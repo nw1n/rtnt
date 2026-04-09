@@ -1,0 +1,28 @@
+{
+  "extends": "./node_modules/@elderbyte/code-style/src/typescript/tsconfig.elder.json",
+
+  "compileOnSave": false,
+  "compilerOptions": {
+    "module": "es2020",
+    "outDir": "./dist/out-tsc",
+    "esModuleInterop": true,
+    "baseUrl": "src",
+    "skipLibCheck": true,
+    "sourceMap": true,
+    "isolatedModules": true,
+    "declaration": false,
+    "importHelpers": true,
+    "experimentalDecorators": true,
+    "moduleResolution": "bundler",
+    "target": "ES2022",
+    "typeRoots": ["node_modules/@types"],
+    "useDefineForClassFields": false
+  },
+  "angularCompilerOptions": {
+    "extendedDiagnostics": {
+      "checks": {
+        "unusedStandaloneImports": "suppress"
+      }
+    }
+  }
+}

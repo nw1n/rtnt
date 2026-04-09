@@ -1,0 +1,26 @@
+.elder-light-theme {
+  --md-sys-color-primary: #0b4446a8 !important;
+}
+
+.elder-light-theme,
+.elder-dark-theme {
+  --bg-water: #82c4cc;
+}
+
+.elder-logo-btn mat-icon {
+  display: none;
+}
+
+.elder-logo-btn::after {
+  content: '🏴‍☠️';
+  font-size: 2.3rem;
+  font-weight: bold;
+  color: #ffffff;
+  text-align: center;
+  width: 100%;
+  display: block;
+}
+
+.bg-water {
+  background-color: var(--bg-water);
+}

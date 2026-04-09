@@ -1,0 +1,29 @@
+.debug-view {
+  max-width: 36rem;
+  margin: 0 auto;
+}
+
+.tick-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.tick-label {
+  font-size: 1rem;
+}
+
+.tick-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.update-time {
+  margin-top: 1rem;
+  opacity: 0.75;
+}
+
+.error-text {
+  margin-top: 1rem;
+  color: #b00020;
+}

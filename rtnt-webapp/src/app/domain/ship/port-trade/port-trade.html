@@ -1,0 +1,111 @@
+<elder-single-pane-wrapper>
+  <div class="port-trade">
+    <header class="port-trade-header">
+      <h1 class="port-trade-title">Port trade</h1>
+      <button
+        mat-stroked-button
+        type="button"
+        (click)="reload()"
+        [disabled]="!playerService.getSelectedPlayerId()"
+      >
+        <span>Refresh</span>
+      </button>
+    </header>
+
+    @if (!playerService.getSelectedPlayerId()) {
+      <p class="state-message">
+        Select or create a player on the
+        <a routerLink="/player">Player</a>
+        page to trade.
+      </p>
+    } @else if (loadError) {
+      <p class="state-message error">{{ loadError }}</p>
+    } @else if (isLoading) {
+      <p class="state-message">Loading…</p>
+    } @else if (dockedShips.length === 0) {
+      <p class="state-message">
+        No ship is docked at an island. Anchor a ship to buy and sell goods.
+      </p>
+    } @else {
+      <section class="port-trade-panel">
+        <mat-form-field appearance="outline" class="ship-field">
+          <mat-label>Ship at port</mat-label>
+          <mat-select [formControl]="shipControl">
+            @for (s of dockedShips; track s.id) {
+              <mat-option [value]="s.id">{{ s.name }} — island {{ s.islandId }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        @if (portIsland && selectedShip) {
+          <h2 class="port-name">{{ portIsland.name }}</h2>
+          <p class="port-meta mono">{{ portIsland.id }}</p>
+
+          <div class="gold-balances" aria-label="Gold balances">
+            <div class="gold-balance">
+              <span class="gold-balance-label">Ship gold</span>
+              <span class="gold-balance-value">{{ selectedShip.inventory.gold }}</span>
+            </div>
+            <div class="gold-balance">
+              <span class="gold-balance-label">Port gold</span>
+              <span class="gold-balance-value">{{ portIsland.inventory.gold }}</span>
+            </div>
+          </div>
+
+          @if (tradeError) {
+            <p class="trade-error">{{ tradeError }}</p>
+          }
+
+          <div class="trade-table" [formGroup]="tradeAmounts">
+            <div class="trade-row trade-row-head">
+              <span>Good</span>
+              <span>Price / u</span>
+              <span>Port stock</span>
+              <span>In hold</span>
+              <span>Qty</span>
+              <span></span>
+            </div>
+            @for (row of tradeGoods; track row.type) {
+              <div class="trade-row">
+                <span class="trade-good">{{ row.label }}</span>
+                <span>{{ unitPrice(row) }}</span>
+                <span>{{ portIsland.inventory[row.invKey] }}</span>
+                <span>{{ selectedShip.inventory[row.invKey] }}</span>
+                <span class="trade-qty">
+                  <mat-form-field appearance="outline" subscriptSizing="dynamic" class="qty-field">
+                    <input matInput type="number" min="1" [formControlName]="row.invKey" />
+                  </mat-form-field>
+                </span>
+                <span class="trade-actions">
+                  <button
+                    mat-stroked-button
+                    type="button"
+                    color="primary"
+                    [disabled]="!canBuy(row)"
+                    (click)="trade('buy', row)"
+                  >
+                    Buy
+                  </button>
+                  <button
+                    mat-stroked-button
+                    type="button"
+                    [disabled]="!canSell(row)"
+                    (click)="trade('sell', row)"
+                  >
+                    Sell
+                  </button>
+                </span>
+              </div>
+            }
+          </div>
+          <p class="trade-footnote">
+            Totals use unit price × quantity. Port figures update locally after each trade; use
+            Refresh to sync with the server.
+          </p>
+        } @else {
+          <p class="state-message">Island data not found for this ship.</p>
+        }
+      </section>
+    }
+  </div>
+</elder-single-pane-wrapper>

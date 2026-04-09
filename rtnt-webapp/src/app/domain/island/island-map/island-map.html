@@ -1,0 +1,99 @@
+<elder-single-pane-wrapper>
+  <div class="island-map-view">
+    <div class="map-toolbar">
+      <h2>Island Map</h2>
+      <button mat-stroked-button color="primary" (click)="refresh()">
+        <mat-icon>refresh</mat-icon>
+        Refresh
+      </button>
+      <mat-slide-toggle [(ngModel)]="isAutoRefreshing">Auto Refresh</mat-slide-toggle>
+    </div>
+
+    @if (islands().length === 0) {
+      <p class="state-text">No islands available.</p>
+    } @else {
+      <div class="map-wrapper">
+        <button
+          class="island-menu-trigger"
+          type="button"
+          [style.left.px]="menuPosition().x"
+          [style.top.px]="menuPosition().y"
+          [matMenuTriggerFor]="islandActionMenu"
+          #islandMenuTrigger="matMenuTrigger"
+          aria-hidden="true"
+          tabindex="-1"
+        ></button>
+        <svg
+          class="island-map"
+          [attr.viewBox]="mapBoundsString()"
+          preserveAspectRatio="xMidYMid meet"
+        >
+          @for (island of islands(); track island.id) {
+            <g class="island-group">
+              <rect
+                [attr.x]="island.footprint.x"
+                [attr.y]="island.footprint.y"
+                [attr.width]="island.footprint.width"
+                [attr.height]="island.footprint.length"
+                class="island-shape"
+                rx="8"
+                ry="8"
+                [class.island-shape--clickable]="canPlayerJourney()"
+                (click)="onIslandClick($event, island)"
+              />
+              <text
+                [attr.x]="island.footprint.x + island.footprint.width / 2"
+                [attr.y]="island.footprint.y + island.footprint.length / 2"
+                text-anchor="middle"
+                dominant-baseline="middle"
+                class="island-label"
+              >
+                {{ island.name }}
+              </text>
+            </g>
+          }
+          @for (ship of shipMarkers(); track ship.id) {
+            <g class="ship-group">
+              <circle
+                [attr.cx]="ship.x"
+                [attr.cy]="ship.y"
+                r="6"
+                class="ship-point"
+                [attr.fill]="ship.color || '#1565c0'"
+              />
+              <text
+                [attr.x]="ship.x"
+                [attr.y]="ship.y - 10"
+                text-anchor="middle"
+                class="ship-label"
+              >
+                {{ ship.name }}
+              </text>
+            </g>
+          }
+        </svg>
+      </div>
+    }
+  </div>
+</elder-single-pane-wrapper>
+
+<mat-menu #islandActionMenu="matMenu">
+  @if (selectedIsland(); as island) {
+    <button mat-menu-item disabled>
+      {{
+        islandActionMode() === 'visit'
+          ? 'Do you want to visit this island?'
+          : 'Do you want to journey here?'
+      }}
+    </button>
+    <button mat-menu-item (click)="performSelectedIslandAction()" [disabled]="isStartingJourney()">
+      {{
+        isStartingJourney()
+          ? 'Working...'
+          : islandActionMode() === 'visit'
+            ? 'Yes, visit island'
+            : 'Yes, journey there'
+      }}
+    </button>
+  }
+</mat-menu>

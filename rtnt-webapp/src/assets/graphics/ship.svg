@@ -1,0 +1,15 @@
+<svg width="300" height="200" viewBox="0 0 300 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Hull -->
+  <path d="M50 140 L250 140 L220 170 L80 170 Z" fill="#8b4513"></path>
+
+  <!-- Foremast (small stick at front) -->
+  <rect x="95" y="75" width="6" height="65" fill="#654321"></rect>
+  <polygon points="98,80 135,110 98,140" fill="#f5f5f5"></polygon>
+
+  <!-- Main Mast (larger) -->
+  <rect x="160" y="40" width="10" height="100" fill="#654321"></rect>
+  <polygon points="165,50 235,100 165,140" fill="#f5f5f5"></polygon>
+
+  <!-- Flag -->
+  <polygon points="160,40 195,50 160,60" fill="black"></polygon>
+</svg>

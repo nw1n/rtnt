@@ -1,0 +1,105 @@
+<button
+  mat-icon-button
+  type="button"
+  [matMenuTriggerFor]="menu"
+  (menuOpened)="onMenuOpened()"
+  aria-label="Player status"
+>
+  <mat-icon [style.color]="triggerIconColor()">account_circle</mat-icon>
+</button>
+
+<mat-menu #menu="matMenu" class="player-status-menu" xPosition="before">
+  <ng-template matMenuContent>
+    <div class="player-status-body" (click)="$event.stopPropagation()">
+      @if (playerStatus.isLoading()) {
+        <p class="player-status-line muted">Loading…</p>
+      } @else if (resourceErrorMessage(); as resErr) {
+        <p class="player-status-line error">{{ resErr }}</p>
+      } @else {
+        @switch (payload().kind) {
+          @case ('idle') {
+            <p class="player-status-line muted">Open to load status.</p>
+          }
+          @case ('no-selection') {
+            <p class="player-status-line muted">
+              No player selected. Choose or create one on the Player page.
+            </p>
+          }
+          @case ('error') {
+            <p class="player-status-line error">{{ payloadErrorMessage() }}</p>
+          }
+          @case ('ready') {
+            @if (readyPayload(); as data) {
+              <section class="player-status-section">
+                <h3 class="player-status-heading">Player</h3>
+                <p class="player-status-line">
+                  <span class="label">Name</span>
+                  <span class="value" [style.color]="data.player.hexColor">{{
+                    data.player.name
+                  }}</span>
+                </p>
+                <p class="player-status-line">
+                  <span class="label">Id</span>
+                  <span class="value mono">{{ data.player.id }}</span>
+                </p>
+              </section>
+
+              @for (ship of data.ships; track ship.id) {
+                <mat-divider class="player-status-divider" />
+                <section class="player-status-section">
+                  <h3 class="player-status-heading">Ship: {{ ship.name }}</h3>
+                  <p class="player-status-line">
+                    <span class="label">Id</span>
+                    <span class="value mono">{{ ship.id }}</span>
+                  </p>
+                  <p class="player-status-line">
+                    <span class="label">Location</span>
+                    <span class="value">{{ ship.islandId ?? 'At sea' }}</span>
+                  </p>
+
+                  <h4 class="player-status-subheading">Inventory</h4>
+                  <ul class="player-status-inventory">
+                    <li><span class="label">Gold</span> {{ ship.inventory.gold }}</li>
+                    <li><span class="label">Rum</span> {{ ship.inventory.rum }}</li>
+                    <li><span class="label">Sugar</span> {{ ship.inventory.sugar }}</li>
+                    <li><span class="label">Spices</span> {{ ship.inventory.spices }}</li>
+                    <li><span class="label">Tobacco</span> {{ ship.inventory.tobacco }}</li>
+                  </ul>
+
+                  @if (ship.journey; as j) {
+                    <h4 class="player-status-subheading">Journey</h4>
+                    <ul class="player-status-journey">
+                      <li><span class="label">Active</span> {{ j.active ? 'Yes' : 'No' }}</li>
+                      <li>
+                        <span class="label">Journey id</span> <span class="mono">{{ j.id }}</span>
+                      </li>
+                      <li><span class="label">From</span> {{ j.startIslandId }}</li>
+                      <li><span class="label">To</span> {{ j.targetIslandId }}</li>
+                      <li>
+                        <span class="label">Departed</span>
+                        {{ j.departed ? (j.departed | date: 'medium') : '—' }}
+                      </li>
+                      <li>
+                        <span class="label">ETA</span>
+                        {{ j.estimatedArrival ? (j.estimatedArrival | date: 'medium') : '—' }}
+                      </li>
+                      <li>
+                        <span class="label">Arrived</span>
+                        {{ j.arrived ? (j.arrived | date: 'medium') : '—' }}
+                      </li>
+                    </ul>
+                  } @else {
+                    <p class="player-status-line muted">No journey on record.</p>
+                  }
+                </section>
+              } @empty {
+                <mat-divider class="player-status-divider" />
+                <p class="player-status-line muted">No ships for this player.</p>
+              }
+            }
+          }
+        }
+      }
+    </div>
+  </ng-template>
+</mat-menu>

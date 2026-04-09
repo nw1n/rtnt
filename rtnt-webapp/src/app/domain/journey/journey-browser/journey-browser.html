@@ -1,0 +1,75 @@
+<elder-single-pane-wrapper>
+  <elder-table [data]="data" class="flex" matSort (itemClick)="openDetail($event)">
+    <elder-data-toolbar
+      *elderTableToolbar
+      (requestNew)="createNew($event)"
+      [canAdd]="false"
+      [canRemove]="false"
+      [canMore]="false"
+    >
+      <elder-search-box
+        *elderToolbarContent="'center'"
+        [autoPanel]="true"
+        [elderSearchContext]="data?.filter"
+        class="flex-60"
+        queryKey="query"
+      >
+      </elder-search-box>
+      <button *elderToolbarContent="'right'" mat-icon-button (click)="refresh()">
+        <mat-icon>refresh</mat-icon>
+      </button>
+    </elder-data-toolbar>
+
+    <ng-container matColumnDef="id">
+      <th mat-header-cell *matHeaderCellDef style="width: 18%" mat-sort-header>Id</th>
+      <td mat-cell *matCellDef="let journey" class="text-label-small">{{ journey.id }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="shipId">
+      <th mat-header-cell *matHeaderCellDef style="width: 14%" mat-sort-header>Ship</th>
+      <td mat-cell *matCellDef="let journey" class="text-body-small">{{ journey.shipId }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="startIslandId">
+      <th mat-header-cell *matHeaderCellDef style="width: 14%" mat-sort-header>Start</th>
+      <td mat-cell *matCellDef="let journey" class="text-body-small">
+        {{ journey.startIslandId }}
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="targetIslandId">
+      <th mat-header-cell *matHeaderCellDef style="width: 12%" mat-sort-header>Target</th>
+      <td mat-cell *matCellDef="let journey" class="text-body-small">
+        {{ journey.targetIslandId }}
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="active">
+      <th mat-header-cell *matHeaderCellDef style="width: 8%" mat-sort-header>Active</th>
+      <td mat-cell *matCellDef="let journey" class="text-body-small">
+        {{ journey.active ? 'Yes' : 'No' }}
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="departed">
+      <th mat-header-cell *matHeaderCellDef style="width: 14%" mat-sort-header>Departed</th>
+      <td mat-cell *matCellDef="let journey" class="text-body-small">
+        {{ journey.departed || '-' }}
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="estimatedArrival">
+      <th mat-header-cell *matHeaderCellDef style="width: 14%" mat-sort-header>ETA</th>
+      <td mat-cell *matCellDef="let journey" class="text-body-small">
+        {{ journey.estimatedArrival || '-' }}
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="arrived">
+      <th mat-header-cell *matHeaderCellDef style="width: 12%" mat-sort-header>Arrived</th>
+      <td mat-cell *matCellDef="let journey" class="text-body-small">
+        {{ journey.arrived || '-' }}
+      </td>
+    </ng-container>
+  </elder-table>
+</elder-single-pane-wrapper>

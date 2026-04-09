@@ -1,0 +1,86 @@
+# Caribbean Island Names
+# This file contains a list of Caribbean island names used by the application
+
+islands:
+  - Jamaica
+  - Cuba
+  - Hispaniola
+  - Puerto Rico
+  - Trinidad
+  - Tobago
+  - Barbados
+  - Martinique
+  - Guadeloupe
+  - Saint Lucia
+  - Saint Vincent
+  - Grenada
+  - Dominica
+  - Antigua
+  - Barbuda
+  - Saint Kitts
+  - Nevis
+  - Montserrat
+  - Anguilla
+  - Aruba
+  - Bonaire
+  - Curaçao
+  - Saint Martin
+  - Sint Maarten
+  - Saint Barthélemy
+  - Saba
+  - Sint Eustatius
+  - Grand Cayman
+  - Little Cayman
+  - Cayman Brac
+  - New Providence
+  - Grand Bahama
+  - Andros
+  - Eleuthera
+  - Exuma
+  - Long Island
+  - Cat Island
+  - San Salvador
+  - Rum Cay
+  - Acklins
+  - Crooked Island
+  - Mayaguana
+  - Inagua
+  - Tortola
+  - Virgin Gorda
+  - Anegada
+  - Jost Van Dyke
+  - Saint Thomas
+  - Saint John
+  - Saint Croix
+  - Isla de la Juventud
+  - Isla de Pinos
+  - Cayo Coco
+  - Cayo Largo
+  - Isla Mujeres
+  - Cozumel
+  - Roatán
+  - Utila
+  - Guanaja
+  - Providencia
+  - San Andrés
+  - Margarita
+  - Coche
+  - Cubagua
+  - La Tortuga
+  - La Blanquilla
+  - Los Roques
+  - Aves
+  - Marie-Galante
+  - La Désirade
+  - Les Saintes
+  - Carriacou
+  - Petit Martinique
+  - Union Island
+  - Canouan
+  - Mustique
+  - Bequia
+  - Palm Island
+  - Mayreau
+  - Young Island
+
+

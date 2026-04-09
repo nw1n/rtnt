@@ -1,0 +1,26 @@
+<h2 mat-dialog-title>Island Interaction: {{ data.island.name }}</h2>
+
+<mat-dialog-content class="dialog-content">
+  @if (errorMessage) {
+    <p class="error-message">{{ errorMessage }}</p>
+  }
+  @if (!errorMessage) {
+    <form [formGroup]="form" class="dialog-form">
+      @if (!isLoading && playerShips.length === 0) {
+        <p class="info-message">No available player ship.</p>
+      }
+
+      <p class="destination-line">
+        <span class="destination-label">Journey destination</span>
+        <span class="destination-value">{{ data.island.name }} ({{ data.island.id }})</span>
+      </p>
+    </form>
+  }
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button type="button" (click)="dialogRef.close(false)">Cancel</button>
+  <button mat-flat-button color="primary" type="button" (click)="submit()">
+    {{ isSubmitting ? 'Starting...' : 'Start Journey' }}
+  </button>
+</mat-dialog-actions>

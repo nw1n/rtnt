@@ -1,0 +1,65 @@
+<elder-single-pane-wrapper>
+  <elder-table [data]="data" class="flex" matSort (itemClick)="openDetail($event)">
+    <elder-data-toolbar *elderTableToolbar [canAdd]="false" [canRemove]="false" [canMore]="false">
+      <elder-search-box
+        *elderToolbarContent="'center'"
+        [autoPanel]="true"
+        [elderSearchContext]="data?.filter"
+        class="flex-60"
+        queryKey="query"
+      >
+      </elder-search-box>
+      <button *elderToolbarContent="'right'" mat-icon-button (click)="refresh()">
+        <mat-icon>refresh</mat-icon>
+      </button>
+    </elder-data-toolbar>
+
+    <ng-container matColumnDef="icon">
+      <th mat-header-cell *matHeaderCellDef style="width: 4%"></th>
+      <td mat-cell *matCellDef="let island">
+        <mat-icon color="primary">paid</mat-icon>
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="id">
+      <th mat-header-cell *matHeaderCellDef style="width: 13%" mat-sort-header>Id</th>
+      <td mat-cell *matCellDef="let island" class="text-label-small">{{ island.id }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="name">
+      <th mat-header-cell *matHeaderCellDef style="width: 17%" mat-sort-header>Name</th>
+      <td mat-cell *matCellDef="let island" class="text-label-normal">{{ island.name }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="rum">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header="tradePrices.rum">Rum Price</th>
+      <td mat-cell *matCellDef="let island" class="price-number">{{ island.tradePrices.rum }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="sugar">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header="tradePrices.sugar">Sugar Price</th>
+      <td mat-cell *matCellDef="let island" class="price-number">{{ island.tradePrices.sugar }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="spices">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header="tradePrices.spices">Spices Price</th>
+      <td mat-cell *matCellDef="let island" class="price-number">
+        {{ island.tradePrices.spices }}
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="tobacco">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header="tradePrices.tobacco">Tobacco Price</th>
+      <td mat-cell *matCellDef="let island" class="price-number">
+        {{ island.tradePrices.tobacco }}
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="totalPrices">
+      <th mat-header-cell *matHeaderCellDef>Total</th>
+      <td mat-cell *matCellDef="let island" class="price-number total-cell">
+        {{ getTotalPrices(island) }}
+      </td>
+    </ng-container>
+  </elder-table>
+</elder-single-pane-wrapper>

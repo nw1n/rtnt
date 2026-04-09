@@ -1,0 +1,54 @@
+buildscript {
+    repositories {
+        mavenCentral()
+        maven { url "https://plugins.gradle.org/m2/" }
+    }
+}
+
+allprojects {
+    version = '0.0.1-SNAPSHOT'
+    group = 'com.example.rtnt'
+
+    // Always show stacktrace
+    gradle.startParameter.showStacktrace = ShowStacktrace.ALWAYS
+}
+
+subprojects {
+    ext {
+        springBootVersion = '3.5.7'
+        bootDependencyManagement = '1.1.7'
+
+        jupiterVersion = '5.11.4'
+        assertjVersion = '3.26.3'
+
+        jacksonVersion = '2.18.2'
+        jakartaValidation = '3.0.2'
+        jakartaAnnotationApi = '2.1.1'
+    }
+
+    configurations.all {
+        resolutionStrategy {
+            // prefer modules that are part of this build (multi-project or composite build) over external modules
+            preferProjectModules()
+        }
+    }
+
+    tasks.withType(JavaCompile) {
+        options.encoding = 'UTF-8'
+        options.compilerArgs << '-parameters' // Retain property names in java byte code
+    }
+
+    tasks.withType(Javadoc) {
+        // Avoid failing builds because of java-doc errors
+        options.addStringOption('Xdoclint:none', '-quiet')
+        options.addStringOption('encoding', 'UTF-8')
+    }
+
+    tasks.withType(Test) {
+        testLogging {
+            exceptionFormat = 'full'
+        }
+
+        test.useJUnitPlatform()
+    }
+}

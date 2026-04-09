@@ -1,0 +1,13 @@
+services:
+  mongodb:
+    image: mongo:8
+    ports:
+      - "27018:27017"
+    volumes:
+      - mongodb-data:/data/db
+    environment:
+      - MONGO_INITDB_DATABASE=rtnt
+
+volumes:
+  mongodb-data:
+

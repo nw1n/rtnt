@@ -1,0 +1,32 @@
+<elder-shell class="full">
+  <ng-template elderToolbarColumn="center" [elderToolbarDefault]="true">
+    <app-player-status />
+  </ng-template>
+
+  <!-- Left Side Content -->
+  <ng-template elderShellSideLeft>
+    <div class="layout-col full">
+      <elder-expand-toggle-button class="p-sm" [elderTogglePanelTrigger]="navMenu">
+        <div class="layout-col p-sm">MENU</div>
+      </elder-expand-toggle-button>
+
+      <elder-toggle-panel class="flex elder-main-nav-panel" #navMenu="elderTogglePanel">
+        <!-- Primary Navigation -->
+        <app-main-nav-menu class="flex" *elderTogglePanelPrimary></app-main-nav-menu>
+
+        <!-- Secondary Navigation -->
+        <elder-nav-list class="flex" *elderTogglePanelSecondary>
+          <elder-nav-link disabled>
+            <elder-theme-toggle></elder-theme-toggle>
+          </elder-nav-link>
+          <elder-nav-link disabled>
+            <elder-static-nav-toggle></elder-static-nav-toggle>
+          </elder-nav-link>
+        </elder-nav-list>
+      </elder-toggle-panel>
+    </div>
+  </ng-template>
+  <ng-template elderShellStaticNavSlot>
+    <app-main-nav-menu elderRailNav></app-main-nav-menu>
+  </ng-template>
+</elder-shell>

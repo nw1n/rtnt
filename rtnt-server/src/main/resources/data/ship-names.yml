@@ -1,0 +1,283 @@
+# Ship Names
+# This file contains a list of ship names used by the application
+# Ships can have duplicate names, so this list can be reused
+
+ships:
+  - Black Pearl
+  - Queen Anne's Revenge
+  - Flying Dutchman
+  - Jolly Roger
+  - Sea Serpent
+  - Golden Hind
+  - Revenge
+  - Royal Fortune
+  - Fancy
+  - Ranger
+  - Fortune
+  - Amity
+  - Satisfaction
+  - Bachelor's Delight
+  - Rising Sun
+  - Speaker
+  - Resolution
+  - Defiance
+  - Neptune
+  - Neptune's Revenge
+  - Sea Wolf
+  - Crimson Tide
+  - Storm Breaker
+  - Wind Runner
+  - Thunder Bay
+  - Sea Breeze
+  - Marauder
+  - Sea Hawk
+  - Tempest
+  - Hurricane
+  - Typhoon
+  - Cyclone
+  - Sea Dragon
+  - Kraken
+  - Leviathan
+  - Poseidon's Wrath
+  - Triton
+  - Siren's Call
+  - Mermaid's Kiss
+  - Davy Jones
+  - Calypso
+  - Blackbeard's Ghost
+  - Captain's Pride
+  - Treasure Hunter
+  - Gold Seeker
+  - Rum Runner
+  - Spice Trader
+  - Merchant's Bane
+  - Freebooter
+  - Sea Rover
+  - Wave Rider
+  - Tide Turner
+  - Current Chaser
+  - Deep Blue
+  - Midnight Star
+  - Dawn Breaker
+  - Sunset Glory
+  - Moonlight Shadow
+  - Star Gazer
+  - Horizon Seeker
+  - Boundless Ocean
+  - Infinite Wave
+  - Old Salt
+  - Sea Dog
+  - Salty Dog
+  - Sea Rat
+  - Barnacle
+  - Anchor's Aweigh
+  - Full Sail
+  - Fair Wind
+  - Following Sea
+  - Trade Wind
+  - Gulf Stream
+  - Caribbean Queen
+  # Spanish Ship Names
+  - Santa María
+  - Nuestra Señora de la Concepción
+  - San Felipe
+  - El Dorado
+  - La Perla Negra
+  - El Cazador
+  - La Venganza
+  - El Tesoro
+  - Nuestra Señora de Atocha
+  - San José
+  - La Galga
+  - El Galeón
+  - La Fortuna
+  - El Destino
+  - Nuestra Señora del Rosario
+  - San Cristóbal
+  - La Esperanza
+  - El Valiente
+  - La Victoria
+  - El Triunfo
+  - Nuestra Señora de Guadalupe
+  - San Juan
+  - La Libertad
+  - El Libertador
+  - La Justicia
+  - El Justiciero
+  - Nuestra Señora de la Merced
+  - San Pedro
+  - La Fe
+  - El Corazón
+  - La Pasión
+  - El Fuego
+  - Nuestra Señora de los Remedios
+  - San Miguel
+  - La Estrella
+  - El Sol
+  - La Luna
+  - El Mar
+  - Nuestra Señora de la Caridad
+  - San Antonio
+  - La Onda
+  - El Viento
+  - La Tormenta
+  - El Huracán
+  - Nuestra Señora de la Paz
+  - San Francisco
+  - La Espada
+  - El Escudo
+  - La Corona
+  - El Rey
+  - Nuestra Señora de la Asunción
+  - San Diego
+  - La Reina
+  - El Príncipe
+  - La Princesa
+  - El Duque
+  - Nuestra Señora de Montserrat
+  - San Luis
+  - La Condesa
+  - El Conde
+  - La Dama
+  - El Caballero
+  - Nuestra Señora de la Soledad
+  - San Martín
+  - La Sirena
+  - El Tritón
+  - La Nereida
+  - El Neptuno
+  - Nuestra Señora de la Candelaria
+  - San Bartolomé
+  - El Dragón
+  - La Serpiente
+  - El León
+  - La Águila
+  - Nuestra Señora de la Encarnación
+  - San Andrés
+  - El Halcón
+  - La Paloma
+  - El Cuervo
+  - La Gaviota
+  - Nuestra Señora de la Purificación
+  - San Mateo
+  - El Tiburón
+  - La Ballena
+  - El Delfín
+  - La Orca
+  - Nuestra Señora de la Visitación
+  - San Marcos
+  - El Corsario
+  - La Pirata
+  - El Bucanero
+  - La Aventurera
+  - Nuestra Señora de la Anunciación
+  - San Lucas
+  - El Buscador
+  - La Cazadora
+  - El Explorador
+  - La Descubridora
+  - Nuestra Señora de la Natividad
+  - San Juan Bautista
+  - El Guerrero
+  - La Guerrera
+  - El Soldado
+  - La Soldado
+  - Nuestra Señora de la Presentación
+  - San Simón
+  - El Capitán
+  - La Capitana
+  - El Almirante
+  - La Almiranta
+  - Nuestra Señora de la Transfiguración
+  - San Judas
+  - El Comandante
+  - La Comandante
+  - El Teniente
+  - La Teniente
+  - Nuestra Señora de la Asunción
+  - San Tomás
+  - El Vigilante
+  - La Vigilante
+  - El Guardián
+  - La Guardiana
+  # French Ship Names
+  - La Perle Noire
+  - Le Vengeur
+  - La Fortune
+  - Le Trésor
+  - L'Aventure
+  - La Victoire
+  - Le Triomphe
+  - La Liberté
+  - L'Égalité
+  - La Fraternité
+  - Le Courageux
+  - La Vaillante
+  - L'Intrépide
+  - La Brave
+  - Le Fier
+  - La Fière
+  - L'Espérance
+  - La Foi
+  - Le Destin
+  - La Destinée
+  - L'Étoile
+  - La Lune
+  - Le Soleil
+  - La Mer
+  - L'Océan
+  - Le Vent
+  - La Tempête
+  - L'Ouragan
+  - Le Dragon
+  - La Sirène
+  - Le Triton
+  - La Néréide
+  - Neptune
+  - Le Requin
+  - La Baleine
+  - Le Dauphin
+  - L'Orque
+  - Le Corsaire
+  - La Corsaire
+  - Le Flibustier
+  - La Flibustière
+  - Le Boucanier
+  - La Boucanière
+  - L'Explorateur
+  - La Exploratrice
+  - Le Chasseur
+  - La Chasseuse
+  - Le Guerrier
+  - La Guerrière
+  # Dutch Ship Names
+  - De Zwarte Parel
+  - De Vliegende Hollander
+  - De Gouden Leeuw
+  - De Zeven Provinciën
+  - De Batavia
+  - De Amsterdam
+  - De Rotterdam
+  - De Utrecht
+  - De Haarlem
+  - De Delft
+  - De Maas
+  - De Rijn
+  - De Schelde
+  - De Waddenzee
+  - De Zuiderzee
+  - De Noordzee
+  - De Oostzee
+  - De West-Indië
+  - De Oost-Indië
+  - De Witte Leeuw
+  - De Rode Leeuw
+  - De Blauwe Leeuw
+  - De Gouden Leeuw
+  - De Zilveren Leeuw
+  - De Zwarte Leeuw
+  - De Vliegende Vis
+  - De Zeehond
+  - De Walvis
+  - De Dolfijn
+  - De Haai

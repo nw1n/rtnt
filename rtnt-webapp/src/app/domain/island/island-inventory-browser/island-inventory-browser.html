@@ -1,0 +1,67 @@
+<elder-single-pane-wrapper>
+  <elder-table [data]="data" class="flex" matSort (itemClick)="openDetail($event)">
+    <elder-data-toolbar *elderTableToolbar [canAdd]="false" [canRemove]="false" [canMore]="false">
+      <elder-search-box
+        *elderToolbarContent="'center'"
+        [autoPanel]="true"
+        [elderSearchContext]="data?.filter"
+        class="flex-60"
+        queryKey="query"
+      >
+      </elder-search-box>
+      <button *elderToolbarContent="'right'" mat-icon-button (click)="refresh()">
+        <mat-icon>refresh</mat-icon>
+      </button>
+    </elder-data-toolbar>
+
+    <ng-container matColumnDef="icon">
+      <th mat-header-cell *matHeaderCellDef style="width: 4%"></th>
+      <td mat-cell *matCellDef="let island">
+        <mat-icon color="primary">inventory</mat-icon>
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="id">
+      <th mat-header-cell *matHeaderCellDef style="width: 13%" mat-sort-header>Id</th>
+      <td mat-cell *matCellDef="let island" class="text-label-small">{{ island.id }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="name">
+      <th mat-header-cell *matHeaderCellDef style="width: 17%" mat-sort-header>Name</th>
+      <td mat-cell *matCellDef="let island" class="text-label-normal">{{ island.name }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="gold">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header="inventory.gold">Gold</th>
+      <td mat-cell *matCellDef="let island" class="inventory-number">
+        {{ island.inventory.gold }}
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="rum">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header="inventory.rum">Rum</th>
+      <td mat-cell *matCellDef="let island" class="inventory-number">{{ island.inventory.rum }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="sugar">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header="inventory.sugar">Sugar</th>
+      <td mat-cell *matCellDef="let island" class="inventory-number">
+        {{ island.inventory.sugar }}
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="spices">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header="inventory.spices">Spices</th>
+      <td mat-cell *matCellDef="let island" class="inventory-number">
+        {{ island.inventory.spices }}
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="tobacco">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header="inventory.tobacco">Tobacco</th>
+      <td mat-cell *matCellDef="let island" class="inventory-number">
+        {{ island.inventory.tobacco }}
+      </td>
+    </ng-container>
+  </elder-table>
+</elder-single-pane-wrapper>

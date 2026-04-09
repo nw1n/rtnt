@@ -1,0 +1,19 @@
+<elder-single-pane-wrapper>
+  <div class="debug-view">
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>Debug</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="tick-line">
+          <span class="tick-label">Current Tick: </span>
+          <span class="tick-value">{{ tickCount() ?? '-' }}</span>
+        </div>
+        <div class="tick-line">
+          <span class="tick-label">Current Tick as Time: </span>
+          <span class="tick-value">{{ ticksAsTime() ?? '-' }}</span>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</elder-single-pane-wrapper>

@@ -1,0 +1,36 @@
+.dialog-content {
+  min-width: 28rem;
+}
+
+.dialog-form {
+  display: grid;
+  gap: 1rem;
+  padding-top: 0.5rem;
+}
+
+.error-message {
+  margin: 0;
+  color: #b00020;
+}
+
+.info-message {
+  margin: 0 0 0.75rem;
+}
+
+.destination-line {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin: 0;
+}
+
+.destination-label {
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.destination-value {
+  font-size: 1rem;
+}
