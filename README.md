@@ -2,6 +2,8 @@
 
 *Rum, Trade and Treasure* is a browser-based real-time economy-focused multiplayer game with a pirate theme.
 
+![Map view of the Caribbean in RTnT](docs/images/rtnt-map-screenshot.png)
+
 ## Tech Stack
 
 - Backend: Java, Spring Boot
