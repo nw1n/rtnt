@@ -8,6 +8,7 @@ import { JourneyBrowser } from './domain/journey/journey-browser/journey-browser
 import { Player } from './domain/player/player/player'
 import { ShipBrowser } from './domain/ship/ship-browser/ship-browser'
 import { PortTrade } from './domain/ship/port-trade/port-trade'
+import { Tavern } from './domain/tavern/tavern/tavern'
 
 export const routes: Routes = [
   {
@@ -62,6 +63,13 @@ export const routes: Routes = [
     component: IslandMap,
     data: {
       title: 'Island Map',
+    },
+  },
+  {
+    path: 'tavern',
+    component: Tavern,
+    data: {
+      title: 'Tavern',
     },
   },
   {

@@ -1,0 +1,28 @@
+.tavern-dialog {
+  margin-top: 1rem;
+  max-width: 36rem;
+  line-height: 1.5;
+  font-style: italic;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.tavern-dialog--loading {
+  font-style: italic;
+  opacity: 0.92;
+}
+
+.tavern-dialog--error {
+  color: #b00020;
+}
+
+/* Nearest-neighbor scaling so upscaled pixel art stays crisp */
+.tavern-pixel-art {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+  image-rendering: pixelated;
+}

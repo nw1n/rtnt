@@ -1,0 +1,28 @@
+<elder-single-pane-wrapper>
+  <div class="layout-row place-between-start">
+    <div class="text-col p-xl">
+      <div style="min-width: 600px">
+        <button
+          mat-flat-button
+          color="primary"
+          [disabled]="isNewsLoading() || infoRequested()"
+          (click)="submitInfoRequest()"
+        >
+          Do you have any news for me, Good Sir?
+        </button>
+        @if (isNewsLoading()) {
+          <p class="tavern-dialog tavern-dialog--loading">{{ newsLoadingMessage }}</p>
+        } @else if (error()) {
+          <p class="tavern-dialog tavern-dialog--error">{{ error() }}</p>
+        } @else if (dialogText()) {
+          <div class="tavern-dialog">{{ dialogText() }}</div>
+        }
+      </div>
+    </div>
+    <div class="flex layout-row place-end-center">
+      <div style="width: 1000px">
+        <img class="tavern-pixel-art" src="/images/tavern-low.png" alt="Tavern" />
+      </div>
+    </div>
+  </div>
+</elder-single-pane-wrapper>
