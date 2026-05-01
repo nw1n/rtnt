@@ -45,3 +45,6 @@ Thumbs.db
 .env.*
 !.env.example
 !.env.secrets.example
+
+# Kafka
+client.truststore.jks

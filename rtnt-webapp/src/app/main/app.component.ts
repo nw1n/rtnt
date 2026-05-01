@@ -59,14 +59,10 @@ export class AppComponent {
    **************************************************************************/
 
   constructor(private router: Router) {
-    const translate = inject(TranslateService)
     const shellService = inject(ElderShellService)
     const playerService = inject(PlayerService)
 
     playerService.ensureStoredPlayerIdValid().subscribe()
-
-    translate.addLangs(['de', 'en'])
-    translate.setDefaultLang('de')
 
     // start with static nav open
     shellService.openStaticNav()

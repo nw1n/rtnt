@@ -14,6 +14,7 @@ java {
 
 repositories {
     mavenCentral()
+    maven { url "https://packages.confluent.io/maven/" }
 }
 
 dependencies {
@@ -22,6 +23,8 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-data-mongodb")
+    implementation("org.apache.kafka:kafka-clients:4.2.0")
+    implementation("io.confluent:kafka-json-schema-serializer:8.1.0")
 
     // Test dependencies
     testImplementation("org.springframework.boot:spring-boot-starter-test")

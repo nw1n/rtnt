@@ -5,11 +5,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
-@EnableScheduling // Enable Spring's scheduled task execution
+@EnableScheduling
 public class RtntApplication {
-
-	public static void main(String[] args) {
-		SpringApplication.run(RtntApplication.class, args);
-	}
+    static void main(String[] args) {
+        SpringApplication.run(RtntApplication.class, args);
+    }
 }
-
