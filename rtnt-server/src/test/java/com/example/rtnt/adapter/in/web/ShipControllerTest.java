@@ -13,9 +13,9 @@ import com.example.rtnt.usecase.ship.StartPlayerJourneyUseCase;
 import com.example.rtnt.usecase.ship.TradeWithIslandUseCase;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Map;
@@ -36,19 +36,19 @@ class ShipControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
+    @MockitoBean
     private ListShipsUseCase listShipsUseCase;
 
-    @MockBean
+    @MockitoBean
     private CreatePlayerControlledShipUseCase createPlayerControlledShipUseCase;
 
-    @MockBean
+    @MockitoBean
     private TradeWithIslandUseCase tradeWithIslandUseCase;
 
-    @MockBean
+    @MockitoBean
     private StartPlayerJourneyUseCase startPlayerJourneyUseCase;
 
-    @MockBean
+    @MockitoBean
     private PlayerRepository playerRepository;
 
     @Test

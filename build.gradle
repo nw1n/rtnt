@@ -15,15 +15,8 @@ allprojects {
 
 subprojects {
     ext {
-        springBootVersion = '3.5.7'
+        springBootVersion = '4.0.6'
         bootDependencyManagement = '1.1.7'
-
-        jupiterVersion = '5.11.4'
-        assertjVersion = '3.26.3'
-
-        jacksonVersion = '2.18.2'
-        jakartaValidation = '3.0.2'
-        jakartaAnnotationApi = '2.1.1'
     }
 
     configurations.all {

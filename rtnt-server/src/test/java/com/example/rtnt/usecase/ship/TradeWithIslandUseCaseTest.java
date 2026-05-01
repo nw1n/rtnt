@@ -24,6 +24,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -36,6 +37,9 @@ class TradeWithIslandUseCaseTest {
 
     @Mock
     private IslandRepository islandRepository;
+
+    @Mock
+    private TradeEventPublisher tradeEventPublisher;
 
     @InjectMocks
     private TradeWithIslandUseCase tradeWithIslandUseCase;
@@ -94,6 +98,7 @@ class TradeWithIslandUseCaseTest {
         assertEquals(15, island.getInventory().getAmount(GoodType.RUM));
         verify(islandRepository, times(1)).save(island);
         verify(shipRepository, times(1)).save(ship);
+        verify(tradeEventPublisher, timeout(1000).times(1)).publish(org.mockito.ArgumentMatchers.any(TradeEvent.class));
     }
 
     @Test
@@ -111,6 +116,7 @@ class TradeWithIslandUseCaseTest {
         assertEquals(23, island.getInventory().getAmount(GoodType.RUM));
         verify(islandRepository, times(1)).save(island);
         verify(shipRepository, times(1)).save(ship);
+        verify(tradeEventPublisher, timeout(1000).times(1)).publish(org.mockito.ArgumentMatchers.any(TradeEvent.class));
     }
 
     @Test
