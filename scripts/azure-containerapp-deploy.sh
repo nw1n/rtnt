@@ -45,6 +45,10 @@ fi
 
 if az containerapp show -g "$RG" -n "$APP" >/dev/null 2>&1; then
   echo "Container app exists. Updating image to: $IMAGE_REF"
+  az containerapp secret set \
+    -g "$RG" \
+    -n "$APP" \
+    --secrets "${SECRETS[@]}"
   az containerapp registry set \
     -g "$RG" \
     -n "$APP" \
@@ -59,10 +63,10 @@ if az containerapp show -g "$RG" -n "$APP" >/dev/null 2>&1; then
   az containerapp update \
     -g "$RG" \
     -n "$APP" \
-    --image "$IMAGE_REF"
-  echo "Note: existing apps get registry auth, ingress target port (8080), and image updates here."
-  echo "To change env vars or app secrets, use the Azure Portal or:"
-  echo "  az containerapp update -g \"$RG\" -n \"$APP\" --replace-secrets ... --set-env-vars ..."
+    --image "$IMAGE_REF" \
+    --set-env-vars "${ENV_VARS[@]}"
+  echo "Note: existing apps now get secret sync, registry auth, ingress target port (8080), env var sync, and image updates."
+  echo "If you need to remove old env vars/secrets, use Azure Portal or explicit az containerapp update/secret commands."
   echo "See: https://learn.microsoft.com/en-us/cli/azure/containerapp"
 else
   echo "Container app does not exist. Creating: $APP"
