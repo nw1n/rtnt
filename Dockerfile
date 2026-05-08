@@ -13,6 +13,9 @@ WORKDIR /app
 
 COPY --from=builder /app/rtnt-server/build/libs/*-exec.jar /app/app.jar
 
+# Kafka TLS truststore (gitignored): expected at rtnt-server/client.truststore.jks.
+COPY rtnt-server/client.truststore.jks /app/client.truststore.jks
+
 ENV SERVER_PORT=8080
 EXPOSE 8080
 
