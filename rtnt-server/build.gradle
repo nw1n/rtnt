@@ -36,3 +36,12 @@ bootRun {
     jvmArgs = ['--enable-native-access=ALL-UNNAMED']
 }
 
+tasks.register('recreateIslands', JavaExec) {
+    group = 'application'
+    description = 'Delete all islands and seed a new set'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.example.rtnt.RtntApplication'
+    args = ['--spring.main.web-application-type=none', 'recreate-islands']
+    jvmArgs = ['--enable-native-access=ALL-UNNAMED']
+}
+

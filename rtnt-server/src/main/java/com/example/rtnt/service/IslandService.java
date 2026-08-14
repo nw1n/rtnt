@@ -83,6 +83,9 @@ public class IslandService implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
+        if (List.of(args).contains("recreate-islands")) {
+            return;
+        }
         if (this.islandMongoRepository.count() > 0) {
             return;
         }
