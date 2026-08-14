@@ -1,6 +1,4 @@
 import { Component, inject } from '@angular/core'
-import { Router } from '@angular/router'
-import { LoggerFactory } from '@elderbyte/ts-logger'
 import { Observable, of } from 'rxjs'
 import {
   ElderDataTransferModule,
@@ -17,10 +15,7 @@ import {
   ElderTogglePanelComponent,
   ElderToolbarModule,
 } from '@elderbyte/ngx-starter'
-import { TranslateService } from '@ngx-translate/core'
-import { PlayerService } from '../domain/player/player.service'
 import { MainNavMenuComponent } from './main-nav-menu/main-nav-menu.component'
-import { PlayerStatusComponent } from './player-status/player-status'
 
 @Component({
   selector: 'app-root',
@@ -33,7 +28,6 @@ import { PlayerStatusComponent } from './player-status/player-status'
     ElderThemeToggleComponent,
     ElderStaticNavToggleComponent,
     MainNavMenuComponent,
-    PlayerStatusComponent,
     ElderTogglePanelComponent,
     ElderDataTransferModule,
     ElderExpandToggleButtonModule,
@@ -44,35 +38,9 @@ import { PlayerStatusComponent } from './player-status/player-status'
   ],
 })
 export class AppComponent {
-  /***************************************************************************
-   *                                                                         *
-   * Fields                                                                  *
-   *                                                                         *
-   **************************************************************************/
-
-  private readonly log = LoggerFactory.getLogger(this.constructor.name)
-
-  /***************************************************************************
-   *                                                                         *
-   * Constructor                                                             *
-   *                                                                         *
-   **************************************************************************/
-
-  constructor(private router: Router) {
-    const shellService = inject(ElderShellService)
-    const playerService = inject(PlayerService)
-
-    playerService.ensureStoredPlayerIdValid().subscribe()
-
-    // start with static nav open
-    shellService.openStaticNav()
+  constructor() {
+    inject(ElderShellService).openStaticNav()
   }
-
-  /***************************************************************************
-   *                                                                         *
-   * Account                                                                 *
-   *                                                                         *
-   **************************************************************************/
 
   public get accountUrl(): string {
     return ''
@@ -85,10 +53,4 @@ export class AppComponent {
   public login(): void {}
 
   public logout(): void {}
-
-  /***************************************************************************
-   *                                                                         *
-   * Public API                                                              *
-   *                                                                         *
-   **************************************************************************/
 }
