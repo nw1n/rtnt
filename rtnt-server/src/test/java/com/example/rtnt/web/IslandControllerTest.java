@@ -11,8 +11,10 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
 
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -38,5 +40,16 @@ class IslandControllerTest {
                 .andExpect(jsonPath("$[0].width").value(60))
                 .andExpect(jsonPath("$[0].length").value(40))
                 .andExpect(jsonPath("$[0].inventory").doesNotExist());
+    }
+
+    @Test
+    void recreateDeletesAndCreatesIslands() throws Exception {
+        Island island = Island.create("Jamaica", Footprint.create(10, 20, 60, 40));
+        when(this.islandService.recreateAll()).thenReturn(List.of(island));
+
+        this.mockMvc.perform(post("/api/islands/recreate"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].name").value("Jamaica"));
+        verify(this.islandService).recreateAll();
     }
 }

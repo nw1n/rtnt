@@ -73,17 +73,29 @@ public class IslandService implements CommandLineRunner {
         throw new IllegalStateException("Could not place island after " + MAX_ATTEMPTS + " attempts");
     }
 
+    public List<Island> recreateAll() {
+        this.islandMongoRepository.deleteAll();
+        this.islandNames.reset();
+        List<Island> placed = this.seed();
+        log.info("Recreated {} islands", placed.size());
+        return placed;
+    }
+
     @Override
     public void run(String... args) {
         if (this.islandMongoRepository.count() > 0) {
             return;
         }
+        log.info("Seeded {} islands", this.seed().size());
+    }
+
+    private List<Island> seed() {
         List<Island> placed = new ArrayList<>();
         for (int i = 0; i < this.islandCount; i++) {
             Island island = this.place(this.islandNames.next(), placed);
             placed.add(this.islandMongoRepository.save(IslandDocument.fromIsland(island)).toIsland());
         }
-        log.info("Seeded {} islands", placed.size());
+        return placed;
     }
 
     private static int randomInRange(int minInclusive, int maxInclusive) {

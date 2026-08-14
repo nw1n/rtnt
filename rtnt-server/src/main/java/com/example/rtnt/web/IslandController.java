@@ -28,6 +28,13 @@ public class IslandController {
                 .toList();
     }
 
+    @PostMapping("/recreate")
+    public List<IslandResponse> recreate() {
+        return this.islandService.recreateAll().stream()
+                .map(IslandResponse::from)
+                .toList();
+    }
+
     @PostMapping
     public IslandResponse create(@RequestBody(required = false) CreateIslandRequest request) {
         try {

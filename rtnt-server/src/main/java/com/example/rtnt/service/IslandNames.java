@@ -19,4 +19,8 @@ public class IslandNames {
         int index = Math.floorMod(this.currentIndex.getAndIncrement(), NAMES.size());
         return NAMES.get(index);
     }
+
+    public void reset() {
+        this.currentIndex.set(0);
+    }
 }
