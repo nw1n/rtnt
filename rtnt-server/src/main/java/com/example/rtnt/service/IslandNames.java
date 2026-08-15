@@ -19,7 +19,7 @@ public class IslandNames {
     }
 
     public String next() {
-        int index = Math.floorMod(this.currentIndex.getAndIncrement(), this.names.size());
+        int index = this.currentIndex.getAndUpdate(i -> (i + 1) % this.names.size());
         return this.names.get(index);
     }
 
