@@ -32,10 +32,10 @@ public class IslandDocument {
         return new IslandDocument(
                 island.getId(),
                 island.getName(),
-                footprint.getX(),
-                footprint.getY(),
-                footprint.getWidth(),
-                footprint.getLength()
+                footprint.x(),
+                footprint.y(),
+                footprint.width(),
+                footprint.length()
         );
     }
 

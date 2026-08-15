@@ -53,10 +53,10 @@ public class IslandController {
             return new IslandResponse(
                     island.getId(),
                     island.getName(),
-                    island.getFootprint().getX(),
-                    island.getFootprint().getY(),
-                    island.getFootprint().getWidth(),
-                    island.getFootprint().getLength()
+                    island.getFootprint().x(),
+                    island.getFootprint().y(),
+                    island.getFootprint().width(),
+                    island.getFootprint().length()
             );
         }
     }

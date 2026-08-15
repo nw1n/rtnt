@@ -27,9 +27,9 @@ class IslandServiceTest {
         Island created = islandService.place("Nassau", List.of());
 
         assertEquals("Nassau", created.getName());
-        assertTrue(created.getFootprint().getX() >= 0);
-        assertTrue(created.getFootprint().getY() >= 0);
-        assertTrue(created.getFootprint().getX() + created.getFootprint().getWidth() <= 2000);
-        assertTrue(created.getFootprint().getY() + created.getFootprint().getLength() <= 1000);
+        assertTrue(created.getFootprint().x() >= 0);
+        assertTrue(created.getFootprint().y() >= 0);
+        assertTrue(created.getFootprint().x() + created.getFootprint().width() <= 2000);
+        assertTrue(created.getFootprint().y() + created.getFootprint().length() <= 1000);
     }
 }
