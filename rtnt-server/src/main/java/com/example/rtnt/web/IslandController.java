@@ -51,12 +51,12 @@ public class IslandController {
     public record IslandResponse(String id, String name, int x, int y, int width, int length) {
         static IslandResponse from(Island island) {
             return new IslandResponse(
-                    island.getId(),
-                    island.getName(),
-                    island.getFootprint().x(),
-                    island.getFootprint().y(),
-                    island.getFootprint().width(),
-                    island.getFootprint().length()
+                    island.id(),
+                    island.name(),
+                    island.footprint().x(),
+                    island.footprint().y(),
+                    island.footprint().width(),
+                    island.footprint().length()
             );
         }
     }

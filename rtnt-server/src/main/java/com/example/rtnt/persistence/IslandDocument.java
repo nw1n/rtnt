@@ -28,10 +28,10 @@ public class IslandDocument {
     }
 
     public static IslandDocument fromIsland(Island island) {
-        Footprint footprint = island.getFootprint();
+        Footprint footprint = island.footprint();
         return new IslandDocument(
-                island.getId(),
-                island.getName(),
+                island.id(),
+                island.name(),
                 footprint.x(),
                 footprint.y(),
                 footprint.width(),

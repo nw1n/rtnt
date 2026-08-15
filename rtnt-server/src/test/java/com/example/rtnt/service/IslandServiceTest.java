@@ -26,10 +26,10 @@ class IslandServiceTest {
         IslandService islandService = new IslandService(this.islandMongoRepository, this.islandNames, 15);
         Island created = islandService.place("Nassau", List.of());
 
-        assertEquals("Nassau", created.getName());
-        assertTrue(created.getFootprint().x() >= 0);
-        assertTrue(created.getFootprint().y() >= 0);
-        assertTrue(created.getFootprint().x() + created.getFootprint().width() <= 2000);
-        assertTrue(created.getFootprint().y() + created.getFootprint().length() <= 1000);
+        assertEquals("Nassau", created.name());
+        assertTrue(created.footprint().x() >= 0);
+        assertTrue(created.footprint().y() >= 0);
+        assertTrue(created.footprint().x() + created.footprint().width() <= 2000);
+        assertTrue(created.footprint().y() + created.footprint().length() <= 1000);
     }
 }
