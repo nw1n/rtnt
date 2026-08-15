@@ -1,4 +1,4 @@
-package com.example.rtnt.domain;
+package com.example.rtnt.domain.island;
 
 public final class Footprint {
     private final int x;

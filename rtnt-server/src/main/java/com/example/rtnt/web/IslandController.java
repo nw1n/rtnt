@@ -1,6 +1,6 @@
 package com.example.rtnt.web;
 
-import com.example.rtnt.domain.Island;
+import com.example.rtnt.domain.island.Island;
 import com.example.rtnt.service.IslandService;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;

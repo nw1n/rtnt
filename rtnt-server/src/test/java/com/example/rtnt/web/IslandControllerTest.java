@@ -1,7 +1,7 @@
 package com.example.rtnt.web;
 
-import com.example.rtnt.domain.Footprint;
-import com.example.rtnt.domain.Island;
+import com.example.rtnt.domain.island.Footprint;
+import com.example.rtnt.domain.island.Island;
 import com.example.rtnt.service.IslandService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -1,4 +1,4 @@
-package com.example.rtnt.domain;
+package com.example.rtnt.domain.island;
 
 import java.util.Objects;
 import java.util.UUID;

@@ -1,7 +1,7 @@
 package com.example.rtnt.persistence;
 
-import com.example.rtnt.domain.Footprint;
-import com.example.rtnt.domain.Island;
+import com.example.rtnt.domain.island.Footprint;
+import com.example.rtnt.domain.island.Island;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 

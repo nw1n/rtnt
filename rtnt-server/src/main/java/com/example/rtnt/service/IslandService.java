@@ -1,7 +1,7 @@
 package com.example.rtnt.service;
 
-import com.example.rtnt.domain.Footprint;
-import com.example.rtnt.domain.Island;
+import com.example.rtnt.domain.island.Footprint;
+import com.example.rtnt.domain.island.Island;
 import com.example.rtnt.persistence.IslandDocument;
 import com.example.rtnt.persistence.IslandMongoRepository;
 import org.slf4j.Logger;
