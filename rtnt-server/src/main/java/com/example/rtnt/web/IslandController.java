@@ -21,9 +21,9 @@ public class IslandController {
     }
 
     @GetMapping
-    public List<IslandResponse> getAll() {
+    public List<IslandDto> getAll() {
         return this.islandService.list().stream()
-                .map(IslandResponse::from)
+                .map(IslandDto::from)
                 .toList();
     }
 
@@ -33,9 +33,9 @@ public class IslandController {
         this.islandService.recreateAll();
     }
 
-    public record IslandResponse(String id, String name, int x, int y, int width, int length) {
-        static IslandResponse from(Island island) {
-            return new IslandResponse(
+    public record IslandDto(String id, String name, int x, int y, int width, int length) {
+        static IslandDto from(Island island) {
+            return new IslandDto(
                     island.id(),
                     island.name(),
                     island.footprint().x(),
