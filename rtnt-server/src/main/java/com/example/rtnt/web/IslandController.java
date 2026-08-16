@@ -29,10 +29,8 @@ public class IslandController {
     }
 
     @PostMapping("/recreate")
-    public List<IslandResponse> recreate() {
-        return this.islandService.recreateAll().stream()
-                .map(IslandResponse::from)
-                .toList();
+    public RecreateResponse recreate() {
+        return new RecreateResponse(this.islandService.recreateAll().size());
     }
 
     @PostMapping
@@ -46,6 +44,9 @@ public class IslandController {
     }
 
     public record CreateIslandRequest(String name) {
+    }
+
+    public record RecreateResponse(int count) {
     }
 
     public record IslandResponse(String id, String name, int x, int y, int width, int length) {

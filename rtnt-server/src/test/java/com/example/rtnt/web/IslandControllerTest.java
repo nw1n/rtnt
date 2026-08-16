@@ -49,7 +49,7 @@ class IslandControllerTest {
 
         this.mockMvc.perform(post("/api/islands/recreate"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].name").value("Jamaica"));
+                .andExpect(jsonPath("$.count").value(1));
         verify(this.islandService).recreateAll();
     }
 }
