@@ -44,12 +44,8 @@ class IslandControllerTest {
 
     @Test
     void recreateDeletesAndCreatesIslands() throws Exception {
-        Island island = Island.create("Jamaica", Footprint.create(10, 20, 60, 40));
-        when(this.islandService.recreateAll()).thenReturn(List.of(island));
-
         this.mockMvc.perform(post("/api/islands/recreate"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.count").value(1));
+                .andExpect(status().isNoContent());
         verify(this.islandService).recreateAll();
     }
 }
