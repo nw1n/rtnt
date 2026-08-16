@@ -2,8 +2,8 @@ package com.example.rtnt.service;
 
 import com.example.rtnt.domain.island.Footprint;
 import com.example.rtnt.domain.island.Island;
-import com.example.rtnt.persistence.IslandDocument;
-import com.example.rtnt.persistence.IslandMongoRepository;
+import com.example.rtnt.persistence.island.IslandDocument;
+import com.example.rtnt.persistence.island.IslandMongoRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;

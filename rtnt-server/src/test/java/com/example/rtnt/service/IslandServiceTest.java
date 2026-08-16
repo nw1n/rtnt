@@ -1,7 +1,7 @@
 package com.example.rtnt.service;
 
 import com.example.rtnt.domain.island.Island;
-import com.example.rtnt.persistence.IslandMongoRepository;
+import com.example.rtnt.persistence.island.IslandMongoRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;

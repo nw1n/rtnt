@@ -1,4 +1,4 @@
-package com.example.rtnt.persistence;
+package com.example.rtnt.persistence.island;
 
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
