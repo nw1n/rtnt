@@ -1,5 +1,8 @@
 # Deploy (Azure)
 
+## Prepare
+- Increment TAG in .env.local
+
 ## Build Container Image and Push to ACR
 
 ```
