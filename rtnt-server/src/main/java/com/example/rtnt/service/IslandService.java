@@ -57,7 +57,7 @@ public class IslandService implements CommandLineRunner {
             int y = ThreadLocalRandom.current().nextInt(MAX_Y - length + 1);
             Island candidate = Island.create(name, Footprint.create(x, y, width, length));
             boolean blocked = existing.stream()
-                    .anyMatch(island -> candidate.footprint().overlapsOrTooClose(island.footprint(), MIN_DISTANCE));
+                    .anyMatch(island -> candidate.footprint().isDistanceTooClose(island.footprint(), MIN_DISTANCE));
             if (!blocked) {
                 return candidate;
             }
