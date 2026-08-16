@@ -1,0 +1,13 @@
+<elder-single-pane-wrapper>
+  <div class="debug-page">
+    <h1>Debug</h1>
+    <div class="debug-actions">
+      <button mat-flat-button color="primary" type="button" [disabled]="busy()" (click)="recreateIslands()">
+        Recreate islands
+      </button>
+    </div>
+    @if (status(); as message) {
+      <p class="status-text">{{ message }}</p>
+    }
+  </div>
+</elder-single-pane-wrapper>

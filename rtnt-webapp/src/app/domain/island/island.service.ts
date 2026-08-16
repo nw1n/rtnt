@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core'
 import { HttpClient } from '@angular/common/http'
-import { Observable } from 'rxjs'
+import { map, Observable } from 'rxjs'
 import { IslandDto } from '../../models/island.dto'
 import { environment } from '../../../environments/environment'
 
@@ -14,5 +14,11 @@ export class IslandService {
 
   public listIslands(): Observable<IslandDto[]> {
     return this.httpClient.get<IslandDto[]>(this.baseApiUrl)
+  }
+
+  public recreateIslands(): Observable<void> {
+    return this.httpClient.post(`${this.baseApiUrl}/recreate`, null, { responseType: 'text' }).pipe(
+      map((): void => undefined)
+    )
   }
 }

@@ -1,0 +1,19 @@
+.debug-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.debug-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.status-text {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #374151;
+}
