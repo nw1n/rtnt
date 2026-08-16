@@ -49,14 +49,6 @@ public class IslandService implements CommandLineRunner {
                 .toList();
     }
 
-    public Island createAndSave(String requestedName) {
-        String name = requestedName == null || requestedName.isBlank()
-                ? this.islandNames.next()
-                : requestedName.trim();
-        Island created = this.place(name, this.list());
-        return this.islandMongoRepository.save(IslandDocument.fromIsland(created)).toIsland();
-    }
-
     Island place(String name, List<Island> existing) {
         for (int attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
             int width = randomInRange(MIN_WIDTH, MAX_WIDTH);
