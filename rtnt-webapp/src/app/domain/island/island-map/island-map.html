@@ -1,0 +1,38 @@
+<elder-single-pane-wrapper>
+  <div class="island-map-view">
+    @if (islands().length === 0) {
+      <p class="state-text">No islands available.</p>
+    } @else {
+      <div class="map-wrapper">
+        <svg
+          class="island-map"
+          [attr.viewBox]="mapBoundsString()"
+          preserveAspectRatio="xMidYMid meet"
+        >
+          @for (island of islands(); track island.id) {
+            <g class="island-group">
+              <rect
+                [attr.x]="island.x"
+                [attr.y]="island.y"
+                [attr.width]="island.width"
+                [attr.height]="island.length"
+                class="island-shape"
+                rx="8"
+                ry="8"
+              />
+              <text
+                [attr.x]="island.x + island.width / 2"
+                [attr.y]="island.y + island.length / 2"
+                text-anchor="middle"
+                dominant-baseline="middle"
+                class="island-label"
+              >
+                {{ island.name }}
+              </text>
+            </g>
+          }
+        </svg>
+      </div>
+    }
+  </div>
+</elder-single-pane-wrapper>
