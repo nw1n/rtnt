@@ -10,37 +10,23 @@ public class IslandDocument {
     @Id
     private String id;
     private String name;
-    private int x;
-    private int y;
-    private int width;
-    private int length;
+    private FootprintDocument footprint;
 
     public IslandDocument() {
     }
 
-    public IslandDocument(String id, String name, int x, int y, int width, int length) {
+    public IslandDocument(String id, String name, FootprintDocument footprint) {
         this.id = id;
         this.name = name;
-        this.x = x;
-        this.y = y;
-        this.width = width;
-        this.length = length;
+        this.footprint = footprint;
     }
 
     public static IslandDocument fromIsland(Island island) {
-        Footprint footprint = island.footprint();
-        return new IslandDocument(
-                island.id(),
-                island.name(),
-                footprint.x(),
-                footprint.y(),
-                footprint.width(),
-                footprint.length()
-        );
+        return new IslandDocument(island.id(), island.name(), FootprintDocument.from(island.footprint()));
     }
 
     public Island toIsland() {
-        return Island.existing(this.id, this.name, Footprint.create(this.x, this.y, this.width, this.length));
+        return Island.existing(this.id, this.name, this.footprint.toFootprint());
     }
 
     public String getId() {
@@ -59,35 +45,68 @@ public class IslandDocument {
         this.name = name;
     }
 
-    public int getX() {
-        return this.x;
+    public FootprintDocument getFootprint() {
+        return this.footprint;
     }
 
-    public void setX(int x) {
-        this.x = x;
+    public void setFootprint(FootprintDocument footprint) {
+        this.footprint = footprint;
     }
 
-    public int getY() {
-        return this.y;
-    }
+    public static class FootprintDocument {
+        private int x;
+        private int y;
+        private int width;
+        private int length;
 
-    public void setY(int y) {
-        this.y = y;
-    }
+        public FootprintDocument() {
+        }
 
-    public int getWidth() {
-        return this.width;
-    }
+        public FootprintDocument(int x, int y, int width, int length) {
+            this.x = x;
+            this.y = y;
+            this.width = width;
+            this.length = length;
+        }
 
-    public void setWidth(int width) {
-        this.width = width;
-    }
+        static FootprintDocument from(Footprint footprint) {
+            return new FootprintDocument(footprint.x(), footprint.y(), footprint.width(), footprint.length());
+        }
 
-    public int getLength() {
-        return this.length;
-    }
+        Footprint toFootprint() {
+            return Footprint.create(this.x, this.y, this.width, this.length);
+        }
 
-    public void setLength(int length) {
-        this.length = length;
+        public int getX() {
+            return this.x;
+        }
+
+        public void setX(int x) {
+            this.x = x;
+        }
+
+        public int getY() {
+            return this.y;
+        }
+
+        public void setY(int y) {
+            this.y = y;
+        }
+
+        public int getWidth() {
+            return this.width;
+        }
+
+        public void setWidth(int width) {
+            this.width = width;
+        }
+
+        public int getLength() {
+            return this.length;
+        }
+
+        public void setLength(int length) {
+            this.length = length;
+        }
     }
 }
