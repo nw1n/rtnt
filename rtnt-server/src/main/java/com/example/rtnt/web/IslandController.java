@@ -16,11 +16,23 @@ import java.util.List;
 public class IslandController {
     private final IslandService islandService;
 
+    /***************************************************************************
+     *                                                                         *
+     * Constructor                                                            *
+     *                                                                         *
+     **************************************************************************/
+
     public IslandController(IslandService islandService) {
         this.islandService = islandService;
     }
 
-    @GetMapping
+    /***************************************************************************
+     *                                                                         *
+     * Endpoints                                                               *
+     *                                                                         *
+     **************************************************************************/
+
+    @GetMapping()
     public List<IslandDto> getAll() {
         return this.islandService.list().stream()
                 .map(IslandDto::from)
@@ -32,6 +44,13 @@ public class IslandController {
     public void recreate() {
         this.islandService.recreateAll();
     }
+
+
+    /***************************************************************************
+     *                                                                         *
+     * DTOs                                                                    *
+     *                                                                         *
+     **************************************************************************/
 
     public record IslandDto(String id, String name, int x, int y, int width, int length) {
         static IslandDto from(Island island) {
