@@ -1,6 +1,6 @@
 package com.example.rtnt.cli;
 
-import com.example.rtnt.service.IslandService;
+import com.example.rtnt.service.island.IslandService;
 import org.jspecify.annotations.NonNull;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -17,21 +17,38 @@ public class RecreateIslandsCommand implements ApplicationRunner {
     private final IslandService islandService;
     private final ConfigurableApplicationContext context;
 
+    /***************************************************************************
+     *                                                                         *
+     * Constructor                                                             *
+     *                                                                         *
+     **************************************************************************/
+
     public RecreateIslandsCommand(IslandService islandService, ConfigurableApplicationContext context) {
         this.islandService = islandService;
         this.context = context;
     }
 
+    /***************************************************************************
+     *                                                                         *
+     * Public API                                                              *
+     *                                                                         *
+     **************************************************************************/
+
     @Override
     public void run(@NonNull ApplicationArguments args) {
-        if (!this.isValid(args)) {
-            return;
+        if (this.isCommandCalled(args)) {
+            this.islandService.recreateAll();
+            System.exit(SpringApplication.exit(this.context, () -> 0));
         }
-        this.islandService.recreateAll();
-        System.exit(SpringApplication.exit(this.context, () -> 0));
     }
 
-    private boolean isValid(ApplicationArguments args) {
+    /***************************************************************************
+     *                                                                         *
+     * Static Utilities                                                        *
+     *                                                                         *
+     **************************************************************************/
+
+    private static boolean isCommandCalled(ApplicationArguments args) {
         return args.getNonOptionArgs().contains(ARG);
     }
 }

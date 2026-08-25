@@ -2,7 +2,8 @@ package com.example.rtnt.web;
 
 import com.example.rtnt.domain.island.Footprint;
 import com.example.rtnt.domain.island.Island;
-import com.example.rtnt.service.IslandService;
+import com.example.rtnt.service.island.IslandService;
+import com.example.rtnt.web.island.IslandController;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -29,7 +30,7 @@ class IslandControllerTest {
 
     @Test
     void getAllReturnsNameAndGeography() throws Exception {
-        Island island = Island.create("Jamaica", Footprint.create(10, 20, 60, 40));
+        Island island = Island.create("Jamaica", new Footprint(10, 20, 60, 40));
         when(this.islandService.list()).thenReturn(List.of(island));
 
         this.mockMvc.perform(get("/api/islands"))
