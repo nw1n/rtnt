@@ -23,7 +23,7 @@ public class IslandService {
 
     private final IslandMongoRepository islandMongoRepository;
     private final int islandCount;
-    private final int mapWidth;    
+    private final int mapWidth;
     private final int mapHeight;
 
     /***************************************************************************
@@ -80,9 +80,9 @@ public class IslandService {
         var islandNames = new IslandNames();
         var islandPlacement = new IslandPlacement(this.mapWidth, this.mapHeight);
         List<Island> islands = new ArrayList<>();
-        
+
         for (int i = 0; i < this.islandCount; i++) {
-            var newIsland = islandPlacement.placeIsland(islandNames.next(), islands)
+            var newIsland = islandPlacement.placeIsland(islandNames.next(), islands);
             islands.add(newIsland);
         }
 
