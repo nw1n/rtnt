@@ -1,8 +1,5 @@
-buildscript {
-    repositories {
-        mavenCentral()
-        maven { url "https://plugins.gradle.org/m2/" }
-    }
+plugins {
+    id 'net.ltgt.errorprone' version '4.2.0' apply false
 }
 
 allprojects {
@@ -14,9 +11,19 @@ allprojects {
 }
 
 subprojects {
+    apply plugin: 'java'
+    apply plugin: 'net.ltgt.errorprone'
+
     ext {
         springBootVersion = '4.0.6'
         bootDependencyManagement = '1.1.7'
+    }
+
+    dependencies {
+        errorprone 'com.uber.nullaway:nullaway:0.13.0'
+        errorprone 'com.google.errorprone:error_prone_core:2.45.0'
+
+        implementation 'org.jspecify:jspecify:1.0.0'
     }
 
     configurations.all {
@@ -29,6 +36,11 @@ subprojects {
     tasks.withType(JavaCompile) {
         options.encoding = 'UTF-8'
         options.compilerArgs << '-parameters' // Retain property names in java byte code
+        options.errorprone {
+            error('NullAway')
+            option('NullAway:OnlyNullMarked', 'true')
+            option('NullAway:JSpecifyMode', 'true')
+        }
     }
 
     tasks.withType(Javadoc) {
