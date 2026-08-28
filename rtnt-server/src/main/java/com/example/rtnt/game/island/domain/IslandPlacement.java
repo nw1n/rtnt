@@ -8,12 +8,12 @@ import java.util.concurrent.ThreadLocalRandom;
 
 @NullMarked
 public final class IslandPlacement {
-    private static final int MIN_WIDTH = 20;
-    private static final int MAX_WIDTH = 100;
-    private static final int MIN_LENGTH = 20;
-    private static final int MAX_LENGTH = 100;
+    private static final int MIN_WIDTH = 40;
+    private static final int MAX_WIDTH = 200;
+    private static final int MIN_LENGTH = 40;
+    private static final int MAX_LENGTH = 200;
     private static final int MAX_ATTEMPTS = 10_000;
-    private static final int MIN_DISTANCE = 10;
+    private static final int MIN_DISTANCE = 20;
 
     /***************************************************************************
      *                                                                         *
