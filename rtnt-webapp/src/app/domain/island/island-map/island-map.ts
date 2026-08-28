@@ -1,15 +1,5 @@
 import { CommonModule } from '@angular/common'
-import {
-  ChangeDetectionStrategy,
-  Component,
-  DestroyRef,
-  effect,
-  ElementRef,
-  inject,
-  signal,
-  untracked,
-  viewChild,
-} from '@angular/core'
+import { ChangeDetectionStrategy, Component, computed, DestroyRef, inject, signal } from '@angular/core'
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop'
 import { ElderSinglePaneWrapperComponent } from '@elderbyte/ngx-starter'
 import { catchError, EMPTY, interval, startWith, switchMap } from 'rxjs'
@@ -17,7 +7,10 @@ import { ClockDto } from '../../../models/clock.dto'
 import { IslandDto } from '../../../models/island.dto'
 import { ClockService } from '../../clock/clock.service'
 import { IslandService } from '../island.service'
-import { IslandMapPixi } from './island-map-pixi'
+
+const MAP_MIN_PADDING = 40
+const MAP_PADDING_RATIO = 0.08
+const MAP_FALLBACK_SIZE = 600
 
 @Component({
   selector: 'app-island-map',
@@ -30,12 +23,33 @@ export class IslandMap {
   private readonly islandService = inject(IslandService)
   private readonly clockService = inject(ClockService)
   private readonly destroyRef = inject(DestroyRef)
-  private readonly mapHost = viewChild<ElementRef<HTMLDivElement>>('mapHost')
-  private readonly pixi = new IslandMapPixi()
-  private pixiReady: Promise<void> | null = null
 
   public islands = signal<IslandDto[]>([])
   public clock = signal<ClockDto | null>(null)
+
+  public mapBoundsString = computed(() => {
+    const islands = this.islands()
+    if (islands.length === 0) {
+      return `0 0 ${MAP_FALLBACK_SIZE} ${MAP_FALLBACK_SIZE}`
+    }
+
+    let minX = Number.POSITIVE_INFINITY
+    let minY = Number.POSITIVE_INFINITY
+    let maxX = Number.NEGATIVE_INFINITY
+    let maxY = Number.NEGATIVE_INFINITY
+
+    for (const island of islands) {
+      minX = Math.min(minX, island.x)
+      minY = Math.min(minY, island.y)
+      maxX = Math.max(maxX, island.x + island.width)
+      maxY = Math.max(maxY, island.y + island.length)
+    }
+
+    const spanX = maxX - minX
+    const spanY = maxY - minY
+    const padding = Math.max(MAP_MIN_PADDING, Math.max(spanX, spanY) * MAP_PADDING_RATIO)
+    return `${minX - padding} ${minY - padding} ${spanX + padding * 2} ${spanY + padding * 2}`
+  })
 
   constructor() {
     this.islandService.listIslands().subscribe((islands) => this.islands.set(islands))
@@ -46,24 +60,5 @@ export class IslandMap {
         takeUntilDestroyed(this.destroyRef)
       )
       .subscribe((clock) => this.clock.set(clock))
-
-    this.destroyRef.onDestroy(() => this.pixi.destroy())
-
-    effect(() => {
-      const host = this.mapHost()?.nativeElement
-      const islands = this.islands()
-      if (!host || islands.length === 0) {
-        return
-      }
-      untracked(() => {
-        void this.syncPixi(host, islands)
-      })
-    })
-  }
-
-  private async syncPixi(host: HTMLElement, islands: IslandDto[]): Promise<void> {
-    this.pixiReady ??= this.pixi.attach(host)
-    await this.pixiReady
-    this.pixi.render(islands)
   }
 }
