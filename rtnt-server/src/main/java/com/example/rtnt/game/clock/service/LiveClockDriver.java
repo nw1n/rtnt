@@ -5,7 +5,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 @Component
-@ConditionalOnProperty(name = "rtnt.clock.live-enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(name = "rtnt.clock.live-enabled", havingValue = "true")
 public class LiveClockDriver {
     private final ClockService clockService;
 
@@ -25,7 +25,7 @@ public class LiveClockDriver {
      *                                                                         *
      **************************************************************************/
 
-    @Scheduled(fixedRateString = "${rtnt.clock.live-interval-ms:1000}")
+    @Scheduled(fixedRateString = "${rtnt.clock.live-interval-ms}")
     public void onInterval() {
         this.clockService.tickIfLive();
     }

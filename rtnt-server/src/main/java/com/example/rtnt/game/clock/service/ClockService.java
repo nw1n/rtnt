@@ -36,7 +36,7 @@ public class ClockService {
     public ClockService(
             GameUnitOfWork unitOfWork,
             List<GameSystem> gameSystems,
-            @Value("${rtnt.clock.batch-flush-every-ticks:1000}") int batchFlushEveryTicks
+            @Value("${rtnt.clock.batch-flush-every-ticks}") int batchFlushEveryTicks
     ) {
         if (batchFlushEveryTicks < 1) {
             throw new IllegalArgumentException("batchFlushEveryTicks must be at least 1");

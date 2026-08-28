@@ -35,9 +35,9 @@ public class IslandService {
 
     public IslandService(
             IslandMongoRepository islandMongoRepository,
-            @Value("${rtnt.startup.island-count:15}") int islandCount,
-            @Value("${rtnt.map.width:2000}") int mapWidth,
-            @Value("${rtnt.map.height:1000}") int mapHeight
+            @Value("${rtnt.startup.island-count}") int islandCount,
+            @Value("${rtnt.map.width}") int mapWidth,
+            @Value("${rtnt.map.height}") int mapHeight
     ) {
         this.islandMongoRepository = islandMongoRepository;
         this.islandCount = islandCount;
