@@ -2,10 +2,12 @@ import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop'
 import { MatButtonModule } from '@angular/material/button'
 import { ElderSinglePaneWrapperComponent } from '@elderbyte/ngx-starter'
-import { catchError, EMPTY, interval, Observable, startWith, switchMap } from 'rxjs'
+import { catchError, forkJoin, interval, Observable, of, startWith, switchMap } from 'rxjs'
 import { ClockService } from '../domain/clock/clock.service'
 import { IslandService } from '../domain/island/island.service'
+import { GameLogService } from '../domain/log/game-log.service'
 import { ClockDto } from '../models/clock.dto'
+import { GameLogDto } from '../models/game-log.dto'
 
 @Component({
   selector: 'app-debug-page',
@@ -17,21 +19,33 @@ import { ClockDto } from '../models/clock.dto'
 export class DebugPage {
   private readonly islandService = inject(IslandService)
   private readonly clockService = inject(ClockService)
+  private readonly gameLogService = inject(GameLogService)
   private readonly destroyRef = inject(DestroyRef)
 
   public busy = signal(false)
   public status = signal<string | null>(null)
   public clock = signal<ClockDto | null>(null)
+  public logs = signal<GameLogDto[]>([])
   public advanceTicks = signal(10)
 
   constructor() {
     interval(1000)
       .pipe(
         startWith(0),
-        switchMap(() => this.clockService.getClock().pipe(catchError(() => EMPTY))),
+        switchMap(() =>
+          forkJoin({
+            clock: this.clockService.getClock().pipe(catchError(() => of(this.clock()))),
+            logs: this.gameLogService.listLogs().pipe(catchError(() => of(this.logs()))),
+          })
+        ),
         takeUntilDestroyed(this.destroyRef)
       )
-      .subscribe((clock) => this.clock.set(clock))
+      .subscribe(({ clock, logs }) => {
+        if (clock) {
+          this.clock.set(clock)
+        }
+        this.logs.set(logs)
+      })
   }
 
   public recreateIslands(): void {
@@ -68,7 +82,10 @@ export class DebugPage {
     request: ReturnType<ClockService['pause']>,
     successMessage: string
   ): void {
-    this.runAction(request, successMessage, 'Clock action failed.', (clock) => this.clock.set(clock))
+    this.runAction(request, successMessage, 'Clock action failed.', (clock) => {
+      this.clock.set(clock)
+      this.gameLogService.listLogs().subscribe((logs) => this.logs.set(logs))
+    })
   }
 
   private runAction<T>(

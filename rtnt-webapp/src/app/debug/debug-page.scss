@@ -49,3 +49,41 @@
   width: 96px;
   padding: 6px 8px;
 }
+
+.log-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.log-panel h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.log-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  max-height: 320px;
+  overflow: auto;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.9rem;
+}
+
+.log-list li {
+  display: flex;
+  gap: 12px;
+  padding: 4px 0;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.log-tick {
+  width: 4rem;
+  color: #6b7280;
+}
+
+.log-type {
+  width: 4rem;
+  font-weight: 600;
+}

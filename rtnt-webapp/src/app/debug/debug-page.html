@@ -45,6 +45,23 @@
       </div>
     </section>
 
+    <section class="log-panel">
+      <h2>Game log</h2>
+      @if (logs().length === 0) {
+        <p class="status-text">No log entries yet.</p>
+      } @else {
+        <ul class="log-list">
+          @for (entry of logs(); track entry.tick + entry.type + entry.detail) {
+            <li>
+              <span class="log-tick">{{ entry.tick }}</span>
+              <span class="log-type">{{ entry.type }}</span>
+              <span>{{ entry.detail }}</span>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+
     <div class="debug-actions">
       <button mat-flat-button color="primary" type="button" [disabled]="busy()" (click)="recreateIslands()">
         Recreate islands
