@@ -1,6 +1,6 @@
 package com.example.rtnt.cli;
 
-import com.example.rtnt.service.island.IslandService;
+import com.example.rtnt.game.island.service.IslandService;
 import org.jspecify.annotations.NonNull;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;

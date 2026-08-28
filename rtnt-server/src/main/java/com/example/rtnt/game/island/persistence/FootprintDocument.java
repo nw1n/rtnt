@@ -1,34 +1,27 @@
-package com.example.rtnt.persistence.island;
+package com.example.rtnt.game.island.persistence;
 
-import com.example.rtnt.domain.island.Island;
+import com.example.rtnt.game.island.domain.Footprint;
 import org.jspecify.annotations.NullMarked;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
 
-@Document(collection = "islands")
 @NullMarked
-public record IslandDocument(
-        @Id String id,
-        String name,
-        FootprintDocument footprint
-) {
+public record FootprintDocument(int x, int y, int width, int length) {
     /***************************************************************************
      *                                                                         *
      * Static Factory Methods                                                  *
      *                                                                         *
      **************************************************************************/
 
-    public static IslandDocument fromIsland(Island island) {
-        return new IslandDocument(island.id(), island.name(), FootprintDocument.from(island.footprint()));
+    public static FootprintDocument from(Footprint footprint) {
+        return new FootprintDocument(footprint.x(), footprint.y(), footprint.width(), footprint.length());
     }
 
     /***************************************************************************
      *                                                                         *
-     * Constructor                                                             *
+     * Public API                                                              *
      *                                                                         *
      **************************************************************************/
 
-    public Island toIsland() {
-        return Island.existing(id, name, footprint.toFootprint());
+    public Footprint toFootprint() {
+        return new Footprint(x, y, width, length);
     }
 }

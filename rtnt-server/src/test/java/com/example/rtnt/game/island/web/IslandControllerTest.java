@@ -1,9 +1,8 @@
-package com.example.rtnt.web;
+package com.example.rtnt.game.island.web;
 
-import com.example.rtnt.domain.island.Footprint;
-import com.example.rtnt.domain.island.Island;
-import com.example.rtnt.service.island.IslandService;
-import com.example.rtnt.web.island.IslandController;
+import com.example.rtnt.game.island.domain.Footprint;
+import com.example.rtnt.game.island.domain.Island;
+import com.example.rtnt.game.island.service.IslandService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;

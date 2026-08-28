@@ -1,6 +1,5 @@
-package com.example.rtnt.service.island;
+package com.example.rtnt.game.island.domain;
 
-import com.example.rtnt.domain.island.Island;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;

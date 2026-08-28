@@ -1,8 +1,9 @@
-package com.example.rtnt.service.island;
+package com.example.rtnt.game.island.service;
 
-import com.example.rtnt.domain.island.Island;
-import com.example.rtnt.persistence.island.IslandDocument;
-import com.example.rtnt.persistence.island.IslandMongoRepository;
+import com.example.rtnt.game.island.domain.Island;
+import com.example.rtnt.game.island.domain.IslandPlacement;
+import com.example.rtnt.game.island.persistence.IslandDocument;
+import com.example.rtnt.game.island.persistence.IslandMongoRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -77,7 +78,7 @@ public class IslandService {
      **************************************************************************/
 
     private List<Island> seed() {
-        var islandNames = new IslandNames();
+        var islandNames = IslandNamesLoader.load();
         var islandPlacement = new IslandPlacement(this.mapWidth, this.mapHeight);
         List<Island> islands = new ArrayList<>();
 

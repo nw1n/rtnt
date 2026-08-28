@@ -1,7 +1,5 @@
-package com.example.rtnt.service.island;
+package com.example.rtnt.game.island.domain;
 
-import com.example.rtnt.domain.island.Footprint;
-import com.example.rtnt.domain.island.Island;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 

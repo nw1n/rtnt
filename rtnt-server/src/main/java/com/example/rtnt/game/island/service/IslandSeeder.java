@@ -1,4 +1,4 @@
-package com.example.rtnt.service.island;
+package com.example.rtnt.game.island.service;
 
 import org.jspecify.annotations.NonNull;
 import org.springframework.boot.ApplicationArguments;

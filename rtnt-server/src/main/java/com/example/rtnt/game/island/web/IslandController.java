@@ -1,7 +1,7 @@
-package com.example.rtnt.web.island;
+package com.example.rtnt.game.island.web;
 
-import com.example.rtnt.domain.island.Island;
-import com.example.rtnt.service.island.IslandService;
+import com.example.rtnt.game.island.domain.Island;
+import com.example.rtnt.game.island.service.IslandService;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
