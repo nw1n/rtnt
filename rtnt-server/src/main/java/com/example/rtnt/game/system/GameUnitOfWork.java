@@ -1,4 +1,4 @@
-package com.example.rtnt.game.world;
+package com.example.rtnt.game.system;
 
 import com.example.rtnt.game.clock.domain.GameClock;
 import com.example.rtnt.game.clock.persistence.GameClockDocument;

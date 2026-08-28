@@ -2,8 +2,8 @@ package com.example.rtnt.game.clock.service;
 
 import com.example.rtnt.game.clock.domain.ClockMode;
 import com.example.rtnt.game.clock.domain.GameClock;
-import com.example.rtnt.game.world.GameSystem;
-import com.example.rtnt.game.world.GameUnitOfWork;
+import com.example.rtnt.game.system.GameSystem;
+import com.example.rtnt.game.system.GameUnitOfWork;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
