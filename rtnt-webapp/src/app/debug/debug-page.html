@@ -1,6 +1,50 @@
 <elder-single-pane-wrapper>
   <div class="debug-page">
     <h1>Debug</h1>
+
+    <section class="clock-panel">
+      <h2>Clock</h2>
+      @if (clock(); as clockState) {
+        <p class="clock-readout">
+          Tick {{ clockState.tick }} · {{ clockState.mode }}
+          @if (clockState.paused) {
+            · paused
+          }
+        </p>
+      } @else {
+        <p class="status-text">Loading clock…</p>
+      }
+      <div class="debug-actions">
+        <button mat-flat-button color="primary" type="button" [disabled]="busy()" (click)="pauseClock()">
+          Pause
+        </button>
+        <button mat-flat-button color="primary" type="button" [disabled]="busy()" (click)="resumeClock()">
+          Resume
+        </button>
+        <button mat-stroked-button type="button" [disabled]="busy()" (click)="setMode('LIVE')">
+          Live
+        </button>
+        <button mat-stroked-button type="button" [disabled]="busy()" (click)="setMode('BATCH')">
+          Batch
+        </button>
+      </div>
+      <div class="debug-actions advance-row">
+        <label class="ticks-label">
+          Ticks
+          <input
+            type="number"
+            min="1"
+            max="100000"
+            [value]="advanceTicks()"
+            (input)="onAdvanceTicksInput($event)"
+          />
+        </label>
+        <button mat-flat-button color="primary" type="button" [disabled]="busy()" (click)="advanceClock()">
+          Advance
+        </button>
+      </div>
+    </section>
+
     <div class="debug-actions">
       <button mat-flat-button color="primary" type="button" [disabled]="busy()" (click)="recreateIslands()">
         Recreate islands

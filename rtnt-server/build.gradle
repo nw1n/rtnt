@@ -45,3 +45,13 @@ tasks.register('recreateIslands', JavaExec) {
     jvmArgs = ['--enable-native-access=ALL-UNNAMED']
 }
 
+tasks.register('advanceClock', JavaExec) {
+    group = 'application'
+    description = 'Advance the game clock by N ticks in batch mode'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.example.rtnt.RtntApplication'
+    def ticks = project.findProperty('ticks') ?: '10'
+    args = ['--spring.main.web-application-type=none', 'advance-clock', ticks]
+    jvmArgs = ['--enable-native-access=ALL-UNNAMED']
+}
+

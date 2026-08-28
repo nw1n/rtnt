@@ -1,5 +1,13 @@
 <elder-single-pane-wrapper>
   <div class="island-map-view">
+    @if (clock(); as clockState) {
+      <p class="clock-readout">
+        Tick {{ clockState.tick }} · {{ clockState.mode }}
+        @if (clockState.paused) {
+          · paused
+        }
+      </p>
+    }
     @if (islands().length === 0) {
       <p class="state-text">No islands available.</p>
     } @else {

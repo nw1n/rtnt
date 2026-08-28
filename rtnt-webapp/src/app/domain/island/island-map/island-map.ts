@@ -1,7 +1,11 @@
 import { CommonModule } from '@angular/common'
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core'
+import { ChangeDetectionStrategy, Component, computed, DestroyRef, inject, signal } from '@angular/core'
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop'
 import { ElderSinglePaneWrapperComponent } from '@elderbyte/ngx-starter'
+import { catchError, EMPTY, interval, startWith, switchMap } from 'rxjs'
+import { ClockDto } from '../../../models/clock.dto'
 import { IslandDto } from '../../../models/island.dto'
+import { ClockService } from '../../clock/clock.service'
 import { IslandService } from '../island.service'
 
 const MAP_MIN_PADDING = 40
@@ -17,8 +21,11 @@ const MAP_FALLBACK_SIZE = 600
 })
 export class IslandMap {
   private readonly islandService = inject(IslandService)
+  private readonly clockService = inject(ClockService)
+  private readonly destroyRef = inject(DestroyRef)
 
   public islands = signal<IslandDto[]>([])
+  public clock = signal<ClockDto | null>(null)
 
   public mapBoundsString = computed(() => {
     const islands = this.islands()
@@ -46,5 +53,12 @@ export class IslandMap {
 
   constructor() {
     this.islandService.listIslands().subscribe((islands) => this.islands.set(islands))
+    interval(1000)
+      .pipe(
+        startWith(0),
+        switchMap(() => this.clockService.getClock().pipe(catchError(() => EMPTY))),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe((clock) => this.clock.set(clock))
   }
 }
