@@ -1,0 +1,25 @@
+name: Backend tests
+
+on:
+  push:
+    branches: [master, main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      mongodb:
+        image: mongo:8
+        ports:
+          - 27017:27017
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 25
+          cache: gradle
+      - name: Run server tests
+        env:
+          MONGODB_URI: mongodb://localhost:27017/rtnt
+        run: ./gradlew :rtnt-server:test --no-daemon
