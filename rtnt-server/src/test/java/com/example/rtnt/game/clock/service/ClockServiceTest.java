@@ -4,11 +4,12 @@ import com.example.rtnt.game.clock.domain.ClockMode;
 import com.example.rtnt.game.clock.domain.GameClock;
 import com.example.rtnt.game.clock.persistence.GameClockDocument;
 import com.example.rtnt.game.clock.persistence.GameClockMongoRepository;
-import com.example.rtnt.game.world.GameLogEvent;
+import com.example.rtnt.game.log.domain.GameLogEvent;
+import com.example.rtnt.game.log.persistence.GameLogDocument;
+import com.example.rtnt.game.log.persistence.GameLogMongoRepository;
+import com.example.rtnt.game.log.service.GameLogService;
 import com.example.rtnt.game.world.GameSystem;
 import com.example.rtnt.game.world.GameUnitOfWork;
-import com.example.rtnt.game.world.persistence.GameLogDocument;
-import com.example.rtnt.game.world.persistence.GameLogMongoRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -40,7 +41,10 @@ class ClockServiceTest {
 
     @BeforeEach
     void setUp() {
-        this.unitOfWork = new GameUnitOfWork(this.gameClockMongoRepository, this.gameLogMongoRepository);
+        this.unitOfWork = new GameUnitOfWork(
+                this.gameClockMongoRepository,
+                new GameLogService(this.gameLogMongoRepository)
+        );
     }
 
     @Test

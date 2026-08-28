@@ -1,4 +1,4 @@
-package com.example.rtnt.game.world.persistence;
+package com.example.rtnt.game.log.persistence;
 
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;

@@ -4,8 +4,8 @@ import com.example.rtnt.game.clock.domain.ClockMode;
 import com.example.rtnt.game.clock.domain.GameClock;
 import com.example.rtnt.game.clock.persistence.GameClockDocument;
 import com.example.rtnt.game.clock.persistence.GameClockMongoRepository;
-import com.example.rtnt.game.world.persistence.GameLogDocument;
-import com.example.rtnt.game.world.persistence.GameLogMongoRepository;
+import com.example.rtnt.game.log.domain.GameLogEvent;
+import com.example.rtnt.game.log.service.GameLogService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -13,7 +13,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -29,13 +28,13 @@ class GameUnitOfWorkTest {
     private GameClockMongoRepository gameClockMongoRepository;
 
     @Mock
-    private GameLogMongoRepository gameLogMongoRepository;
+    private GameLogService gameLogService;
 
     private GameUnitOfWork unitOfWork;
 
     @BeforeEach
     void setUp() {
-        this.unitOfWork = new GameUnitOfWork(this.gameClockMongoRepository, this.gameLogMongoRepository);
+        this.unitOfWork = new GameUnitOfWork(this.gameClockMongoRepository, this.gameLogService);
     }
 
     @Test
@@ -57,6 +56,7 @@ class GameUnitOfWorkTest {
 
         assertEquals(0, clock.tick());
         verify(this.gameClockMongoRepository).save(org.mockito.ArgumentMatchers.any());
+        verify(this.gameLogService).flush();
     }
 
     @Test
@@ -74,22 +74,15 @@ class GameUnitOfWorkTest {
         assertEquals(3, captor.getValue().toClock().tick());
         this.unitOfWork.flush();
         verify(this.gameClockMongoRepository, times(1)).save(org.mockito.ArgumentMatchers.any());
+        verify(this.gameLogService, times(2)).flush();
     }
 
     @Test
-    void flushWritesBufferedLogEventsTogether() {
-        this.unitOfWork.append(new GameLogEvent(1, "BUY", "iron"));
-        this.unitOfWork.append(new GameLogEvent(2, "SELL", "iron"));
-        this.unitOfWork.flush();
+    void appendDelegatesToLogFeature() {
+        GameLogEvent event = new GameLogEvent(1, "BUY", "iron");
 
-        @SuppressWarnings("unchecked")
-        ArgumentCaptor<List<GameLogDocument>> captor = ArgumentCaptor.forClass(List.class);
-        verify(this.gameLogMongoRepository).saveAll(captor.capture());
-        List<GameLogDocument> saved = captor.getValue();
-        assertEquals(2, saved.size());
-        assertEquals("BUY", saved.get(0).type());
-        assertEquals("SELL", saved.get(1).type());
-        this.unitOfWork.flush();
-        verify(this.gameLogMongoRepository, times(1)).saveAll(org.mockito.ArgumentMatchers.any());
+        this.unitOfWork.append(event);
+
+        verify(this.gameLogService).append(event);
     }
 }

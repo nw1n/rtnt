@@ -1,4 +1,4 @@
-package com.example.rtnt.game.world;
+package com.example.rtnt.game.log.domain;
 
 import org.jspecify.annotations.NullMarked;
 

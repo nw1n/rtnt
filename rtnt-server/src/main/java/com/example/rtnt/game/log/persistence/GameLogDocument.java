@@ -1,6 +1,6 @@
-package com.example.rtnt.game.world.persistence;
+package com.example.rtnt.game.log.persistence;
 
-import com.example.rtnt.game.world.GameLogEvent;
+import com.example.rtnt.game.log.domain.GameLogEvent;
 import org.jspecify.annotations.NullMarked;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;

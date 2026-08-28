@@ -3,12 +3,9 @@ package com.example.rtnt.game.world;
 import com.example.rtnt.game.clock.domain.GameClock;
 import com.example.rtnt.game.clock.persistence.GameClockDocument;
 import com.example.rtnt.game.clock.persistence.GameClockMongoRepository;
-import com.example.rtnt.game.world.persistence.GameLogDocument;
-import com.example.rtnt.game.world.persistence.GameLogMongoRepository;
+import com.example.rtnt.game.log.domain.GameLogEvent;
+import com.example.rtnt.game.log.service.GameLogService;
 import org.springframework.stereotype.Component;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Component
 public class GameUnitOfWork {
@@ -19,10 +16,9 @@ public class GameUnitOfWork {
      **************************************************************************/
 
     private final GameClockMongoRepository gameClockMongoRepository;
-    private final GameLogMongoRepository gameLogMongoRepository;
+    private final GameLogService gameLogService;
     private GameClock clock;
     private boolean clockDirty;
-    private final List<GameLogEvent> pendingLog = new ArrayList<>();
 
     /***************************************************************************
      *                                                                         *
@@ -32,10 +28,10 @@ public class GameUnitOfWork {
 
     public GameUnitOfWork(
             GameClockMongoRepository gameClockMongoRepository,
-            GameLogMongoRepository gameLogMongoRepository
+            GameLogService gameLogService
     ) {
         this.gameClockMongoRepository = gameClockMongoRepository;
-        this.gameLogMongoRepository = gameLogMongoRepository;
+        this.gameLogService = gameLogService;
     }
 
     /***************************************************************************
@@ -65,7 +61,7 @@ public class GameUnitOfWork {
     }
 
     public void append(GameLogEvent event) {
-        this.pendingLog.add(event);
+        this.gameLogService.append(event);
     }
 
     public void flush() {
@@ -73,9 +69,6 @@ public class GameUnitOfWork {
             this.gameClockMongoRepository.save(GameClockDocument.from(this.clock));
             this.clockDirty = false;
         }
-        if (!this.pendingLog.isEmpty()) {
-            this.gameLogMongoRepository.saveAll(this.pendingLog.stream().map(GameLogDocument::from).toList());
-            this.pendingLog.clear();
-        }
+        this.gameLogService.flush();
     }
 }
