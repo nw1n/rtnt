@@ -1,13 +1,16 @@
 package com.example.rtnt.game.clock.service;
 
-import com.example.rtnt.game.clock.domain.BatchClockDriver;
 import com.example.rtnt.game.clock.domain.ClockMode;
 import com.example.rtnt.game.clock.domain.GameClock;
-import com.example.rtnt.game.clock.persistence.GameClockDocument;
-import com.example.rtnt.game.clock.persistence.GameClockMongoRepository;
+import com.example.rtnt.game.world.GameSystem;
+import com.example.rtnt.game.world.GameUnitOfWork;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.function.UnaryOperator;
 
 @Service
 public class ClockService {
@@ -19,8 +22,9 @@ public class ClockService {
      *                                                                         *
      **************************************************************************/
 
-    private final GameClockMongoRepository gameClockMongoRepository;
-    private final BatchClockDriver batchClockDriver;
+    private final GameUnitOfWork unitOfWork;
+    private final List<GameSystem> gameSystems;
+    private final int batchFlushEveryTicks;
     private final Object lock = new Object();
 
     /***************************************************************************
@@ -29,9 +33,17 @@ public class ClockService {
      *                                                                         *
      **************************************************************************/
 
-    public ClockService(GameClockMongoRepository gameClockMongoRepository) {
-        this.gameClockMongoRepository = gameClockMongoRepository;
-        this.batchClockDriver = new BatchClockDriver();
+    public ClockService(
+            GameUnitOfWork unitOfWork,
+            List<GameSystem> gameSystems,
+            @Value("${rtnt.clock.batch-flush-every-ticks:1000}") int batchFlushEveryTicks
+    ) {
+        if (batchFlushEveryTicks < 1) {
+            throw new IllegalArgumentException("batchFlushEveryTicks must be at least 1");
+        }
+        this.unitOfWork = unitOfWork;
+        this.gameSystems = List.copyOf(gameSystems);
+        this.batchFlushEveryTicks = batchFlushEveryTicks;
     }
 
     /***************************************************************************
@@ -42,14 +54,14 @@ public class ClockService {
 
     public GameClock get() {
         synchronized (this.lock) {
-            return this.load();
+            return this.unitOfWork.clock();
         }
     }
 
     public GameClock pause() {
         synchronized (this.lock) {
-            GameClock clock = this.load().pause();
-            this.save(clock);
+            GameClock clock = this.mutateClock(GameClock::pause);
+            this.unitOfWork.flush();
             log.info("Clock paused at tick {}", clock.tick());
             return clock;
         }
@@ -57,8 +69,8 @@ public class ClockService {
 
     public GameClock resume() {
         synchronized (this.lock) {
-            GameClock clock = this.load().resume();
-            this.save(clock);
+            GameClock clock = this.mutateClock(GameClock::resume);
+            this.unitOfWork.flush();
             log.info("Clock resumed at tick {}", clock.tick());
             return clock;
         }
@@ -66,8 +78,8 @@ public class ClockService {
 
     public GameClock setMode(ClockMode mode) {
         synchronized (this.lock) {
-            GameClock clock = this.load().withMode(mode);
-            this.save(clock);
+            GameClock clock = this.mutateClock(current -> current.withMode(mode));
+            this.unitOfWork.flush();
             log.info("Clock mode set to {} at tick {}", mode, clock.tick());
             return clock;
         }
@@ -75,8 +87,17 @@ public class ClockService {
 
     public GameClock advance(int ticks) {
         synchronized (this.lock) {
-            GameClock clock = this.batchClockDriver.run(this.load(), ticks);
-            this.save(clock);
+            if (ticks < 1) {
+                throw new IllegalArgumentException("ticks must be at least 1");
+            }
+            GameClock clock = this.unitOfWork.clock();
+            for (int i = 1; i <= ticks; i++) {
+                clock = this.applyTick(clock);
+                if (i % this.batchFlushEveryTicks == 0) {
+                    this.unitOfWork.flush();
+                }
+            }
+            this.unitOfWork.flush();
             log.info("Clock advanced by {} ticks to {}", ticks, clock.tick());
             return clock;
         }
@@ -84,11 +105,12 @@ public class ClockService {
 
     public void tickIfLive() {
         synchronized (this.lock) {
-            GameClock clock = this.load();
+            GameClock clock = this.unitOfWork.clock();
             if (clock.mode() != ClockMode.LIVE || clock.paused()) {
                 return;
             }
-            this.save(clock.advance());
+            this.applyTick(clock);
+            this.unitOfWork.flush();
         }
     }
 
@@ -98,17 +120,18 @@ public class ClockService {
      *                                                                         *
      **************************************************************************/
 
-    private GameClock load() {
-        return this.gameClockMongoRepository.findById(GameClockDocument.DOCUMENT_ID)
-                .map(GameClockDocument::toClock)
-                .orElseGet(() -> {
-                    GameClock initial = GameClock.initial();
-                    this.save(initial);
-                    return initial;
-                });
+    private GameClock mutateClock(UnaryOperator<GameClock> mutation) {
+        GameClock clock = mutation.apply(this.unitOfWork.clock());
+        this.unitOfWork.replaceClock(clock);
+        return clock;
     }
 
-    private void save(GameClock clock) {
-        this.gameClockMongoRepository.save(GameClockDocument.from(clock));
+    private GameClock applyTick(GameClock current) {
+        GameClock next = current.advance();
+        this.unitOfWork.replaceClock(next);
+        for (GameSystem system : this.gameSystems) {
+            system.onTick(next, this.unitOfWork);
+        }
+        return next;
     }
 }

@@ -4,6 +4,11 @@ import com.example.rtnt.game.clock.domain.ClockMode;
 import com.example.rtnt.game.clock.domain.GameClock;
 import com.example.rtnt.game.clock.persistence.GameClockDocument;
 import com.example.rtnt.game.clock.persistence.GameClockMongoRepository;
+import com.example.rtnt.game.world.GameLogEvent;
+import com.example.rtnt.game.world.GameSystem;
+import com.example.rtnt.game.world.GameUnitOfWork;
+import com.example.rtnt.game.world.persistence.GameLogDocument;
+import com.example.rtnt.game.world.persistence.GameLogMongoRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -11,12 +16,14 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -26,74 +33,126 @@ class ClockServiceTest {
     @Mock
     private GameClockMongoRepository gameClockMongoRepository;
 
-    private ClockService clockService;
+    @Mock
+    private GameLogMongoRepository gameLogMongoRepository;
+
+    private GameUnitOfWork unitOfWork;
 
     @BeforeEach
     void setUp() {
-        this.clockService = new ClockService(this.gameClockMongoRepository);
+        this.unitOfWork = new GameUnitOfWork(this.gameClockMongoRepository, this.gameLogMongoRepository);
     }
 
     @Test
-    void tickIfLiveAdvancesWhenLiveAndUnpaused() {
-        when(this.gameClockMongoRepository.findById(GameClockDocument.DOCUMENT_ID))
-                .thenReturn(Optional.of(GameClockDocument.from(GameClock.initial())));
+    void tickIfLiveAdvancesAndFlushesImmediately() {
+        this.givenClock(GameClock.initial());
+        ClockService clockService = this.service(List.of(), 1000);
 
-        this.clockService.tickIfLive();
+        clockService.tickIfLive();
 
-        GameClock saved = this.capturedSave();
+        GameClock saved = this.capturedClockSave();
         assertEquals(1, saved.tick());
         assertEquals(ClockMode.LIVE, saved.mode());
         assertFalse(saved.paused());
+        verify(this.gameLogMongoRepository, never()).saveAll(org.mockito.ArgumentMatchers.any());
     }
 
     @Test
     void tickIfLiveDoesNothingWhenPaused() {
-        GameClock paused = GameClock.initial().pause();
-        when(this.gameClockMongoRepository.findById(GameClockDocument.DOCUMENT_ID))
-                .thenReturn(Optional.of(GameClockDocument.from(paused)));
+        this.givenClock(GameClock.initial().pause());
+        ClockService clockService = this.service(List.of(), 1000);
 
-        this.clockService.tickIfLive();
+        clockService.tickIfLive();
 
         verify(this.gameClockMongoRepository, never()).save(org.mockito.ArgumentMatchers.any());
     }
 
     @Test
     void tickIfLiveDoesNothingInBatchMode() {
-        GameClock batch = GameClock.initial().withMode(ClockMode.BATCH);
-        when(this.gameClockMongoRepository.findById(GameClockDocument.DOCUMENT_ID))
-                .thenReturn(Optional.of(GameClockDocument.from(batch)));
+        this.givenClock(GameClock.initial().withMode(ClockMode.BATCH));
+        ClockService clockService = this.service(List.of(), 1000);
 
-        this.clockService.tickIfLive();
+        clockService.tickIfLive();
 
         verify(this.gameClockMongoRepository, never()).save(org.mockito.ArgumentMatchers.any());
     }
 
     @Test
-    void advancePersistsOnceAtTheEnd() {
-        when(this.gameClockMongoRepository.findById(GameClockDocument.DOCUMENT_ID))
-                .thenReturn(Optional.of(GameClockDocument.from(GameClock.initial())));
+    void tickIfLiveFlushesLogEventsFromSystemsImmediately() {
+        this.givenClock(GameClock.initial());
+        ClockService clockService = this.service(List.of(this.tradeEachTick()), 1000);
 
-        GameClock clock = this.clockService.advance(3);
+        clockService.tickIfLive();
 
-        assertEquals(3, clock.tick());
-        GameClock saved = this.capturedSave();
-        assertEquals(3, saved.tick());
+        List<GameLogDocument> events = this.capturedLogSave();
+        assertEquals(1, events.size());
+        assertEquals(1, events.getFirst().tick());
+        assertEquals("BUY", events.getFirst().type());
     }
 
     @Test
-    void pauseAndResumeUpdateFlagWithoutTicking() {
-        when(this.gameClockMongoRepository.findById(GameClockDocument.DOCUMENT_ID))
-                .thenReturn(Optional.of(GameClockDocument.from(new GameClock(12, ClockMode.LIVE, false))));
+    void advancePersistsClockAndLogOnceAtTheEnd() {
+        this.givenClock(GameClock.initial());
+        ClockService clockService = this.service(List.of(this.tradeEachTick()), 1000);
 
-        GameClock paused = this.clockService.pause();
+        GameClock clock = clockService.advance(3);
+
+        assertEquals(3, clock.tick());
+        assertEquals(3, this.capturedClockSave().tick());
+        List<GameLogDocument> events = this.capturedLogSave();
+        assertEquals(3, events.size());
+        assertEquals(1, events.getFirst().tick());
+        assertEquals(3, events.get(2).tick());
+        verify(this.gameClockMongoRepository, times(1)).save(org.mockito.ArgumentMatchers.any());
+        verify(this.gameLogMongoRepository, times(1)).saveAll(org.mockito.ArgumentMatchers.any());
+    }
+
+    @Test
+    void advanceFlushesPeriodicallyDuringLongSimulation() {
+        this.givenClock(GameClock.initial());
+        ClockService clockService = this.service(List.of(this.tradeEachTick()), 2);
+
+        clockService.advance(5);
+
+        verify(this.gameClockMongoRepository, times(3)).save(org.mockito.ArgumentMatchers.any());
+        verify(this.gameLogMongoRepository, times(3)).saveAll(org.mockito.ArgumentMatchers.any());
+    }
+
+    @Test
+    void pauseFlushesImmediatelyWithoutTicking() {
+        this.givenClock(new GameClock(12, ClockMode.LIVE, false));
+        ClockService clockService = this.service(List.of(), 1000);
+
+        GameClock paused = clockService.pause();
 
         assertTrue(paused.paused());
         assertEquals(12, paused.tick());
+        assertTrue(this.capturedClockSave().paused());
     }
 
-    private GameClock capturedSave() {
+    private ClockService service(List<GameSystem> systems, int batchFlushEveryTicks) {
+        return new ClockService(this.unitOfWork, systems, batchFlushEveryTicks);
+    }
+
+    private void givenClock(GameClock clock) {
+        when(this.gameClockMongoRepository.findById(GameClockDocument.DOCUMENT_ID))
+                .thenReturn(Optional.of(GameClockDocument.from(clock)));
+    }
+
+    private GameSystem tradeEachTick() {
+        return (clock, unitOfWork) -> unitOfWork.append(new GameLogEvent(clock.tick(), "BUY", "iron"));
+    }
+
+    private GameClock capturedClockSave() {
         ArgumentCaptor<GameClockDocument> captor = ArgumentCaptor.forClass(GameClockDocument.class);
         verify(this.gameClockMongoRepository).save(captor.capture());
         return captor.getValue().toClock();
+    }
+
+    private List<GameLogDocument> capturedLogSave() {
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<List<GameLogDocument>> captor = ArgumentCaptor.forClass(List.class);
+        verify(this.gameLogMongoRepository).saveAll(captor.capture());
+        return captor.getValue();
     }
 }
