@@ -4,10 +4,10 @@ import com.example.rtnt.game.clock.domain.ClockMode;
 import com.example.rtnt.game.clock.domain.GameClock;
 import com.example.rtnt.game.clock.persistence.GameClockDocument;
 import com.example.rtnt.game.clock.persistence.GameClockMongoRepository;
-import com.example.rtnt.game.log.domain.GameLogEvent;
 import com.example.rtnt.game.log.persistence.GameLogDocument;
 import com.example.rtnt.game.log.persistence.GameLogMongoRepository;
 import com.example.rtnt.game.log.service.GameLogService;
+import com.example.rtnt.game.log.service.TickLogSystem;
 import com.example.rtnt.game.system.GameSystem;
 import com.example.rtnt.game.system.GameUnitOfWork;
 import org.junit.jupiter.api.BeforeEach;
@@ -84,20 +84,21 @@ class ClockServiceTest {
     @Test
     void tickIfLiveFlushesLogEventsFromSystemsImmediately() {
         this.givenClock(GameClock.initial());
-        ClockService clockService = this.service(List.of(this.tradeEachTick()), 1000);
+        ClockService clockService = this.service(List.of(new TickLogSystem()), 1000);
 
         clockService.tickIfLive();
 
         List<GameLogDocument> events = this.capturedLogSave();
         assertEquals(1, events.size());
         assertEquals(1, events.getFirst().tick());
-        assertEquals("BUY", events.getFirst().type());
+        assertEquals("TICK", events.getFirst().type());
+        assertEquals("Tick 1", events.getFirst().detail());
     }
 
     @Test
     void advancePersistsClockAndLogOnceAtTheEnd() {
         this.givenClock(GameClock.initial());
-        ClockService clockService = this.service(List.of(this.tradeEachTick()), 1000);
+        ClockService clockService = this.service(List.of(new TickLogSystem()), 1000);
 
         GameClock clock = clockService.advance(3);
 
@@ -114,7 +115,7 @@ class ClockServiceTest {
     @Test
     void advanceFlushesPeriodicallyDuringLongSimulation() {
         this.givenClock(GameClock.initial());
-        ClockService clockService = this.service(List.of(this.tradeEachTick()), 2);
+        ClockService clockService = this.service(List.of(new TickLogSystem()), 2);
 
         clockService.advance(5);
 
@@ -141,10 +142,6 @@ class ClockServiceTest {
     private void givenClock(GameClock clock) {
         when(this.gameClockMongoRepository.findById(GameClockDocument.DOCUMENT_ID))
                 .thenReturn(Optional.of(GameClockDocument.from(clock)));
-    }
-
-    private GameSystem tradeEachTick() {
-        return (clock, unitOfWork) -> unitOfWork.append(new GameLogEvent(clock.tick(), "BUY", "iron"));
     }
 
     private GameClock capturedClockSave() {

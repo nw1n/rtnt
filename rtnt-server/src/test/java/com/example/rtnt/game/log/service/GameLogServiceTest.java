@@ -16,6 +16,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class GameLogServiceTest {
@@ -52,5 +53,17 @@ class GameLogServiceTest {
         this.gameLogService.flush();
 
         verify(this.gameLogMongoRepository, never()).saveAll(org.mockito.ArgumentMatchers.any());
+    }
+
+    @Test
+    void listRecentReadsPersistedEvents() {
+        when(this.gameLogMongoRepository.findTop200ByOrderByTickDesc())
+                .thenReturn(List.of(GameLogDocument.from(GameLogEvent.forTick(2))));
+
+        List<GameLogEvent> events = this.gameLogService.listRecent();
+
+        assertEquals(1, events.size());
+        assertEquals(2, events.getFirst().tick());
+        assertEquals("Tick 2", events.getFirst().detail());
     }
 }

@@ -39,6 +39,12 @@ public class GameLogService {
         this.pending.add(event);
     }
 
+    public List<GameLogEvent> listRecent() {
+        return this.gameLogMongoRepository.findTop200ByOrderByTickDesc().stream()
+                .map(GameLogDocument::toEvent)
+                .toList();
+    }
+
     public void flush() {
         if (this.pending.isEmpty()) {
             return;
