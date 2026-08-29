@@ -3,9 +3,7 @@ package com.example.rtnt.game.log.domain;
 import org.jspecify.annotations.NullMarked;
 
 @NullMarked
-public record GameLogEvent(long tick, String type, String detail) {
-    public static final String TYPE_TICK = "TICK";
-
+public record GameLogEvent(long tick, GameLogType type, String detail) {
     /***************************************************************************
      *                                                                         *
      * Static Factory Methods                                                  *
@@ -13,6 +11,6 @@ public record GameLogEvent(long tick, String type, String detail) {
      **************************************************************************/
 
     public static GameLogEvent forTick(long tick) {
-        return new GameLogEvent(tick, TYPE_TICK, "Tick " + tick);
+        return new GameLogEvent(tick, GameLogType.TICK, "Tick " + tick);
     }
 }

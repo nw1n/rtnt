@@ -1,6 +1,7 @@
 package com.example.rtnt.game.log.web;
 
 import com.example.rtnt.game.log.domain.GameLogEvent;
+import com.example.rtnt.game.log.domain.GameLogType;
 import com.example.rtnt.game.log.service.GameLogService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -42,7 +43,7 @@ public class GameLogController {
      *                                                                         *
      **************************************************************************/
 
-    public record GameLogDto(long tick, String type, String detail) {
+    public record GameLogDto(long tick, GameLogType type, String detail) {
         static GameLogDto from(GameLogEvent event) {
             return new GameLogDto(event.tick(), event.type(), event.detail());
         }

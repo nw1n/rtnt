@@ -1,6 +1,7 @@
 package com.example.rtnt.game.log.service;
 
 import com.example.rtnt.game.log.domain.GameLogEvent;
+import com.example.rtnt.game.log.domain.GameLogType;
 import com.example.rtnt.game.log.persistence.GameLogDocument;
 import com.example.rtnt.game.log.persistence.GameLogMongoRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,8 +34,8 @@ class GameLogServiceTest {
 
     @Test
     void flushWritesBufferedEventsTogether() {
-        this.gameLogService.append(new GameLogEvent(1, "BUY", "iron"));
-        this.gameLogService.append(new GameLogEvent(2, "SELL", "iron"));
+        this.gameLogService.append(new GameLogEvent(1, GameLogType.TICK, "Tick 1"));
+        this.gameLogService.append(new GameLogEvent(2, GameLogType.TICK, "Tick 2"));
         this.gameLogService.flush();
 
         @SuppressWarnings("unchecked")
@@ -42,8 +43,8 @@ class GameLogServiceTest {
         verify(this.gameLogMongoRepository).saveAll(captor.capture());
         List<GameLogDocument> saved = captor.getValue();
         assertEquals(2, saved.size());
-        assertEquals("BUY", saved.get(0).type());
-        assertEquals("SELL", saved.get(1).type());
+        assertEquals(GameLogType.TICK, saved.get(0).type());
+        assertEquals(GameLogType.TICK, saved.get(1).type());
         this.gameLogService.flush();
         verify(this.gameLogMongoRepository, times(1)).saveAll(org.mockito.ArgumentMatchers.any());
     }

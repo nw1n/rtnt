@@ -4,6 +4,7 @@ import com.example.rtnt.game.clock.domain.ClockMode;
 import com.example.rtnt.game.clock.domain.GameClock;
 import com.example.rtnt.game.clock.persistence.GameClockDocument;
 import com.example.rtnt.game.clock.persistence.GameClockMongoRepository;
+import com.example.rtnt.game.log.domain.GameLogType;
 import com.example.rtnt.game.log.persistence.GameLogDocument;
 import com.example.rtnt.game.log.persistence.GameLogMongoRepository;
 import com.example.rtnt.game.log.service.GameLogService;
@@ -91,7 +92,7 @@ class ClockServiceTest {
         List<GameLogDocument> events = this.capturedLogSave();
         assertEquals(1, events.size());
         assertEquals(1, events.getFirst().tick());
-        assertEquals("TICK", events.getFirst().type());
+        assertEquals(GameLogType.TICK, events.getFirst().type());
         assertEquals("Tick 1", events.getFirst().detail());
     }
 

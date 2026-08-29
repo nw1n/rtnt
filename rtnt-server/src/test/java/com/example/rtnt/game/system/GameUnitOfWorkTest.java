@@ -5,6 +5,7 @@ import com.example.rtnt.game.clock.domain.GameClock;
 import com.example.rtnt.game.clock.persistence.GameClockDocument;
 import com.example.rtnt.game.clock.persistence.GameClockMongoRepository;
 import com.example.rtnt.game.log.domain.GameLogEvent;
+import com.example.rtnt.game.log.domain.GameLogType;
 import com.example.rtnt.game.log.service.GameLogService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -79,7 +80,7 @@ class GameUnitOfWorkTest {
 
     @Test
     void appendDelegatesToLogFeature() {
-        GameLogEvent event = new GameLogEvent(1, "BUY", "iron");
+        GameLogEvent event = new GameLogEvent(1, GameLogType.TICK, "Tick 1");
 
         this.unitOfWork.append(event);
 

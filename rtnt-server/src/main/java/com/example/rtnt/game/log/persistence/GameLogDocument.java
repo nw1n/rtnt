@@ -1,6 +1,7 @@
 package com.example.rtnt.game.log.persistence;
 
 import com.example.rtnt.game.log.domain.GameLogEvent;
+import com.example.rtnt.game.log.domain.GameLogType;
 import org.jspecify.annotations.NullMarked;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
@@ -13,7 +14,7 @@ import java.util.UUID;
 public record GameLogDocument(
         @Id String id,
         @Indexed long tick,
-        String type,
+        GameLogType type,
         String detail
 ) {
     /***************************************************************************
