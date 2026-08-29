@@ -1,21 +1,39 @@
 package com.example.rtnt.game.log.service;
 
-import com.example.rtnt.game.clock.domain.GameClock;
+import com.example.rtnt.game.clock.event.TickAdvancedEvent;
 import com.example.rtnt.game.log.domain.GameLogEvent;
-import com.example.rtnt.game.system.GameSystem;
 import com.example.rtnt.game.system.GameUnitOfWork;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 @Component
-public class TickLogSystem implements GameSystem {
+public class TickLogSystem {
     /***************************************************************************
      *                                                                         *
-     * Public API                                                              *
+     * Fields                                                                  *
      *                                                                         *
      **************************************************************************/
 
-    @Override
-    public void onTick(GameClock clock, GameUnitOfWork unitOfWork) {
-        unitOfWork.append(GameLogEvent.forTick(clock.tick()));
+    private final GameUnitOfWork unitOfWork;
+
+    /***************************************************************************
+     *                                                                         *
+     * Constructor                                                             *
+     *                                                                         *
+     **************************************************************************/
+
+    public TickLogSystem(GameUnitOfWork unitOfWork) {
+        this.unitOfWork = unitOfWork;
+    }
+
+    /***************************************************************************
+     *                                                                         *
+     * Event Handlers                                                          *
+     *                                                                         *
+     **************************************************************************/
+
+    @EventListener
+    public void onTickAdvanced(TickAdvancedEvent event) {
+        this.unitOfWork.append(GameLogEvent.forTick(event.clock().tick()));
     }
 }

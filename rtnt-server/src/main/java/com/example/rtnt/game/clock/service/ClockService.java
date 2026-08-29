@@ -2,11 +2,16 @@ package com.example.rtnt.game.clock.service;
 
 import com.example.rtnt.game.clock.domain.ClockMode;
 import com.example.rtnt.game.clock.domain.GameClock;
+import com.example.rtnt.game.clock.event.ClockModeChangedEvent;
+import com.example.rtnt.game.clock.event.ClockPausedEvent;
+import com.example.rtnt.game.clock.event.ClockResumedEvent;
+import com.example.rtnt.game.clock.event.TickAdvancedEvent;
 import com.example.rtnt.game.system.GameSystem;
 import com.example.rtnt.game.system.GameUnitOfWork;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -24,6 +29,7 @@ public class ClockService {
 
     private final GameUnitOfWork unitOfWork;
     private final List<GameSystem> gameSystems;
+    private final ApplicationEventPublisher eventPublisher;
     private final int batchFlushEveryTicks;
     private final Object lock = new Object();
 
@@ -36,6 +42,7 @@ public class ClockService {
     public ClockService(
             GameUnitOfWork unitOfWork,
             List<GameSystem> gameSystems,
+            ApplicationEventPublisher eventPublisher,
             @Value("${rtnt.clock.batch-flush-every-ticks}") int batchFlushEveryTicks
     ) {
         if (batchFlushEveryTicks < 1) {
@@ -43,6 +50,7 @@ public class ClockService {
         }
         this.unitOfWork = unitOfWork;
         this.gameSystems = List.copyOf(gameSystems);
+        this.eventPublisher = eventPublisher;
         this.batchFlushEveryTicks = batchFlushEveryTicks;
     }
 
@@ -62,6 +70,7 @@ public class ClockService {
         synchronized (this.lock) {
             GameClock clock = this.mutateClock(GameClock::pause);
             this.unitOfWork.flush();
+            this.eventPublisher.publishEvent(new ClockPausedEvent(clock));
             log.info("Clock paused at tick {}", clock.tick());
             return clock;
         }
@@ -71,6 +80,7 @@ public class ClockService {
         synchronized (this.lock) {
             GameClock clock = this.mutateClock(GameClock::resume);
             this.unitOfWork.flush();
+            this.eventPublisher.publishEvent(new ClockResumedEvent(clock));
             log.info("Clock resumed at tick {}", clock.tick());
             return clock;
         }
@@ -80,6 +90,7 @@ public class ClockService {
         synchronized (this.lock) {
             GameClock clock = this.mutateClock(current -> current.withMode(mode));
             this.unitOfWork.flush();
+            this.eventPublisher.publishEvent(new ClockModeChangedEvent(clock));
             log.info("Clock mode set to {} at tick {}", mode, clock.tick());
             return clock;
         }
@@ -132,6 +143,7 @@ public class ClockService {
         for (GameSystem system : this.gameSystems) {
             system.onTick(next, this.unitOfWork);
         }
+        this.eventPublisher.publishEvent(new TickAdvancedEvent(next));
         return next;
     }
 }
