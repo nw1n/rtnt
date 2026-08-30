@@ -71,6 +71,22 @@ class GameLoopTest {
     }
 
     @Test
+    void startsInBatchPausedWhenNoFlowDocument() {
+        when(this.tickerMongoRepository.findById(TickerDocument.DOCUMENT_ID)).thenReturn(Optional.empty());
+        when(this.gameFlowStatusMongoRepository.findById(GameFlowStatusDocument.DOCUMENT_ID))
+                .thenReturn(Optional.empty());
+
+        GameFlowStatus status = this.gameLoop.get();
+
+        assertEquals(0, status.tick());
+        assertEquals(FlowMode.BATCH, status.mode());
+        assertTrue(status.paused());
+        GameFlowStatusDocument saved = this.capturedFlow();
+        assertEquals(FlowMode.BATCH, saved.mode());
+        assertTrue(saved.paused());
+    }
+
+    @Test
     void stepAdvancesTickAndDrainsCommandsForThatTick() {
         this.givenLatest(0, FlowMode.BATCH, false);
         this.gameCommandQueue.enqueue(0, new GameCommand("depart"));

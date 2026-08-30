@@ -39,8 +39,8 @@ public class GameLoop {
     private final int snapshotIntervalTicks;
     private final Object lock = new Object();
     private @Nullable GameTick gameTick;
-    private FlowMode mode = FlowMode.LIVE;
-    private boolean paused;
+    private FlowMode mode = FlowMode.BATCH;
+    private boolean paused = true;
     private boolean loaded;
 
     /***************************************************************************
@@ -243,8 +243,8 @@ public class GameLoop {
                     this.mode = document.mode();
                     this.paused = document.paused();
                 }, () -> {
-                    this.mode = FlowMode.LIVE;
-                    this.paused = false;
+                    this.mode = FlowMode.BATCH;
+                    this.paused = true;
                     this.saveFlow();
                 });
         this.loaded = true;
