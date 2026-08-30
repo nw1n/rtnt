@@ -1,6 +1,5 @@
 package com.example.rtnt.game.clock.service;
 
-import com.example.rtnt.game.clock.domain.BatchClockDriver;
 import com.example.rtnt.game.clock.domain.ClockMode;
 import com.example.rtnt.game.clock.domain.GameClock;
 import com.example.rtnt.game.clock.persistence.GameClockDocument;
@@ -20,7 +19,6 @@ public class ClockService {
      **************************************************************************/
 
     private final GameClockMongoRepository gameClockMongoRepository;
-    private final BatchClockDriver batchClockDriver;
     private final Object lock = new Object();
 
     /***************************************************************************
@@ -31,7 +29,6 @@ public class ClockService {
 
     public ClockService(GameClockMongoRepository gameClockMongoRepository) {
         this.gameClockMongoRepository = gameClockMongoRepository;
-        this.batchClockDriver = new BatchClockDriver();
     }
 
     /***************************************************************************
@@ -74,8 +71,14 @@ public class ClockService {
     }
 
     public GameClock advance(int ticks) {
+        if (ticks < 1) {
+            throw new IllegalArgumentException("ticks must be at least 1");
+        }
         synchronized (this.lock) {
-            GameClock clock = this.batchClockDriver.run(this.load(), ticks);
+            GameClock clock = this.load();
+            for (int i = 0; i < ticks; i++) {
+                clock = clock.advance();
+            }
             this.save(clock);
             log.info("Clock advanced by {} ticks to {}", ticks, clock.tick());
             return clock;

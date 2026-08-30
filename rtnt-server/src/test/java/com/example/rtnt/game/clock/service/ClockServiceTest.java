@@ -15,6 +15,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -78,6 +79,24 @@ class ClockServiceTest {
         assertEquals(3, clock.tick());
         GameClock saved = this.capturedSave();
         assertEquals(3, saved.tick());
+    }
+
+    @Test
+    void advanceFromCurrentTick() {
+        GameClock start = new GameClock(1_000, ClockMode.BATCH, false);
+        when(this.gameClockMongoRepository.findById(GameClockDocument.DOCUMENT_ID))
+                .thenReturn(Optional.of(GameClockDocument.from(start)));
+
+        GameClock clock = this.clockService.advance(100_000);
+
+        assertEquals(101_000, clock.tick());
+        assertEquals(ClockMode.BATCH, clock.mode());
+    }
+
+    @Test
+    void advanceRejectsNonPositiveTicks() {
+        assertThrows(IllegalArgumentException.class, () -> this.clockService.advance(0));
+        verify(this.gameClockMongoRepository, never()).save(org.mockito.ArgumentMatchers.any());
     }
 
     @Test
