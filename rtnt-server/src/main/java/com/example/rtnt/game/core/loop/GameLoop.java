@@ -1,7 +1,7 @@
 package com.example.rtnt.game.core.loop;
 
 import com.example.rtnt.game.core.flow.GameFlowStatus;
-import com.example.rtnt.game.core.flow.TimeMode;
+import com.example.rtnt.game.core.flow.FlowMode;
 import com.example.rtnt.game.core.flow.persistence.GameFlowStatusDocument;
 import com.example.rtnt.game.core.flow.persistence.GameFlowStatusMongoRepository;
 import com.example.rtnt.game.core.ticker.GameTick;
@@ -37,7 +37,7 @@ public class GameLoop {
     private final int snapshotIntervalTicks;
     private final Object lock = new Object();
     private @Nullable GameTick gameTick;
-    private TimeMode mode = TimeMode.LIVE;
+    private FlowMode mode = FlowMode.LIVE;
     private boolean paused;
     private boolean loaded;
 
@@ -112,12 +112,12 @@ public class GameLoop {
         }
     }
 
-    public GameFlowStatus setMode(TimeMode mode) {
+    public GameFlowStatus setMode(FlowMode mode) {
         synchronized (this.lock) {
             this.ensureLoaded();
             this.mode = mode;
             this.persistFlowIfLive();
-            log.info("Time mode set to {} at tick {}", mode, this.requireTick().tick());
+            log.info("Flow mode set to {} at tick {}", mode, this.requireTick().tick());
             return this.status();
         }
     }
@@ -133,7 +133,7 @@ public class GameLoop {
     public void stepIfLive() {
         synchronized (this.lock) {
             this.ensureLoaded();
-            if (this.mode != TimeMode.LIVE || this.paused) {
+            if (this.mode != FlowMode.LIVE || this.paused) {
                 return;
             }
             this.execute();
@@ -203,7 +203,7 @@ public class GameLoop {
     }
 
     private void persistFlowIfLive() {
-        if (this.mode == TimeMode.LIVE) {
+        if (this.mode == FlowMode.LIVE) {
             this.saveFlow();
         }
     }
@@ -232,7 +232,7 @@ public class GameLoop {
                     this.mode = document.mode();
                     this.paused = document.paused();
                 }, () -> {
-                    this.mode = TimeMode.LIVE;
+                    this.mode = FlowMode.LIVE;
                     this.paused = false;
                     this.saveFlow();
                 });

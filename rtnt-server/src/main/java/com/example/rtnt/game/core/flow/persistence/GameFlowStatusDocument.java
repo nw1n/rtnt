@@ -1,6 +1,6 @@
 package com.example.rtnt.game.core.flow.persistence;
 
-import com.example.rtnt.game.core.flow.TimeMode;
+import com.example.rtnt.game.core.flow.FlowMode;
 import org.jspecify.annotations.NullMarked;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -9,7 +9,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @NullMarked
 public record GameFlowStatusDocument(
         @Id String id,
-        TimeMode mode,
+        FlowMode mode,
         boolean paused
 ) {
     public static final String DOCUMENT_ID = "default";
@@ -20,7 +20,7 @@ public record GameFlowStatusDocument(
      *                                                                         *
      **************************************************************************/
 
-    public static GameFlowStatusDocument from(TimeMode mode, boolean paused) {
+    public static GameFlowStatusDocument from(FlowMode mode, boolean paused) {
         return new GameFlowStatusDocument(DOCUMENT_ID, mode, paused);
     }
 }

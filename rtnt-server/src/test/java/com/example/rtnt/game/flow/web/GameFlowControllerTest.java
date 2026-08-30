@@ -1,7 +1,7 @@
 package com.example.rtnt.game.flow.web;
 
 import com.example.rtnt.game.core.flow.GameFlowStatus;
-import com.example.rtnt.game.core.flow.TimeMode;
+import com.example.rtnt.game.core.flow.FlowMode;
 import com.example.rtnt.game.core.flow.web.GameFlowController;
 import com.example.rtnt.game.core.loop.GameLoop;
 import org.junit.jupiter.api.Test;
@@ -29,7 +29,7 @@ class GameFlowControllerTest {
 
     @Test
     void getReturnsStatus() throws Exception {
-        when(this.gameLoop.get()).thenReturn(new GameFlowStatus(4, TimeMode.LIVE, true));
+        when(this.gameLoop.get()).thenReturn(new GameFlowStatus(4, FlowMode.LIVE, true));
 
         this.mockMvc.perform(get("/api/game-flow"))
                 .andExpect(status().isOk())
@@ -40,7 +40,7 @@ class GameFlowControllerTest {
 
     @Test
     void pauseDelegatesToGameLoop() throws Exception {
-        when(this.gameLoop.pause()).thenReturn(new GameFlowStatus(0, TimeMode.LIVE, true));
+        when(this.gameLoop.pause()).thenReturn(new GameFlowStatus(0, FlowMode.LIVE, true));
 
         this.mockMvc.perform(post("/api/game-flow/pause"))
                 .andExpect(status().isOk())
@@ -50,20 +50,20 @@ class GameFlowControllerTest {
 
     @Test
     void setModeDelegatesToGameLoop() throws Exception {
-        when(this.gameLoop.setMode(TimeMode.BATCH))
-                .thenReturn(new GameFlowStatus(0, TimeMode.BATCH, false));
+        when(this.gameLoop.setMode(FlowMode.BATCH))
+                .thenReturn(new GameFlowStatus(0, FlowMode.BATCH, false));
 
         this.mockMvc.perform(post("/api/game-flow/mode")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"mode\":\"BATCH\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.mode").value("BATCH"));
-        verify(this.gameLoop).setMode(TimeMode.BATCH);
+        verify(this.gameLoop).setMode(FlowMode.BATCH);
     }
 
     @Test
     void advanceDelegatesToGameLoop() throws Exception {
-        when(this.gameLoop.advance(25)).thenReturn(new GameFlowStatus(25, TimeMode.BATCH, false));
+        when(this.gameLoop.advance(25)).thenReturn(new GameFlowStatus(25, FlowMode.BATCH, false));
 
         this.mockMvc.perform(post("/api/game-flow/advance")
                         .contentType(MediaType.APPLICATION_JSON)

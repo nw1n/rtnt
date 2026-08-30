@@ -51,7 +51,7 @@ export class DebugPage {
   }
 
   public setMode(mode: GameFlowDto['mode']): void {
-    this.runGameFlowAction(this.gameFlowService.setMode(mode), `Time mode set to ${mode}.`)
+    this.runGameFlowAction(this.gameFlowService.setMode(mode), `Flow mode set to ${mode}.`)
   }
 
   public advance(): void {

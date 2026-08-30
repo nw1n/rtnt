@@ -1,6 +1,6 @@
 package com.example.rtnt.game.core.flow;
 
-public enum TimeMode {
+public enum FlowMode {
     LIVE,
     BATCH
 }

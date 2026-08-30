@@ -1,7 +1,7 @@
 package com.example.rtnt.game.loop;
 
 import com.example.rtnt.game.core.flow.GameFlowStatus;
-import com.example.rtnt.game.core.flow.TimeMode;
+import com.example.rtnt.game.core.flow.FlowMode;
 import com.example.rtnt.game.core.flow.persistence.GameFlowStatusDocument;
 import com.example.rtnt.game.core.flow.persistence.GameFlowStatusMongoRepository;
 import com.example.rtnt.game.core.loop.GameCommand;
@@ -65,7 +65,7 @@ class GameLoopTest {
 
     @Test
     void stepAdvancesTickAndDrainsCommandsForThatTick() {
-        this.givenLatest(0, TimeMode.BATCH, false);
+        this.givenLatest(0, FlowMode.BATCH, false);
         this.gameCommandQueue.enqueue(0, new GameCommand("depart"));
         this.gameCommandQueue.enqueue(1, new GameCommand("later"));
 
@@ -81,7 +81,7 @@ class GameLoopTest {
 
     @Test
     void quietLiveTickDoesNotPersistLatest() {
-        this.givenLatest(0, TimeMode.LIVE, false);
+        this.givenLatest(0, FlowMode.LIVE, false);
 
         this.gameLoop.stepIfLive();
 
@@ -93,7 +93,7 @@ class GameLoopTest {
 
     @Test
     void stepIfLiveDoesNothingWhenPaused() {
-        this.givenLatest(0, TimeMode.LIVE, true);
+        this.givenLatest(0, FlowMode.LIVE, true);
 
         this.gameLoop.stepIfLive();
 
@@ -104,7 +104,7 @@ class GameLoopTest {
 
     @Test
     void advanceQuietTicksDoesNotPersistUntilSnapshot() {
-        this.givenLatest(0, TimeMode.BATCH, false);
+        this.givenLatest(0, FlowMode.BATCH, false);
 
         GameFlowStatus status = this.gameLoop.advance(1);
 
@@ -121,7 +121,7 @@ class GameLoopTest {
 
     @Test
     void snapshotIfAtTickZeroPersistsWorld() {
-        this.givenLatest(0, TimeMode.LIVE, false);
+        this.givenLatest(0, FlowMode.LIVE, false);
 
         this.gameLoop.snapshotIfAtTickZero();
 
@@ -134,7 +134,7 @@ class GameLoopTest {
 
     @Test
     void snapshotIfAtTickZeroSkippedWhenTickMoved() {
-        this.givenLatest(1, TimeMode.LIVE, false);
+        this.givenLatest(1, FlowMode.LIVE, false);
 
         this.gameLoop.snapshotIfAtTickZero();
 
@@ -143,7 +143,7 @@ class GameLoopTest {
 
     @Test
     void writesWorldSnapshotAndTickerOnInterval() {
-        this.givenLatest(0, TimeMode.LIVE, false);
+        this.givenLatest(0, FlowMode.LIVE, false);
 
         this.gameLoop.advance(4);
 
@@ -160,7 +160,7 @@ class GameLoopTest {
 
     @Test
     void pauseUpdatesFlagWithoutTicking() {
-        this.givenLatest(12, TimeMode.LIVE, false);
+        this.givenLatest(12, FlowMode.LIVE, false);
 
         GameFlowStatus paused = this.gameLoop.pause();
 
@@ -168,24 +168,24 @@ class GameLoopTest {
         assertEquals(12, paused.tick());
         GameFlowStatusDocument saved = this.capturedFlow();
         assertTrue(saved.paused());
-        assertEquals(TimeMode.LIVE, saved.mode());
+        assertEquals(FlowMode.LIVE, saved.mode());
         verify(this.tickerMongoRepository, never()).save(org.mockito.ArgumentMatchers.any());
     }
 
     @Test
     void setModeBatchDoesNotPersist() {
-        this.givenLatest(0, TimeMode.LIVE, false);
+        this.givenLatest(0, FlowMode.LIVE, false);
 
-        GameFlowStatus status = this.gameLoop.setMode(TimeMode.BATCH);
+        GameFlowStatus status = this.gameLoop.setMode(FlowMode.BATCH);
 
-        assertEquals(TimeMode.BATCH, status.mode());
+        assertEquals(FlowMode.BATCH, status.mode());
         verify(this.gameFlowStatusMongoRepository, never()).save(org.mockito.ArgumentMatchers.any());
         verify(this.tickerMongoRepository, never()).save(org.mockito.ArgumentMatchers.any());
     }
 
     @Test
     void readsMongoOnceThenUsesMemory() {
-        this.givenLatest(0, TimeMode.LIVE, false);
+        this.givenLatest(0, FlowMode.LIVE, false);
 
         this.gameLoop.get();
         this.gameLoop.step();
@@ -196,7 +196,7 @@ class GameLoopTest {
         assertEquals(2, this.capturedTicker().tick());
     }
 
-    private void givenLatest(long tick, TimeMode mode, boolean paused) {
+    private void givenLatest(long tick, FlowMode mode, boolean paused) {
         when(this.tickerMongoRepository.findById(TickerDocument.DOCUMENT_ID))
                 .thenReturn(Optional.of(new TickerDocument(TickerDocument.DOCUMENT_ID, tick)));
         when(this.gameFlowStatusMongoRepository.findById(GameFlowStatusDocument.DOCUMENT_ID))

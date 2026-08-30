@@ -1,7 +1,7 @@
 package com.example.rtnt.game.core.flow.web;
 
 import com.example.rtnt.game.core.flow.GameFlowStatus;
-import com.example.rtnt.game.core.flow.TimeMode;
+import com.example.rtnt.game.core.flow.FlowMode;
 import com.example.rtnt.game.core.loop.GameLoop;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
@@ -65,13 +65,13 @@ public class GameFlowController {
      *                                                                         *
      **************************************************************************/
 
-    public record GameFlowDto(long tick, TimeMode mode, boolean paused) {
+    public record GameFlowDto(long tick, FlowMode mode, boolean paused) {
         static GameFlowDto from(GameFlowStatus status) {
             return new GameFlowDto(status.tick(), status.mode(), status.paused());
         }
     }
 
-    public record ModeRequest(@NotNull TimeMode mode) {
+    public record ModeRequest(@NotNull FlowMode mode) {
     }
 
     public record AdvanceRequest(@Min(1) @Max(100_000) int ticks) {
