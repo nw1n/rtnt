@@ -16,6 +16,16 @@ class BatchClockDriverTest {
     }
 
     @Test
+    void runAdvancesManyTicksFromCurrent() {
+        GameClock start = new GameClock(1_000, ClockMode.BATCH, false);
+
+        GameClock clock = new BatchClockDriver().run(start, 100_000);
+
+        assertEquals(101_000, clock.tick());
+        assertEquals(ClockMode.BATCH, clock.mode());
+    }
+
+    @Test
     void runRejectsNonPositiveTicks() {
         BatchClockDriver driver = new BatchClockDriver();
 
