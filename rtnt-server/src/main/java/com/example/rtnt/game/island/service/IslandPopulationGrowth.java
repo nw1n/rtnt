@@ -30,7 +30,7 @@ public class IslandPopulationGrowth {
     @Autowired
     public IslandPopulationGrowth(
             IslandStatusMongoRepository islandStatusMongoRepository,
-            @Value("${rtnt.island.population-check-interval-ticks:10}") int checkIntervalTicks,
+            @Value("${rtnt.island.population-check-interval-ticks:100}") int checkIntervalTicks,
             @Value("${rtnt.island.population-growth-chance:0.25}") double growthChance,
             @Value("${rtnt.island.population-growth-min:1}") int growthMin,
             @Value("${rtnt.island.population-growth-max:3}") int growthMax
