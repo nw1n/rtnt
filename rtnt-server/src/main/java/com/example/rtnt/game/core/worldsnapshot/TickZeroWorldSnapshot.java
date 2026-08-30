@@ -1,5 +1,6 @@
-package com.example.rtnt.game.core.loop;
+package com.example.rtnt.game.core.worldsnapshot;
 
+import com.example.rtnt.game.core.loop.GameLoop;
 import org.jspecify.annotations.NonNull;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
