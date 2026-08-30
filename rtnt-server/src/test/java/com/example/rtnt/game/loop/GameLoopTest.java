@@ -105,6 +105,27 @@ class GameLoopTest {
     }
 
     @Test
+    void snapshotIfAtTickZeroPersistsWorld() {
+        this.givenLatest(0, ClockMode.LIVE, false);
+
+        this.gameLoop.snapshotIfAtTickZero();
+
+        ArgumentCaptor<WorldSnapshot> captor = ArgumentCaptor.forClass(WorldSnapshot.class);
+        verify(this.worldSnapshotStore).save(captor.capture());
+        assertEquals(0, captor.getValue().tick());
+        assertEquals(0, this.capturedLatest().tick());
+    }
+
+    @Test
+    void snapshotIfAtTickZeroSkippedWhenTickMoved() {
+        this.givenLatest(1, ClockMode.LIVE, false);
+
+        this.gameLoop.snapshotIfAtTickZero();
+
+        verify(this.worldSnapshotStore, never()).save(org.mockito.ArgumentMatchers.any());
+    }
+
+    @Test
     void writesWorldSnapshotAndLatestOnInterval() {
         this.givenLatest(0, ClockMode.LIVE, false);
 

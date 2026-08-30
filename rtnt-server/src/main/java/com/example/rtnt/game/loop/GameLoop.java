@@ -145,6 +145,15 @@ public class GameLoop {
         }
     }
 
+    public void snapshotIfAtTickZero() {
+        synchronized (this.lock) {
+            this.ensureLoaded();
+            if (this.requireClock().tick() == 0) {
+                this.persistSnapshot();
+            }
+        }
+    }
+
     /***************************************************************************
      *                                                                         *
      * Private Methods                                                         *
@@ -157,11 +166,15 @@ public class GameLoop {
         this.clock = current.advance();
         boolean snapshotDue = this.requireClock().tick() % this.snapshotIntervalTicks == 0;
         if (snapshotDue) {
-            this.worldSnapshotStore.save(this.captureWorld());
-        }
-        if (eventful || snapshotDue) {
+            this.persistSnapshot();
+        } else if (eventful) {
             this.save();
         }
+    }
+
+    private void persistSnapshot() {
+        this.worldSnapshotStore.save(this.captureWorld());
+        this.save();
     }
 
     private WorldSnapshot captureWorld() {
