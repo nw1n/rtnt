@@ -1,6 +1,6 @@
-package com.example.rtnt.game.core.clock.clock.web;
+package com.example.rtnt.game.core.loop.web;
 
-import com.example.rtnt.game.core.clock.clock.domain.ClockMode;
+import com.example.rtnt.game.core.loop.ClockMode;
 import com.example.rtnt.game.core.loop.GameLoop;
 import com.example.rtnt.game.core.loop.GameLoopStatus;
 import jakarta.validation.Valid;
@@ -14,8 +14,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/clock")
-public class ClockController {
+@RequestMapping("/api/game-loop")
+public class GameLoopController {
     private final GameLoop gameLoop;
 
     /***************************************************************************
@@ -24,7 +24,7 @@ public class ClockController {
      *                                                                         *
      **************************************************************************/
 
-    public ClockController(GameLoop gameLoop) {
+    public GameLoopController(GameLoop gameLoop) {
         this.gameLoop = gameLoop;
     }
 
@@ -35,28 +35,28 @@ public class ClockController {
      **************************************************************************/
 
     @GetMapping
-    public ClockDto get() {
-        return ClockDto.from(this.gameLoop.get());
+    public GameLoopDto get() {
+        return GameLoopDto.from(this.gameLoop.get());
     }
 
     @PostMapping("/pause")
-    public ClockDto pause() {
-        return ClockDto.from(this.gameLoop.pause());
+    public GameLoopDto pause() {
+        return GameLoopDto.from(this.gameLoop.pause());
     }
 
     @PostMapping("/resume")
-    public ClockDto resume() {
-        return ClockDto.from(this.gameLoop.resume());
+    public GameLoopDto resume() {
+        return GameLoopDto.from(this.gameLoop.resume());
     }
 
     @PostMapping("/mode")
-    public ClockDto setMode(@Valid @RequestBody ModeRequest request) {
-        return ClockDto.from(this.gameLoop.setMode(request.mode()));
+    public GameLoopDto setMode(@Valid @RequestBody ModeRequest request) {
+        return GameLoopDto.from(this.gameLoop.setMode(request.mode()));
     }
 
     @PostMapping("/advance")
-    public ClockDto advance(@Valid @RequestBody AdvanceRequest request) {
-        return ClockDto.from(this.gameLoop.advance(request.ticks()));
+    public GameLoopDto advance(@Valid @RequestBody AdvanceRequest request) {
+        return GameLoopDto.from(this.gameLoop.advance(request.ticks()));
     }
 
     /***************************************************************************
@@ -65,9 +65,9 @@ public class ClockController {
      *                                                                         *
      **************************************************************************/
 
-    public record ClockDto(long tick, ClockMode mode, boolean paused) {
-        static ClockDto from(GameLoopStatus status) {
-            return new ClockDto(status.tick(), status.mode(), status.paused());
+    public record GameLoopDto(long tick, ClockMode mode, boolean paused) {
+        static GameLoopDto from(GameLoopStatus status) {
+            return new GameLoopDto(status.tick(), status.mode(), status.paused());
         }
     }
 

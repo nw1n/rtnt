@@ -1,6 +1,6 @@
-package com.example.rtnt.game.clock.domain;
+package com.example.rtnt.game.loop;
 
-import com.example.rtnt.game.core.clock.clock.domain.GameClock;
+import com.example.rtnt.game.core.loop.GameClock;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

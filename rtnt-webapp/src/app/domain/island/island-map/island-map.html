@@ -1,9 +1,9 @@
 <elder-single-pane-wrapper>
   <div class="island-map-view">
-    @if (clock(); as clockState) {
-      <p class="clock-readout">
-        Tick {{ clockState.tick }} · {{ clockState.mode }}
-        @if (clockState.paused) {
+    @if (gameLoop(); as gameLoopState) {
+      <p class="game-loop-readout">
+        Tick {{ gameLoopState.tick }} · {{ gameLoopState.mode }}
+        @if (gameLoopState.paused) {
           · paused
         }
       </p>

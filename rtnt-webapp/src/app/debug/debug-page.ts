@@ -3,9 +3,9 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop'
 import { MatButtonModule } from '@angular/material/button'
 import { ElderSinglePaneWrapperComponent } from '@elderbyte/ngx-starter'
 import { catchError, EMPTY, interval, Observable, startWith, switchMap } from 'rxjs'
-import { ClockService } from '../domain/clock/clock.service'
+import { GameLoopService } from '../domain/game-loop/game-loop.service'
 import { IslandService } from '../domain/island/island.service'
-import { ClockDto } from '../models/clock.dto'
+import { GameLoopDto } from '../models/game-loop.dto'
 
 @Component({
   selector: 'app-debug-page',
@@ -16,22 +16,22 @@ import { ClockDto } from '../models/clock.dto'
 })
 export class DebugPage {
   private readonly islandService = inject(IslandService)
-  private readonly clockService = inject(ClockService)
+  private readonly gameLoopService = inject(GameLoopService)
   private readonly destroyRef = inject(DestroyRef)
 
   public busy = signal(false)
   public status = signal<string | null>(null)
-  public clock = signal<ClockDto | null>(null)
+  public gameLoop = signal<GameLoopDto | null>(null)
   public advanceTicks = signal(10)
 
   constructor() {
     interval(1000)
       .pipe(
         startWith(0),
-        switchMap(() => this.clockService.getClock().pipe(catchError(() => EMPTY))),
+        switchMap(() => this.gameLoopService.get().pipe(catchError(() => EMPTY))),
         takeUntilDestroyed(this.destroyRef)
       )
-      .subscribe((clock) => this.clock.set(clock))
+      .subscribe((gameLoop) => this.gameLoop.set(gameLoop))
   }
 
   public recreateIslands(): void {
@@ -42,21 +42,21 @@ export class DebugPage {
     )
   }
 
-  public pauseClock(): void {
-    this.runClockAction(this.clockService.pause(), 'Clock paused.')
+  public pause(): void {
+    this.runGameLoopAction(this.gameLoopService.pause(), 'Game loop paused.')
   }
 
-  public resumeClock(): void {
-    this.runClockAction(this.clockService.resume(), 'Clock resumed.')
+  public resume(): void {
+    this.runGameLoopAction(this.gameLoopService.resume(), 'Game loop resumed.')
   }
 
-  public setMode(mode: ClockDto['mode']): void {
-    this.runClockAction(this.clockService.setMode(mode), `Clock mode set to ${mode}.`)
+  public setMode(mode: GameLoopDto['mode']): void {
+    this.runGameLoopAction(this.gameLoopService.setMode(mode), `Game loop mode set to ${mode}.`)
   }
 
-  public advanceClock(): void {
+  public advance(): void {
     const ticks = this.advanceTicks()
-    this.runClockAction(this.clockService.advance(ticks), `Clock advanced by ${ticks} ticks.`)
+    this.runGameLoopAction(this.gameLoopService.advance(ticks), `Game loop advanced by ${ticks} ticks.`)
   }
 
   public onAdvanceTicksInput(event: Event): void {
@@ -64,11 +64,11 @@ export class DebugPage {
     this.advanceTicks.set(Number.isFinite(value) ? value : 1)
   }
 
-  private runClockAction(
-    request: ReturnType<ClockService['pause']>,
+  private runGameLoopAction(
+    request: ReturnType<GameLoopService['pause']>,
     successMessage: string
   ): void {
-    this.runAction(request, successMessage, 'Clock action failed.', (clock) => this.clock.set(clock))
+    this.runAction(request, successMessage, 'Game loop action failed.', (gameLoop) => this.gameLoop.set(gameLoop))
   }
 
   private runAction<T>(

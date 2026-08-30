@@ -1,9 +1,9 @@
-package com.example.rtnt.game.clock.web;
+package com.example.rtnt.game.loop.web;
 
-import com.example.rtnt.game.core.clock.clock.domain.ClockMode;
-import com.example.rtnt.game.core.clock.clock.web.ClockController;
-import com.example.rtnt.game.core.loop.GameLoopStatus;
+import com.example.rtnt.game.core.loop.ClockMode;
 import com.example.rtnt.game.core.loop.GameLoop;
+import com.example.rtnt.game.core.loop.GameLoopStatus;
+import com.example.rtnt.game.core.loop.web.GameLoopController;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -18,8 +18,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(ClockController.class)
-class ClockControllerTest {
+@WebMvcTest(GameLoopController.class)
+class GameLoopControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -28,10 +28,10 @@ class ClockControllerTest {
     private GameLoop gameLoop;
 
     @Test
-    void getReturnsClock() throws Exception {
+    void getReturnsStatus() throws Exception {
         when(this.gameLoop.get()).thenReturn(new GameLoopStatus(4, ClockMode.LIVE, true));
 
-        this.mockMvc.perform(get("/api/clock"))
+        this.mockMvc.perform(get("/api/game-loop"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.tick").value(4))
                 .andExpect(jsonPath("$.mode").value("LIVE"))
@@ -42,7 +42,7 @@ class ClockControllerTest {
     void pauseDelegatesToGameLoop() throws Exception {
         when(this.gameLoop.pause()).thenReturn(new GameLoopStatus(0, ClockMode.LIVE, true));
 
-        this.mockMvc.perform(post("/api/clock/pause"))
+        this.mockMvc.perform(post("/api/game-loop/pause"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.paused").value(true));
         verify(this.gameLoop).pause();
@@ -53,7 +53,7 @@ class ClockControllerTest {
         when(this.gameLoop.setMode(ClockMode.BATCH))
                 .thenReturn(new GameLoopStatus(0, ClockMode.BATCH, false));
 
-        this.mockMvc.perform(post("/api/clock/mode")
+        this.mockMvc.perform(post("/api/game-loop/mode")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"mode\":\"BATCH\"}"))
                 .andExpect(status().isOk())
@@ -65,7 +65,7 @@ class ClockControllerTest {
     void advanceDelegatesToGameLoop() throws Exception {
         when(this.gameLoop.advance(25)).thenReturn(new GameLoopStatus(25, ClockMode.BATCH, false));
 
-        this.mockMvc.perform(post("/api/clock/advance")
+        this.mockMvc.perform(post("/api/game-loop/advance")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"ticks\":25}"))
                 .andExpect(status().isOk())
@@ -75,7 +75,7 @@ class ClockControllerTest {
 
     @Test
     void advanceRejectsZeroTicks() throws Exception {
-        this.mockMvc.perform(post("/api/clock/advance")
+        this.mockMvc.perform(post("/api/game-loop/advance")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"ticks\":0}"))
                 .andExpect(status().isBadRequest());

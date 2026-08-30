@@ -2,23 +2,23 @@
   <div class="debug-page">
     <h1>Debug</h1>
 
-    <section class="clock-panel">
-      <h2>Clock</h2>
-      @if (clock(); as clockState) {
-        <p class="clock-readout">
-          Tick {{ clockState.tick }} · {{ clockState.mode }}
-          @if (clockState.paused) {
+    <section class="game-loop-panel">
+      <h2>Game loop</h2>
+      @if (gameLoop(); as gameLoopState) {
+        <p class="game-loop-readout">
+          Tick {{ gameLoopState.tick }} · {{ gameLoopState.mode }}
+          @if (gameLoopState.paused) {
             · paused
           }
         </p>
       } @else {
-        <p class="status-text">Loading clock…</p>
+        <p class="status-text">Loading game loop…</p>
       }
       <div class="debug-actions">
-        <button mat-flat-button color="primary" type="button" [disabled]="busy()" (click)="pauseClock()">
+        <button mat-flat-button color="primary" type="button" [disabled]="busy()" (click)="pause()">
           Pause
         </button>
-        <button mat-flat-button color="primary" type="button" [disabled]="busy()" (click)="resumeClock()">
+        <button mat-flat-button color="primary" type="button" [disabled]="busy()" (click)="resume()">
           Resume
         </button>
         <button mat-stroked-button type="button" [disabled]="busy()" (click)="setMode('LIVE')">
@@ -39,7 +39,7 @@
             (input)="onAdvanceTicksInput($event)"
           />
         </label>
-        <button mat-flat-button color="primary" type="button" [disabled]="busy()" (click)="advanceClock()">
+        <button mat-flat-button color="primary" type="button" [disabled]="busy()" (click)="advance()">
           Advance
         </button>
       </div>

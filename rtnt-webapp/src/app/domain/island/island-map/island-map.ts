@@ -3,9 +3,9 @@ import { ChangeDetectionStrategy, Component, computed, DestroyRef, inject, signa
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop'
 import { ElderSinglePaneWrapperComponent } from '@elderbyte/ngx-starter'
 import { catchError, EMPTY, interval, startWith, switchMap } from 'rxjs'
-import { ClockDto } from '../../../models/clock.dto'
+import { GameLoopDto } from '../../../models/game-loop.dto'
 import { IslandDto } from '../../../models/island.dto'
-import { ClockService } from '../../clock/clock.service'
+import { GameLoopService } from '../../game-loop/game-loop.service'
 import { IslandService } from '../island.service'
 
 const MAP_MIN_PADDING = 40
@@ -21,11 +21,11 @@ const MAP_FALLBACK_SIZE = 600
 })
 export class IslandMap {
   private readonly islandService = inject(IslandService)
-  private readonly clockService = inject(ClockService)
+  private readonly gameLoopService = inject(GameLoopService)
   private readonly destroyRef = inject(DestroyRef)
 
   public islands = signal<IslandDto[]>([])
-  public clock = signal<ClockDto | null>(null)
+  public gameLoop = signal<GameLoopDto | null>(null)
 
   public mapBoundsString = computed(() => {
     const islands = this.islands()
@@ -56,9 +56,9 @@ export class IslandMap {
     interval(1000)
       .pipe(
         startWith(0),
-        switchMap(() => this.clockService.getClock().pipe(catchError(() => EMPTY))),
+        switchMap(() => this.gameLoopService.get().pipe(catchError(() => EMPTY))),
         takeUntilDestroyed(this.destroyRef)
       )
-      .subscribe((clock) => this.clock.set(clock))
+      .subscribe((gameLoop) => this.gameLoop.set(gameLoop))
   }
 }

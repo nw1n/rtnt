@@ -1,4 +1,4 @@
-package com.example.rtnt.game.core.clock.clock.domain;
+package com.example.rtnt.game.core.loop;
 
 import org.jspecify.annotations.NullMarked;
 
