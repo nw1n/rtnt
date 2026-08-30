@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop'
 import { MatButtonModule } from '@angular/material/button'
 import { ElderSinglePaneWrapperComponent } from '@elderbyte/ngx-starter'
-import { catchError, EMPTY, interval, Observable, startWith, switchMap } from 'rxjs'
+import { catchError, EMPTY, firstValueFrom, interval, Observable, startWith, switchMap, timer } from 'rxjs'
 import { GameFlowService } from '../domain/game-flow/game-flow.service'
 import { IslandService } from '../domain/island/island.service'
 import { GameFlowDto } from '../models/game-flow.dto'
@@ -22,7 +22,8 @@ export class DebugPage {
   public busy = signal(false)
   public status = signal<string | null>(null)
   public gameFlow = signal<GameFlowDto | null>(null)
-  public advanceTicks = signal(10)
+  public batchSize = signal(100)
+  public batchCount = signal(1)
   public snapshotTick = signal(0)
 
   constructor() {
@@ -55,9 +56,29 @@ export class DebugPage {
     this.runGameFlowAction(this.gameFlowService.setMode(mode), `Flow mode set to ${mode}.`)
   }
 
-  public advance(): void {
-    const ticks = this.advanceTicks()
-    this.runGameFlowAction(this.gameFlowService.advance(ticks), `Game flow advanced by ${ticks} ticks.`)
+  public async advance(): Promise<void> {
+    if (this.busy()) {
+      return
+    }
+    const batchSize = Math.max(1, Math.min(100_000, Math.trunc(this.batchSize()) || 1))
+    const batches = Math.max(1, Math.trunc(this.batchCount()) || 1)
+    this.busy.set(true)
+    this.status.set(null)
+    try {
+      for (let i = 0; i < batches; i++) {
+        const gameFlow = await firstValueFrom(this.gameFlowService.advance(batchSize))
+        this.gameFlow.set(gameFlow)
+        this.status.set(`Batch ${i + 1} of ${batches} · ${batchSize} ticks`)
+        if (i < batches - 1) {
+          await firstValueFrom(timer(150))
+        }
+      }
+      this.status.set(`Advanced ${batches} batches of ${batchSize} ticks.`)
+    } catch {
+      this.status.set('Game flow action failed.')
+    } finally {
+      this.busy.set(false)
+    }
   }
 
   public loadSnapshot(): void {
@@ -69,9 +90,14 @@ export class DebugPage {
     )
   }
 
-  public onAdvanceTicksInput(event: Event): void {
+  public onBatchSizeInput(event: Event): void {
     const value = Number((event.target as HTMLInputElement).value)
-    this.advanceTicks.set(Number.isFinite(value) ? value : 1)
+    this.batchSize.set(Number.isFinite(value) ? value : 1)
+  }
+
+  public onBatchCountInput(event: Event): void {
+    const value = Number((event.target as HTMLInputElement).value)
+    this.batchCount.set(Number.isFinite(value) ? value : 1)
   }
 
   public onSnapshotTickInput(event: Event): void {

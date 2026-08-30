@@ -30,13 +30,23 @@
       </div>
       <div class="debug-actions advance-row">
         <label class="ticks-label">
-          Ticks
+          Batch size
           <input
             type="number"
             min="1"
             max="100000"
-            [value]="advanceTicks()"
-            (input)="onAdvanceTicksInput($event)"
+            [value]="batchSize()"
+            (input)="onBatchSizeInput($event)"
+          />
+        </label>
+        <label class="ticks-label">
+          Batches
+          <input
+            type="number"
+            min="1"
+            max="100000"
+            [value]="batchCount()"
+            (input)="onBatchCountInput($event)"
           />
         </label>
         <button mat-flat-button color="primary" type="button" [disabled]="busy()" (click)="advance()">
