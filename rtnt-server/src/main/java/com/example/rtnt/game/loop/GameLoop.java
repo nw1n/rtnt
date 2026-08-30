@@ -29,6 +29,8 @@ public class GameLoop {
     private final int snapshotIntervalTicks;
     private final Object lock = new Object();
     private @Nullable GameClock clock;
+    private ClockMode mode = ClockMode.LIVE;
+    private boolean paused;
 
     /***************************************************************************
      *                                                                         *
@@ -70,69 +72,73 @@ public class GameLoop {
      *                                                                         *
      **************************************************************************/
 
-    public GameClock get() {
+    public ClockStatus get() {
         synchronized (this.lock) {
-            return this.ensureLoaded();
+            this.ensureLoaded();
+            return this.status();
         }
     }
 
-    public GameClock pause() {
+    public ClockStatus pause() {
         synchronized (this.lock) {
-            this.clock = this.ensureLoaded().pause();
+            this.ensureLoaded();
+            this.paused = true;
             this.persistIfLive();
-            log.info("Clock paused at tick {}", this.clock.tick());
-            return this.clock;
+            log.info("Clock paused at tick {}", this.requireClock().tick());
+            return this.status();
         }
     }
 
-    public GameClock resume() {
+    public ClockStatus resume() {
         synchronized (this.lock) {
-            this.clock = this.ensureLoaded().resume();
+            this.ensureLoaded();
+            this.paused = false;
             this.persistIfLive();
-            log.info("Clock resumed at tick {}", this.clock.tick());
-            return this.clock;
+            log.info("Clock resumed at tick {}", this.requireClock().tick());
+            return this.status();
         }
     }
 
-    public GameClock setMode(ClockMode mode) {
+    public ClockStatus setMode(ClockMode mode) {
         synchronized (this.lock) {
-            this.clock = this.ensureLoaded().withMode(mode);
+            this.ensureLoaded();
+            this.mode = mode;
             this.persistIfLive();
-            log.info("Clock mode set to {} at tick {}", mode, this.clock.tick());
-            return this.clock;
+            log.info("Clock mode set to {} at tick {}", mode, this.requireClock().tick());
+            return this.status();
         }
     }
 
-    public GameClock step() {
+    public ClockStatus step() {
         synchronized (this.lock) {
-            this.clock = this.execute(this.ensureLoaded());
-            return this.clock;
+            this.ensureLoaded();
+            this.execute();
+            return this.status();
         }
     }
 
     public void stepIfLive() {
         synchronized (this.lock) {
-            GameClock current = this.ensureLoaded();
-            if (current.mode() != ClockMode.LIVE || current.paused()) {
+            this.ensureLoaded();
+            if (this.mode != ClockMode.LIVE || this.paused) {
                 return;
             }
-            this.clock = this.execute(current);
+            this.execute();
             this.save();
         }
     }
 
-    public GameClock advance(int ticks) {
+    public ClockStatus advance(int ticks) {
         if (ticks < 1) {
             throw new IllegalArgumentException("ticks must be at least 1");
         }
         synchronized (this.lock) {
-            GameClock current = this.ensureLoaded();
+            this.ensureLoaded();
             for (int i = 0; i < ticks; i++) {
-                current = this.execute(current);
+                this.execute();
             }
-            this.clock = current;
-            log.info("Clock advanced by {} ticks to {}", ticks, current.tick());
-            return current;
+            log.info("Clock advanced by {} ticks to {}", ticks, this.requireClock().tick());
+            return this.status();
         }
     }
 
@@ -142,38 +148,51 @@ public class GameLoop {
      *                                                                         *
      **************************************************************************/
 
-    private GameClock execute(GameClock clock) {
-        this.gameCommandQueue.drain(clock.tick());
-        GameClock next = clock.advance();
-        if (next.tick() % this.snapshotIntervalTicks == 0) {
-            this.worldSnapshotStore.save(next);
+    private void execute() {
+        GameClock current = this.requireClock();
+        this.gameCommandQueue.drain(current.tick());
+        this.clock = current.advance();
+        if (this.requireClock().tick() % this.snapshotIntervalTicks == 0) {
+            this.worldSnapshotStore.save(this.requireClock());
         }
-        return next;
     }
 
-    private GameClock ensureLoaded() {
-        if (this.clock != null) {
-            return this.clock;
+    private GameClock requireClock() {
+        GameClock current = this.clock;
+        if (current == null) {
+            throw new IllegalStateException("clock not loaded");
         }
-        this.clock = this.gameClockMongoRepository.findById(GameClockDocument.DOCUMENT_ID)
-                .map(GameClockDocument::toClock)
-                .orElseGet(() -> {
-                    GameClock initial = GameClock.initial();
-                    this.gameClockMongoRepository.save(GameClockDocument.from(initial));
-                    return initial;
-                });
-        return this.clock;
+        return current;
+    }
+
+    private ClockStatus status() {
+        return new ClockStatus(this.requireClock().tick(), this.mode, this.paused);
     }
 
     private void persistIfLive() {
-        if (this.clock != null && this.clock.mode() == ClockMode.LIVE) {
+        if (this.mode == ClockMode.LIVE) {
             this.save();
         }
     }
 
     private void save() {
+        this.gameClockMongoRepository.save(GameClockDocument.from(this.requireClock(), this.mode, this.paused));
+    }
+
+    private void ensureLoaded() {
         if (this.clock != null) {
-            this.gameClockMongoRepository.save(GameClockDocument.from(this.clock));
+            return;
         }
+        this.gameClockMongoRepository.findById(GameClockDocument.DOCUMENT_ID)
+                .ifPresentOrElse(document -> {
+                    this.clock = new GameClock(document.tick());
+                    this.mode = document.mode();
+                    this.paused = document.paused();
+                }, () -> {
+                    this.clock = GameClock.initial();
+                    this.mode = ClockMode.LIVE;
+                    this.paused = false;
+                    this.save();
+                });
     }
 }

@@ -3,32 +3,22 @@ package com.example.rtnt.game.clock.domain;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class GameClockTest {
 
     @Test
-    void initialStartsAtTickZeroLiveAndUnpaused() {
-        GameClock clock = GameClock.initial();
-
-        assertEquals(0, clock.tick());
-        assertEquals(ClockMode.LIVE, clock.mode());
-        assertFalse(clock.paused());
+    void initialStartsAtTickZero() {
+        assertEquals(0, GameClock.initial().tick());
     }
 
     @Test
-    void advanceIncrementsTickAndKeepsModeAndPause() {
-        GameClock clock = GameClock.initial().pause().withMode(ClockMode.BATCH).advance();
-
-        assertEquals(1, clock.tick());
-        assertEquals(ClockMode.BATCH, clock.mode());
-        assertTrue(clock.paused());
+    void advanceIncrementsTick() {
+        assertEquals(1, GameClock.initial().advance().tick());
     }
 
     @Test
     void rejectsNegativeTick() {
-        assertThrows(IllegalArgumentException.class, () -> new GameClock(-1, ClockMode.LIVE, false));
+        assertThrows(IllegalArgumentException.class, () -> new GameClock(-1));
     }
 }

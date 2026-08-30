@@ -22,17 +22,7 @@ public record GameClockDocument(
      *                                                                         *
      **************************************************************************/
 
-    public static GameClockDocument from(GameClock clock) {
-        return new GameClockDocument(DOCUMENT_ID, clock.tick(), clock.mode(), clock.paused());
-    }
-
-    /***************************************************************************
-     *                                                                         *
-     * Public API                                                              *
-     *                                                                         *
-     **************************************************************************/
-
-    public GameClock toClock() {
-        return new GameClock(this.tick, this.mode, this.paused);
+    public static GameClockDocument from(GameClock clock, ClockMode mode, boolean paused) {
+        return new GameClockDocument(DOCUMENT_ID, clock.tick(), mode, paused);
     }
 }

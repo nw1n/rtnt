@@ -46,13 +46,13 @@ class GameLoopTest {
 
     @Test
     void stepAdvancesClockAndDrainsCommandsForThatTick() {
-        this.givenClock(GameClock.initial().withMode(ClockMode.BATCH));
+        this.givenLatest(0, ClockMode.BATCH, false);
         this.gameCommandQueue.enqueue(0, new GameCommand("depart"));
         this.gameCommandQueue.enqueue(1, new GameCommand("later"));
 
-        GameClock clock = this.gameLoop.step();
+        ClockStatus status = this.gameLoop.step();
 
-        assertEquals(1, clock.tick());
+        assertEquals(1, status.tick());
         assertTrue(this.gameCommandQueue.drain(0).isEmpty());
         assertEquals(1, this.gameCommandQueue.drain(1).size());
         verify(this.gameClockMongoRepository, never()).save(org.mockito.ArgumentMatchers.any());
@@ -61,17 +61,18 @@ class GameLoopTest {
 
     @Test
     void stepIfLivePersists() {
-        this.givenClock(GameClock.initial());
+        this.givenLatest(0, ClockMode.LIVE, false);
 
         this.gameLoop.stepIfLive();
 
-        GameClock saved = this.capturedLatest();
+        GameClockDocument saved = this.capturedLatest();
         assertEquals(1, saved.tick());
+        assertEquals(ClockMode.LIVE, saved.mode());
     }
 
     @Test
     void stepIfLiveDoesNothingWhenPaused() {
-        this.givenClock(GameClock.initial().pause());
+        this.givenLatest(0, ClockMode.LIVE, true);
 
         this.gameLoop.stepIfLive();
 
@@ -81,11 +82,11 @@ class GameLoopTest {
 
     @Test
     void advanceRunsStepNTimesWithoutPersistingLatest() {
-        this.givenClock(new GameClock(1_000, ClockMode.BATCH, false));
+        this.givenLatest(1_000, ClockMode.BATCH, false);
 
-        GameClock clock = this.gameLoop.advance(3);
+        ClockStatus status = this.gameLoop.advance(3);
 
-        assertEquals(1_003, clock.tick());
+        assertEquals(1_003, status.tick());
         verify(this.gameClockMongoRepository, never()).save(org.mockito.ArgumentMatchers.any());
     }
 
@@ -96,7 +97,7 @@ class GameLoopTest {
 
     @Test
     void writesSnapshotOnInterval() {
-        this.givenClock(GameClock.initial());
+        this.givenLatest(0, ClockMode.LIVE, false);
 
         this.gameLoop.advance(4);
 
@@ -108,30 +109,30 @@ class GameLoopTest {
 
     @Test
     void pauseUpdatesFlagWithoutTicking() {
-        this.givenClock(new GameClock(12, ClockMode.LIVE, false));
+        this.givenLatest(12, ClockMode.LIVE, false);
 
-        GameClock paused = this.gameLoop.pause();
+        ClockStatus paused = this.gameLoop.pause();
 
         assertTrue(paused.paused());
         assertEquals(12, paused.tick());
-        GameClock saved = this.capturedLatest();
+        GameClockDocument saved = this.capturedLatest();
         assertTrue(saved.paused());
         assertEquals(12, saved.tick());
     }
 
     @Test
     void setModeBatchDoesNotPersist() {
-        this.givenClock(GameClock.initial());
+        this.givenLatest(0, ClockMode.LIVE, false);
 
-        GameClock clock = this.gameLoop.setMode(ClockMode.BATCH);
+        ClockStatus status = this.gameLoop.setMode(ClockMode.BATCH);
 
-        assertEquals(ClockMode.BATCH, clock.mode());
+        assertEquals(ClockMode.BATCH, status.mode());
         verify(this.gameClockMongoRepository, never()).save(org.mockito.ArgumentMatchers.any());
     }
 
     @Test
     void readsMongoOnceThenUsesMemory() {
-        this.givenClock(GameClock.initial());
+        this.givenLatest(0, ClockMode.LIVE, false);
 
         this.gameLoop.get();
         this.gameLoop.step();
@@ -141,14 +142,19 @@ class GameLoopTest {
         assertEquals(2, this.capturedLatest().tick());
     }
 
-    private void givenClock(GameClock clock) {
+    private void givenLatest(long tick, ClockMode mode, boolean paused) {
         when(this.gameClockMongoRepository.findById(GameClockDocument.DOCUMENT_ID))
-                .thenReturn(Optional.of(GameClockDocument.from(clock)));
+                .thenReturn(Optional.of(new GameClockDocument(
+                        GameClockDocument.DOCUMENT_ID,
+                        tick,
+                        mode,
+                        paused
+                )));
     }
 
-    private GameClock capturedLatest() {
+    private GameClockDocument capturedLatest() {
         ArgumentCaptor<GameClockDocument> captor = ArgumentCaptor.forClass(GameClockDocument.class);
         verify(this.gameClockMongoRepository).save(captor.capture());
-        return captor.getValue().toClock();
+        return captor.getValue();
     }
 }
