@@ -1,13 +1,12 @@
-package com.example.rtnt.game.clock.service;
+package com.example.rtnt.game.loop;
 
-import com.example.rtnt.game.loop.GameLoop;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 @Component
 @ConditionalOnProperty(name = "rtnt.clock.live-enabled", havingValue = "true", matchIfMissing = true)
-public class LiveClockScheduler {
+public class LiveTickScheduler {
     private final GameLoop gameLoop;
 
     /***************************************************************************
@@ -16,7 +15,7 @@ public class LiveClockScheduler {
      *                                                                         *
      **************************************************************************/
 
-    public LiveClockScheduler(GameLoop gameLoop) {
+    public LiveTickScheduler(GameLoop gameLoop) {
         this.gameLoop = gameLoop;
     }
 
