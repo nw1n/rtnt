@@ -1,7 +1,7 @@
 package com.example.rtnt.game.core.worldsnapshot.persistence;
 
 import com.example.rtnt.game.island.persistence.IslandDocument;
-import com.example.rtnt.game.core.loop.WorldSnapshot;
+import com.example.rtnt.game.core.worldsnapshot.WorldSnapshot;
 import org.jspecify.annotations.NullMarked;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;

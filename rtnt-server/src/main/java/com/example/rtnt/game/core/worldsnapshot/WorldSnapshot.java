@@ -1,4 +1,4 @@
-package com.example.rtnt.game.core.loop;
+package com.example.rtnt.game.core.worldsnapshot;
 
 import com.example.rtnt.game.island.domain.Island;
 import org.jspecify.annotations.NullMarked;

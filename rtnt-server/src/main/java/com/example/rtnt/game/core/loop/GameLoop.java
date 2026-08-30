@@ -1,5 +1,7 @@
 package com.example.rtnt.game.core.loop;
 
+import com.example.rtnt.game.core.worldsnapshot.WorldSnapshot;
+import com.example.rtnt.game.core.worldsnapshot.WorldSnapshotStore;
 import com.example.rtnt.game.island.service.IslandService;
 import com.example.rtnt.game.core.loop.persistence.GameLoopStatusDocument;
 import com.example.rtnt.game.core.loop.persistence.GameLoopStatusMongoRepository;
@@ -146,7 +148,7 @@ public class GameLoop {
     public void snapshotIfAtTickZero() {
         synchronized (this.lock) {
             this.ensureLoaded();
-            if (this.requireClock().tick() == 0) {
+            if (this.requireClock().tick() == 0 && !this.worldSnapshotStore.exists(0)) {
                 this.persistSnapshot();
             }
         }

@@ -1,6 +1,8 @@
 package com.example.rtnt.game.loop;
 
 import com.example.rtnt.game.core.loop.*;
+import com.example.rtnt.game.core.worldsnapshot.WorldSnapshot;
+import com.example.rtnt.game.core.worldsnapshot.WorldSnapshotStore;
 import com.example.rtnt.game.island.service.IslandService;
 import com.example.rtnt.game.core.loop.persistence.GameLoopStatusDocument;
 import com.example.rtnt.game.core.loop.persistence.GameLoopStatusMongoRepository;

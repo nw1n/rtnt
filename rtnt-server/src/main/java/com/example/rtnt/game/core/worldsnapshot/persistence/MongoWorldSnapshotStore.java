@@ -1,7 +1,7 @@
 package com.example.rtnt.game.core.worldsnapshot.persistence;
 
-import com.example.rtnt.game.core.loop.WorldSnapshot;
-import com.example.rtnt.game.core.loop.WorldSnapshotStore;
+import com.example.rtnt.game.core.worldsnapshot.WorldSnapshot;
+import com.example.rtnt.game.core.worldsnapshot.WorldSnapshotStore;
 import org.jspecify.annotations.NullMarked;
 import org.springframework.stereotype.Component;
 
@@ -29,5 +29,10 @@ public class MongoWorldSnapshotStore implements WorldSnapshotStore {
     @Override
     public void save(WorldSnapshot snapshot) {
         this.worldSnapshotMongoRepository.save(WorldSnapshotDocument.from(snapshot));
+    }
+
+    @Override
+    public boolean exists(long tick) {
+        return this.worldSnapshotMongoRepository.existsById(tick);
     }
 }
