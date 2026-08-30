@@ -5,6 +5,8 @@ import com.example.rtnt.game.core.worldsnapshot.WorldSnapshotStore;
 import org.jspecify.annotations.NullMarked;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 @Component
 @NullMarked
 public class MongoWorldSnapshotStore implements WorldSnapshotStore {
@@ -34,5 +36,12 @@ public class MongoWorldSnapshotStore implements WorldSnapshotStore {
     @Override
     public boolean exists(long tick) {
         return this.worldSnapshotMongoRepository.existsById(tick);
+    }
+
+    @Override
+    public List<WorldSnapshot> list() {
+        return this.worldSnapshotMongoRepository.findAllByOrderByTickAsc().stream()
+                .map(WorldSnapshotDocument::toSnapshot)
+                .toList();
     }
 }

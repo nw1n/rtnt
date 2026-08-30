@@ -29,4 +29,18 @@ public record WorldSnapshotDocument(
                 snapshot.islandStatuses().stream().map(IslandStatusDocument::from).toList()
         );
     }
+
+    /***************************************************************************
+     *                                                                         *
+     * Public API                                                              *
+     *                                                                         *
+     **************************************************************************/
+
+    public WorldSnapshot toSnapshot() {
+        return new WorldSnapshot(
+                this.tick,
+                this.islands.stream().map(IslandDocument::toIsland).toList(),
+                this.islandStatuses.stream().map(IslandStatusDocument::toIslandStatus).toList()
+        );
+    }
 }
