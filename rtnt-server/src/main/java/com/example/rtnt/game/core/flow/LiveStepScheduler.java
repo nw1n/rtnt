@@ -1,12 +1,13 @@
-package com.example.rtnt.game.core.loop;
+package com.example.rtnt.game.core.flow;
 
+import com.example.rtnt.game.core.loop.GameLoop;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 @Component
-@ConditionalOnProperty(name = "rtnt.clock.live-enabled", havingValue = "true", matchIfMissing = true)
-public class LiveTickScheduler {
+@ConditionalOnProperty(name = "rtnt.flow.live-enabled", havingValue = "true", matchIfMissing = true)
+public class LiveStepScheduler {
     private final GameLoop gameLoop;
 
     /***************************************************************************
@@ -15,7 +16,7 @@ public class LiveTickScheduler {
      *                                                                         *
      **************************************************************************/
 
-    public LiveTickScheduler(GameLoop gameLoop) {
+    public LiveStepScheduler(GameLoop gameLoop) {
         this.gameLoop = gameLoop;
     }
 
@@ -25,7 +26,7 @@ public class LiveTickScheduler {
      *                                                                         *
      **************************************************************************/
 
-    @Scheduled(fixedRateString = "${rtnt.clock.live-interval-ms:1000}")
+    @Scheduled(fixedRateString = "${rtnt.flow.live-interval-ms:1000}")
     public void onInterval() {
         this.gameLoop.stepIfLive();
     }

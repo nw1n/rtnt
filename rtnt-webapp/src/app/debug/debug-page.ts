@@ -3,9 +3,9 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop'
 import { MatButtonModule } from '@angular/material/button'
 import { ElderSinglePaneWrapperComponent } from '@elderbyte/ngx-starter'
 import { catchError, EMPTY, interval, Observable, startWith, switchMap } from 'rxjs'
-import { GameLoopService } from '../domain/game-loop/game-loop.service'
+import { GameFlowService } from '../domain/game-flow/game-flow.service'
 import { IslandService } from '../domain/island/island.service'
-import { GameLoopDto } from '../models/game-loop.dto'
+import { GameFlowDto } from '../models/game-flow.dto'
 
 @Component({
   selector: 'app-debug-page',
@@ -16,22 +16,22 @@ import { GameLoopDto } from '../models/game-loop.dto'
 })
 export class DebugPage {
   private readonly islandService = inject(IslandService)
-  private readonly gameLoopService = inject(GameLoopService)
+  private readonly gameFlowService = inject(GameFlowService)
   private readonly destroyRef = inject(DestroyRef)
 
   public busy = signal(false)
   public status = signal<string | null>(null)
-  public gameLoop = signal<GameLoopDto | null>(null)
+  public gameFlow = signal<GameFlowDto | null>(null)
   public advanceTicks = signal(10)
 
   constructor() {
     interval(1000)
       .pipe(
         startWith(0),
-        switchMap(() => this.gameLoopService.get().pipe(catchError(() => EMPTY))),
+        switchMap(() => this.gameFlowService.get().pipe(catchError(() => EMPTY))),
         takeUntilDestroyed(this.destroyRef)
       )
-      .subscribe((gameLoop) => this.gameLoop.set(gameLoop))
+      .subscribe((gameFlow) => this.gameFlow.set(gameFlow))
   }
 
   public recreateIslands(): void {
@@ -43,20 +43,20 @@ export class DebugPage {
   }
 
   public pause(): void {
-    this.runGameLoopAction(this.gameLoopService.pause(), 'Game loop paused.')
+    this.runGameFlowAction(this.gameFlowService.pause(), 'Game flow paused.')
   }
 
   public resume(): void {
-    this.runGameLoopAction(this.gameLoopService.resume(), 'Game loop resumed.')
+    this.runGameFlowAction(this.gameFlowService.resume(), 'Game flow resumed.')
   }
 
-  public setMode(mode: GameLoopDto['mode']): void {
-    this.runGameLoopAction(this.gameLoopService.setMode(mode), `Game loop mode set to ${mode}.`)
+  public setMode(mode: GameFlowDto['mode']): void {
+    this.runGameFlowAction(this.gameFlowService.setMode(mode), `Time mode set to ${mode}.`)
   }
 
   public advance(): void {
     const ticks = this.advanceTicks()
-    this.runGameLoopAction(this.gameLoopService.advance(ticks), `Game loop advanced by ${ticks} ticks.`)
+    this.runGameFlowAction(this.gameFlowService.advance(ticks), `Game flow advanced by ${ticks} ticks.`)
   }
 
   public onAdvanceTicksInput(event: Event): void {
@@ -64,11 +64,11 @@ export class DebugPage {
     this.advanceTicks.set(Number.isFinite(value) ? value : 1)
   }
 
-  private runGameLoopAction(
-    request: ReturnType<GameLoopService['pause']>,
+  private runGameFlowAction(
+    request: ReturnType<GameFlowService['pause']>,
     successMessage: string
   ): void {
-    this.runAction(request, successMessage, 'Game loop action failed.', (gameLoop) => this.gameLoop.set(gameLoop))
+    this.runAction(request, successMessage, 'Game flow action failed.', (gameFlow) => this.gameFlow.set(gameFlow))
   }
 
   private runAction<T>(

@@ -1,10 +1,13 @@
 package com.example.rtnt.game.core.loop;
 
+import com.example.rtnt.game.core.flow.GameFlowStatus;
+import com.example.rtnt.game.core.flow.GameTick;
+import com.example.rtnt.game.core.flow.TimeMode;
+import com.example.rtnt.game.core.flow.persistence.GameFlowStatusDocument;
+import com.example.rtnt.game.core.flow.persistence.GameFlowStatusMongoRepository;
 import com.example.rtnt.game.core.worldsnapshot.WorldSnapshot;
 import com.example.rtnt.game.core.worldsnapshot.WorldSnapshotStore;
 import com.example.rtnt.game.island.service.IslandService;
-import com.example.rtnt.game.core.loop.persistence.GameLoopStatusDocument;
-import com.example.rtnt.game.core.loop.persistence.GameLoopStatusMongoRepository;
 import jakarta.annotation.PostConstruct;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
@@ -24,14 +27,14 @@ public class GameLoop {
      *                                                                         *
      **************************************************************************/
 
-    private final GameLoopStatusMongoRepository gameLoopStatusMongoRepository;
+    private final GameFlowStatusMongoRepository gameFlowStatusMongoRepository;
     private final GameCommandQueue gameCommandQueue;
     private final WorldSnapshotStore worldSnapshotStore;
     private final IslandService islandService;
     private final int snapshotIntervalTicks;
     private final Object lock = new Object();
-    private @Nullable GameClock clock;
-    private ClockMode mode = ClockMode.LIVE;
+    private @Nullable GameTick gameTick;
+    private TimeMode mode = TimeMode.LIVE;
     private boolean paused;
 
     /***************************************************************************
@@ -41,16 +44,16 @@ public class GameLoop {
      **************************************************************************/
 
     public GameLoop(
-            GameLoopStatusMongoRepository gameLoopStatusMongoRepository,
+            GameFlowStatusMongoRepository gameFlowStatusMongoRepository,
             GameCommandQueue gameCommandQueue,
             WorldSnapshotStore worldSnapshotStore,
             IslandService islandService,
-            @Value("${rtnt.clock.snapshot-interval-ticks:1000}") int snapshotIntervalTicks
+            @Value("${rtnt.snapshot.interval-ticks:1000}") int snapshotIntervalTicks
     ) {
         if (snapshotIntervalTicks < 1) {
             throw new IllegalArgumentException("snapshotIntervalTicks must be at least 1");
         }
-        this.gameLoopStatusMongoRepository = gameLoopStatusMongoRepository;
+        this.gameFlowStatusMongoRepository = gameFlowStatusMongoRepository;
         this.gameCommandQueue = gameCommandQueue;
         this.worldSnapshotStore = worldSnapshotStore;
         this.islandService = islandService;
@@ -76,44 +79,44 @@ public class GameLoop {
      *                                                                         *
      **************************************************************************/
 
-    public GameLoopStatus get() {
+    public GameFlowStatus get() {
         synchronized (this.lock) {
             this.ensureLoaded();
             return this.status();
         }
     }
 
-    public GameLoopStatus pause() {
+    public GameFlowStatus pause() {
         synchronized (this.lock) {
             this.ensureLoaded();
             this.paused = true;
             this.persistIfLive();
-            log.info("Clock paused at tick {}", this.requireClock().tick());
+            log.info("Game flow paused at tick {}", this.requireTick().tick());
             return this.status();
         }
     }
 
-    public GameLoopStatus resume() {
+    public GameFlowStatus resume() {
         synchronized (this.lock) {
             this.ensureLoaded();
             this.paused = false;
             this.persistIfLive();
-            log.info("Clock resumed at tick {}", this.requireClock().tick());
+            log.info("Game flow resumed at tick {}", this.requireTick().tick());
             return this.status();
         }
     }
 
-    public GameLoopStatus setMode(ClockMode mode) {
+    public GameFlowStatus setMode(TimeMode mode) {
         synchronized (this.lock) {
             this.ensureLoaded();
             this.mode = mode;
             this.persistIfLive();
-            log.info("Clock mode set to {} at tick {}", mode, this.requireClock().tick());
+            log.info("Time mode set to {} at tick {}", mode, this.requireTick().tick());
             return this.status();
         }
     }
 
-    public GameLoopStatus step() {
+    public GameFlowStatus step() {
         synchronized (this.lock) {
             this.ensureLoaded();
             this.execute();
@@ -124,14 +127,14 @@ public class GameLoop {
     public void stepIfLive() {
         synchronized (this.lock) {
             this.ensureLoaded();
-            if (this.mode != ClockMode.LIVE || this.paused) {
+            if (this.mode != TimeMode.LIVE || this.paused) {
                 return;
             }
             this.execute();
         }
     }
 
-    public GameLoopStatus advance(int ticks) {
+    public GameFlowStatus advance(int ticks) {
         if (ticks < 1) {
             throw new IllegalArgumentException("ticks must be at least 1");
         }
@@ -140,7 +143,7 @@ public class GameLoop {
             for (int i = 0; i < ticks; i++) {
                 this.execute();
             }
-            log.info("Clock advanced by {} ticks to {}", ticks, this.requireClock().tick());
+            log.info("Game flow advanced by {} ticks to {}", ticks, this.requireTick().tick());
             return this.status();
         }
     }
@@ -148,7 +151,7 @@ public class GameLoop {
     public void snapshotIfAtTickZero() {
         synchronized (this.lock) {
             this.ensureLoaded();
-            if (this.requireClock().tick() == 0 && !this.worldSnapshotStore.exists(0)) {
+            if (this.requireTick().tick() == 0 && !this.worldSnapshotStore.exists(0)) {
                 this.persistSnapshot();
             }
         }
@@ -161,10 +164,10 @@ public class GameLoop {
      **************************************************************************/
 
     private void execute() {
-        GameClock current = this.requireClock();
+        GameTick current = this.requireTick();
         boolean eventful = !this.gameCommandQueue.drain(current.tick()).isEmpty();
-        this.clock = current.advance();
-        boolean snapshotDue = this.requireClock().tick() % this.snapshotIntervalTicks == 0;
+        this.gameTick = current.advance();
+        boolean snapshotDue = this.requireTick().tick() % this.snapshotIntervalTicks == 0;
         if (snapshotDue) {
             this.persistSnapshot();
         } else if (eventful) {
@@ -178,43 +181,43 @@ public class GameLoop {
     }
 
     private WorldSnapshot captureWorld() {
-        return new WorldSnapshot(this.requireClock().tick(), this.islandService.list());
+        return new WorldSnapshot(this.requireTick().tick(), this.islandService.list());
     }
 
-    private GameClock requireClock() {
-        GameClock current = this.clock;
+    private GameTick requireTick() {
+        GameTick current = this.gameTick;
         if (current == null) {
-            throw new IllegalStateException("clock not loaded");
+            throw new IllegalStateException("tick not loaded");
         }
         return current;
     }
 
-    private GameLoopStatus status() {
-        return new GameLoopStatus(this.requireClock().tick(), this.mode, this.paused);
+    private GameFlowStatus status() {
+        return new GameFlowStatus(this.requireTick().tick(), this.mode, this.paused);
     }
 
     private void persistIfLive() {
-        if (this.mode == ClockMode.LIVE) {
+        if (this.mode == TimeMode.LIVE) {
             this.save();
         }
     }
 
     private void save() {
-        this.gameLoopStatusMongoRepository.save(GameLoopStatusDocument.from(this.requireClock(), this.mode, this.paused));
+        this.gameFlowStatusMongoRepository.save(GameFlowStatusDocument.from(this.requireTick(), this.mode, this.paused));
     }
 
     private void ensureLoaded() {
-        if (this.clock != null) {
+        if (this.gameTick != null) {
             return;
         }
-        this.gameLoopStatusMongoRepository.findById(GameLoopStatusDocument.DOCUMENT_ID)
+        this.gameFlowStatusMongoRepository.findById(GameFlowStatusDocument.DOCUMENT_ID)
                 .ifPresentOrElse(document -> {
-                    this.clock = new GameClock(document.tick());
+                    this.gameTick = new GameTick(document.tick());
                     this.mode = document.mode();
                     this.paused = document.paused();
                 }, () -> {
-                    this.clock = GameClock.initial();
-                    this.mode = ClockMode.LIVE;
+                    this.gameTick = GameTick.initial();
+                    this.mode = TimeMode.LIVE;
                     this.paused = false;
                     this.save();
                 });

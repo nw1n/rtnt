@@ -1,9 +1,9 @@
 <elder-single-pane-wrapper>
   <div class="island-map-view">
-    @if (gameLoop(); as gameLoopState) {
-      <p class="game-loop-readout">
-        Tick {{ gameLoopState.tick }} · {{ gameLoopState.mode }}
-        @if (gameLoopState.paused) {
+    @if (gameFlow(); as gameFlowState) {
+      <p class="game-flow-readout">
+        Tick {{ gameFlowState.tick }} · {{ gameFlowState.mode }}
+        @if (gameFlowState.paused) {
           · paused
         }
       </p>

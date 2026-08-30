@@ -1,17 +1,17 @@
-package com.example.rtnt.game.core.loop;
+package com.example.rtnt.game.core.flow;
 
 import org.jspecify.annotations.NullMarked;
 
 @NullMarked
-public record GameClock(long tick) {
+public record GameTick(long tick) {
     /***************************************************************************
      *                                                                         *
      * Static Factory Methods                                                  *
      *                                                                         *
      **************************************************************************/
 
-    public static GameClock initial() {
-        return new GameClock(0);
+    public static GameTick initial() {
+        return new GameTick(0);
     }
 
     /***************************************************************************
@@ -20,7 +20,7 @@ public record GameClock(long tick) {
      *                                                                         *
      **************************************************************************/
 
-    public GameClock {
+    public GameTick {
         if (tick < 0) {
             throw new IllegalArgumentException("tick must be >= 0");
         }
@@ -32,7 +32,7 @@ public record GameClock(long tick) {
      *                                                                         *
      **************************************************************************/
 
-    public GameClock advance() {
-        return new GameClock(this.tick + 1);
+    public GameTick advance() {
+        return new GameTick(this.tick + 1);
     }
 }

@@ -1,17 +1,17 @@
-package com.example.rtnt.game.core.loop.persistence;
+package com.example.rtnt.game.core.flow.persistence;
 
-import com.example.rtnt.game.core.loop.ClockMode;
-import com.example.rtnt.game.core.loop.GameClock;
+import com.example.rtnt.game.core.flow.GameTick;
+import com.example.rtnt.game.core.flow.TimeMode;
 import org.jspecify.annotations.NullMarked;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-@Document(collection = "game_loop_status")
+@Document(collection = "game_flow_status")
 @NullMarked
-public record GameLoopStatusDocument(
+public record GameFlowStatusDocument(
         @Id String id,
         long tick,
-        ClockMode mode,
+        TimeMode mode,
         boolean paused
 ) {
     public static final String DOCUMENT_ID = "default";
@@ -22,7 +22,7 @@ public record GameLoopStatusDocument(
      *                                                                         *
      **************************************************************************/
 
-    public static GameLoopStatusDocument from(GameClock clock, ClockMode mode, boolean paused) {
-        return new GameLoopStatusDocument(DOCUMENT_ID, clock.tick(), mode, paused);
+    public static GameFlowStatusDocument from(GameTick gameTick, TimeMode mode, boolean paused) {
+        return new GameFlowStatusDocument(DOCUMENT_ID, gameTick.tick(), mode, paused);
     }
 }

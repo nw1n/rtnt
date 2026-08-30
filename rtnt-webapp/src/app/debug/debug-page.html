@@ -2,17 +2,17 @@
   <div class="debug-page">
     <h1>Debug</h1>
 
-    <section class="game-loop-panel">
-      <h2>Game loop</h2>
-      @if (gameLoop(); as gameLoopState) {
-        <p class="game-loop-readout">
-          Tick {{ gameLoopState.tick }} · {{ gameLoopState.mode }}
-          @if (gameLoopState.paused) {
+    <section class="game-flow-panel">
+      <h2>Game flow</h2>
+      @if (gameFlow(); as gameFlowState) {
+        <p class="game-flow-readout">
+          Tick {{ gameFlowState.tick }} · {{ gameFlowState.mode }}
+          @if (gameFlowState.paused) {
             · paused
           }
         </p>
       } @else {
-        <p class="status-text">Loading game loop…</p>
+        <p class="status-text">Loading game flow…</p>
       }
       <div class="debug-actions">
         <button mat-flat-button color="primary" type="button" [disabled]="busy()" (click)="pause()">

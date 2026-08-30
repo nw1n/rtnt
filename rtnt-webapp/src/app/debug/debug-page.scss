@@ -18,18 +18,18 @@
   color: #374151;
 }
 
-.game-loop-panel {
+.game-flow-panel {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
-.game-loop-panel h2 {
+.game-flow-panel h2 {
   margin: 0;
   font-size: 1.1rem;
 }
 
-.game-loop-readout {
+.game-flow-readout {
   margin: 0;
   font-variant-numeric: tabular-nums;
 }

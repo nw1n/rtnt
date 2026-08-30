@@ -1,8 +1,8 @@
-package com.example.rtnt.game.core.loop.web;
+package com.example.rtnt.game.core.flow.web;
 
-import com.example.rtnt.game.core.loop.ClockMode;
+import com.example.rtnt.game.core.flow.GameFlowStatus;
+import com.example.rtnt.game.core.flow.TimeMode;
 import com.example.rtnt.game.core.loop.GameLoop;
-import com.example.rtnt.game.core.loop.GameLoopStatus;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -14,8 +14,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/game-loop")
-public class GameLoopController {
+@RequestMapping("/api/game-flow")
+public class GameFlowController {
     private final GameLoop gameLoop;
 
     /***************************************************************************
@@ -24,7 +24,7 @@ public class GameLoopController {
      *                                                                         *
      **************************************************************************/
 
-    public GameLoopController(GameLoop gameLoop) {
+    public GameFlowController(GameLoop gameLoop) {
         this.gameLoop = gameLoop;
     }
 
@@ -35,28 +35,28 @@ public class GameLoopController {
      **************************************************************************/
 
     @GetMapping
-    public GameLoopDto get() {
-        return GameLoopDto.from(this.gameLoop.get());
+    public GameFlowDto get() {
+        return GameFlowDto.from(this.gameLoop.get());
     }
 
     @PostMapping("/pause")
-    public GameLoopDto pause() {
-        return GameLoopDto.from(this.gameLoop.pause());
+    public GameFlowDto pause() {
+        return GameFlowDto.from(this.gameLoop.pause());
     }
 
     @PostMapping("/resume")
-    public GameLoopDto resume() {
-        return GameLoopDto.from(this.gameLoop.resume());
+    public GameFlowDto resume() {
+        return GameFlowDto.from(this.gameLoop.resume());
     }
 
     @PostMapping("/mode")
-    public GameLoopDto setMode(@Valid @RequestBody ModeRequest request) {
-        return GameLoopDto.from(this.gameLoop.setMode(request.mode()));
+    public GameFlowDto setMode(@Valid @RequestBody ModeRequest request) {
+        return GameFlowDto.from(this.gameLoop.setMode(request.mode()));
     }
 
     @PostMapping("/advance")
-    public GameLoopDto advance(@Valid @RequestBody AdvanceRequest request) {
-        return GameLoopDto.from(this.gameLoop.advance(request.ticks()));
+    public GameFlowDto advance(@Valid @RequestBody AdvanceRequest request) {
+        return GameFlowDto.from(this.gameLoop.advance(request.ticks()));
     }
 
     /***************************************************************************
@@ -65,13 +65,13 @@ public class GameLoopController {
      *                                                                         *
      **************************************************************************/
 
-    public record GameLoopDto(long tick, ClockMode mode, boolean paused) {
-        static GameLoopDto from(GameLoopStatus status) {
-            return new GameLoopDto(status.tick(), status.mode(), status.paused());
+    public record GameFlowDto(long tick, TimeMode mode, boolean paused) {
+        static GameFlowDto from(GameFlowStatus status) {
+            return new GameFlowDto(status.tick(), status.mode(), status.paused());
         }
     }
 
-    public record ModeRequest(@NotNull ClockMode mode) {
+    public record ModeRequest(@NotNull TimeMode mode) {
     }
 
     public record AdvanceRequest(@Min(1) @Max(100_000) int ticks) {

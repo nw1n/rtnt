@@ -3,9 +3,9 @@ import { ChangeDetectionStrategy, Component, computed, DestroyRef, inject, signa
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop'
 import { ElderSinglePaneWrapperComponent } from '@elderbyte/ngx-starter'
 import { catchError, EMPTY, interval, startWith, switchMap } from 'rxjs'
-import { GameLoopDto } from '../../../models/game-loop.dto'
+import { GameFlowDto } from '../../../models/game-flow.dto'
 import { IslandDto } from '../../../models/island.dto'
-import { GameLoopService } from '../../game-loop/game-loop.service'
+import { GameFlowService } from '../../game-flow/game-flow.service'
 import { IslandService } from '../island.service'
 
 const MAP_MIN_PADDING = 40
@@ -21,11 +21,11 @@ const MAP_FALLBACK_SIZE = 600
 })
 export class IslandMap {
   private readonly islandService = inject(IslandService)
-  private readonly gameLoopService = inject(GameLoopService)
+  private readonly gameFlowService = inject(GameFlowService)
   private readonly destroyRef = inject(DestroyRef)
 
   public islands = signal<IslandDto[]>([])
-  public gameLoop = signal<GameLoopDto | null>(null)
+  public gameFlow = signal<GameFlowDto | null>(null)
 
   public mapBoundsString = computed(() => {
     const islands = this.islands()
@@ -56,9 +56,9 @@ export class IslandMap {
     interval(1000)
       .pipe(
         startWith(0),
-        switchMap(() => this.gameLoopService.get().pipe(catchError(() => EMPTY))),
+        switchMap(() => this.gameFlowService.get().pipe(catchError(() => EMPTY))),
         takeUntilDestroyed(this.destroyRef)
       )
-      .subscribe((gameLoop) => this.gameLoop.set(gameLoop))
+      .subscribe((gameFlow) => this.gameFlow.set(gameFlow))
   }
 }

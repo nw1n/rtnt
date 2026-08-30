@@ -1,8 +1,8 @@
 package com.example.rtnt.game.loop;
 
 import com.example.rtnt.RtntDataTest;
+import com.example.rtnt.game.core.flow.GameFlowStatus;
 import com.example.rtnt.game.core.loop.GameLoop;
-import com.example.rtnt.game.core.loop.GameLoopStatus;
 import com.example.rtnt.game.core.worldsnapshot.persistence.WorldSnapshotDocument;
 import com.example.rtnt.game.core.worldsnapshot.persistence.WorldSnapshotMongoRepository;
 import org.junit.jupiter.api.Test;
@@ -28,7 +28,7 @@ class WorldSnapshotIntervalTest {
     @Autowired
     private WorldSnapshotMongoRepository worldSnapshotMongoRepository;
 
-    @Value("${rtnt.clock.snapshot-interval-ticks:1000}")
+    @Value("${rtnt.snapshot.interval-ticks:1000}")
     private int snapshotIntervalTicks;
 
     @Test
@@ -36,7 +36,7 @@ class WorldSnapshotIntervalTest {
         assertEquals(0, this.gameLoop.get().tick());
         assertTrue(this.worldSnapshotMongoRepository.existsById(0L));
 
-        GameLoopStatus status = this.gameLoop.advance(TICKS);
+        GameFlowStatus status = this.gameLoop.advance(TICKS);
         long endTick = status.tick();
         assertEquals(TICKS, endTick);
 
