@@ -45,18 +45,3 @@ tasks.register('recreateIslands', JavaExec) {
     jvmArgs = ['--enable-native-access=ALL-UNNAMED']
 }
 
-tasks.register('demoWorldSnapshots', JavaExec) {
-    group = 'application'
-    description = 'Advance 10000 ticks and verify world snapshots in MongoDB'
-    classpath = sourceSets.main.runtimeClasspath
-    mainClass = 'com.example.rtnt.RtntApplication'
-    def ticks = project.findProperty('ticks') ?: '10000'
-    args = [
-            '--spring.main.web-application-type=none',
-            '--rtnt.clock.live-enabled=false',
-            'demo-world-snapshots',
-            ticks
-    ]
-    jvmArgs = ['--enable-native-access=ALL-UNNAMED']
-}
-

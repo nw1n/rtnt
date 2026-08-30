@@ -1,6 +1,7 @@
 package com.example.rtnt;
 
-import org.springframework.data.mongodb.core.MongoTemplate;
+import com.mongodb.ConnectionString;
+import com.mongodb.client.MongoClients;
 
 final class MongoTestDatabase {
     static final String NAME = "rtnt-test";
@@ -8,13 +9,16 @@ final class MongoTestDatabase {
     private MongoTestDatabase() {
     }
 
-    static void drop(MongoTemplate mongoTemplate) {
-        String name = mongoTemplate.getDb().getName();
-        if (!NAME.equals(name)) {
+    static void drop(String mongoUri) {
+        var connectionString = new ConnectionString(mongoUri);
+        String database = connectionString.getDatabase();
+        if (!NAME.equals(database)) {
             throw new IllegalStateException(
-                    "Refusing to drop Mongo database '" + name + "'; tests must use '" + NAME + "'"
+                    "Refusing to drop Mongo database '" + database + "'; tests must use '" + NAME + "'"
             );
         }
-        mongoTemplate.getDb().drop();
+        try (var client = MongoClients.create(connectionString)) {
+            client.getDatabase(database).drop();
+        }
     }
 }
