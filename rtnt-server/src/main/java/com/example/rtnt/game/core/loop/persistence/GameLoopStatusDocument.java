@@ -1,7 +1,7 @@
 package com.example.rtnt.game.core.loop.persistence;
 
-import com.example.rtnt.game.clock.domain.ClockMode;
-import com.example.rtnt.game.clock.domain.GameClock;
+import com.example.rtnt.game.core.clock.clock.domain.ClockMode;
+import com.example.rtnt.game.core.clock.clock.domain.GameClock;
 import org.jspecify.annotations.NullMarked;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;

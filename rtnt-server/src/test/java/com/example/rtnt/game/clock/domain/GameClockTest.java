@@ -1,5 +1,6 @@
 package com.example.rtnt.game.clock.domain;
 
+import com.example.rtnt.game.core.clock.clock.domain.GameClock;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

@@ -1,6 +1,6 @@
 package com.example.rtnt.game.loop;
 
-import com.example.rtnt.game.clock.domain.ClockMode;
+import com.example.rtnt.game.core.clock.clock.domain.ClockMode;
 import com.example.rtnt.game.core.loop.*;
 import com.example.rtnt.game.island.service.IslandService;
 import com.example.rtnt.game.core.loop.persistence.GameLoopStatusDocument;

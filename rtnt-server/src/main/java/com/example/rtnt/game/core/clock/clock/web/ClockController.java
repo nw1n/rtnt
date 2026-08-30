@@ -1,6 +1,6 @@
-package com.example.rtnt.game.clock.web;
+package com.example.rtnt.game.core.clock.clock.web;
 
-import com.example.rtnt.game.clock.domain.ClockMode;
+import com.example.rtnt.game.core.clock.clock.domain.ClockMode;
 import com.example.rtnt.game.core.loop.GameLoop;
 import com.example.rtnt.game.core.loop.GameLoopStatus;
 import jakarta.validation.Valid;

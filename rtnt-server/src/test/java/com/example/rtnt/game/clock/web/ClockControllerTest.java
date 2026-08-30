@@ -1,6 +1,7 @@
 package com.example.rtnt.game.clock.web;
 
-import com.example.rtnt.game.clock.domain.ClockMode;
+import com.example.rtnt.game.core.clock.clock.domain.ClockMode;
+import com.example.rtnt.game.core.clock.clock.web.ClockController;
 import com.example.rtnt.game.core.loop.GameLoopStatus;
 import com.example.rtnt.game.core.loop.GameLoop;
 import org.junit.jupiter.api.Test;
