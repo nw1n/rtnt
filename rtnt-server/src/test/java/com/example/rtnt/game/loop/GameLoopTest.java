@@ -53,6 +53,7 @@ class GameLoopTest {
     void setUp() {
         this.gameCommandQueue = new GameCommandQueue();
         lenient().when(this.islandService.list()).thenReturn(List.of());
+        lenient().when(this.islandService.listStatuses()).thenReturn(List.of());
         this.gameLoop = new GameLoop(
                 this.tickerMongoRepository,
                 this.gameFlowStatusMongoRepository,

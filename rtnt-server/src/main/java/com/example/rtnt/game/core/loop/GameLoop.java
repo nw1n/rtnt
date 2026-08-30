@@ -187,7 +187,11 @@ public class GameLoop {
     }
 
     private WorldSnapshot captureWorld() {
-        return new WorldSnapshot(this.requireTick().tick(), this.islandService.list());
+        return new WorldSnapshot(
+                this.requireTick().tick(),
+                this.islandService.list(),
+                this.islandService.listStatuses()
+        );
     }
 
     private GameTick requireTick() {

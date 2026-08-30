@@ -1,6 +1,7 @@
 package com.example.rtnt.game.core.worldsnapshot.persistence;
 
 import com.example.rtnt.game.island.persistence.IslandDocument;
+import com.example.rtnt.game.island.persistence.IslandStatusDocument;
 import com.example.rtnt.game.core.worldsnapshot.WorldSnapshot;
 import org.jspecify.annotations.NullMarked;
 import org.springframework.data.annotation.Id;
@@ -12,7 +13,8 @@ import java.util.List;
 @NullMarked
 public record WorldSnapshotDocument(
         @Id long tick,
-        List<IslandDocument> islands
+        List<IslandDocument> islands,
+        List<IslandStatusDocument> islandStatuses
 ) {
     /***************************************************************************
      *                                                                         *
@@ -23,7 +25,8 @@ public record WorldSnapshotDocument(
     public static WorldSnapshotDocument from(WorldSnapshot snapshot) {
         return new WorldSnapshotDocument(
                 snapshot.tick(),
-                snapshot.islands().stream().map(IslandDocument::fromIsland).toList()
+                snapshot.islands().stream().map(IslandDocument::fromIsland).toList(),
+                snapshot.islandStatuses().stream().map(IslandStatusDocument::from).toList()
         );
     }
 }
