@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 @ConditionalOnProperty(name = "rtnt.clock.live-enabled", havingValue = "true", matchIfMissing = true)
-public class LiveClockDriver {
+public class LiveClockScheduler {
     private final ClockService clockService;
 
     /***************************************************************************
@@ -15,7 +15,7 @@ public class LiveClockDriver {
      *                                                                         *
      **************************************************************************/
 
-    public LiveClockDriver(ClockService clockService) {
+    public LiveClockScheduler(ClockService clockService) {
         this.clockService = clockService;
     }
 
