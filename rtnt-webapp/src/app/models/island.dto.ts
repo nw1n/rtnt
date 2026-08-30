@@ -5,4 +5,5 @@ export interface IslandDto {
   y: number
   width: number
   length: number
+  population: number
 }

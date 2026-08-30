@@ -1,6 +1,7 @@
 package com.example.rtnt.game.island.web;
 
 import com.example.rtnt.game.island.domain.Island;
+import com.example.rtnt.game.island.domain.IslandStatus;
 import com.example.rtnt.game.island.service.IslandService;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -10,6 +11,8 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/islands")
@@ -34,8 +37,10 @@ public class IslandController {
 
     @GetMapping
     public List<IslandDto> getAll() {
+        Map<String, Long> populationByIslandId = this.islandService.listStatuses().stream()
+                .collect(Collectors.toMap(IslandStatus::islandId, IslandStatus::population, (left, right) -> left));
         return this.islandService.list().stream()
-                .map(IslandDto::from)
+                .map(island -> IslandDto.from(island, populationByIslandId.getOrDefault(island.id(), 0L)))
                 .toList();
     }
 
@@ -52,15 +57,16 @@ public class IslandController {
      *                                                                         *
      **************************************************************************/
 
-    public record IslandDto(String id, String name, int x, int y, int width, int length) {
-        static IslandDto from(Island island) {
+    public record IslandDto(String id, String name, int x, int y, int width, int length, long population) {
+        static IslandDto from(Island island, long population) {
             return new IslandDto(
                     island.id(),
                     island.name(),
                     island.footprint().x(),
                     island.footprint().y(),
                     island.footprint().width(),
-                    island.footprint().length()
+                    island.footprint().length(),
+                    population
             );
         }
     }

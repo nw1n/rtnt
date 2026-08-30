@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router'
 import { DebugPage } from './debug/debug-page'
 import { IslandMap } from './domain/island/island-map/island-map'
+import { IslandTable } from './domain/island/island-table/island-table'
 
 export const routes: Routes = [
   {
@@ -13,6 +14,13 @@ export const routes: Routes = [
     component: IslandMap,
     data: {
       title: 'Island Map',
+    },
+  },
+  {
+    path: 'islands',
+    component: IslandTable,
+    data: {
+      title: 'Islands',
     },
   },
   {
