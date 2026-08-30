@@ -7,11 +7,15 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.util.NoSuchElementException;
 
 @RestController
 @RequestMapping("/api/game-flow")
@@ -59,6 +63,15 @@ public class GameFlowController {
         return GameFlowDto.from(this.gameLoop.advance(request.ticks()));
     }
 
+    @PostMapping("/load-snapshot")
+    public GameFlowDto loadSnapshot(@Valid @RequestBody LoadSnapshotRequest request) {
+        try {
+            return GameFlowDto.from(this.gameLoop.loadFromSnapshot(request.tick()));
+        } catch (NoSuchElementException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        }
+    }
+
     /***************************************************************************
      *                                                                         *
      * DTOs                                                                    *
@@ -75,5 +88,8 @@ public class GameFlowController {
     }
 
     public record AdvanceRequest(@Min(1) @Max(100_000) int ticks) {
+    }
+
+    public record LoadSnapshotRequest(@Min(0) long tick) {
     }
 }

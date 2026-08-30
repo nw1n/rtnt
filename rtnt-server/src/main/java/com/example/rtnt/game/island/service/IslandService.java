@@ -79,6 +79,14 @@ public class IslandService {
         return placed;
     }
 
+    public void replaceAll(List<Island> islands, List<IslandStatus> statuses) {
+        this.islandStatusMongoRepository.deleteAll();
+        this.islandMongoRepository.deleteAll();
+        this.islandMongoRepository.saveAll(islands.stream().map(IslandDocument::fromIsland).toList());
+        this.islandStatusMongoRepository.saveAll(statuses.stream().map(IslandStatusDocument::from).toList());
+        log.info("Replaced world with {} islands from snapshot", islands.size());
+    }
+
     public void seedIfEmpty() {
         if (this.islandMongoRepository.count() > 0) {
             this.ensureStatuses();

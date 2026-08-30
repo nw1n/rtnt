@@ -19,6 +19,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.util.NoSuchElementException;
+
 @Service
 @NullMarked
 public class GameLoop {
@@ -154,6 +156,25 @@ public class GameLoop {
                 this.execute();
             }
             log.info("Game flow advanced by {} ticks to {}", ticks, this.requireTick().tick());
+            return this.status();
+        }
+    }
+
+    public GameFlowStatus loadFromSnapshot(long tick) {
+        if (tick < 0) {
+            throw new IllegalArgumentException("tick must be >= 0");
+        }
+        synchronized (this.lock) {
+            this.ensureLoaded();
+            WorldSnapshot snapshot = this.worldSnapshotStore.findByTick(tick)
+                    .orElseThrow(() -> new NoSuchElementException("snapshot not found for tick " + tick));
+            this.islandService.replaceAll(snapshot.islands(), snapshot.islandStatuses());
+            this.gameCommandQueue.clear();
+            this.gameTick = new GameTick(snapshot.tick());
+            this.saveTick();
+            this.paused = true;
+            this.persistFlowIfLive();
+            log.info("Loaded world snapshot at tick {}", snapshot.tick());
             return this.status();
         }
     }

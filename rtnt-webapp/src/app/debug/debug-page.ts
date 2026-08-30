@@ -23,6 +23,7 @@ export class DebugPage {
   public status = signal<string | null>(null)
   public gameFlow = signal<GameFlowDto | null>(null)
   public advanceTicks = signal(10)
+  public snapshotTick = signal(0)
 
   constructor() {
     interval(1000)
@@ -59,16 +60,31 @@ export class DebugPage {
     this.runGameFlowAction(this.gameFlowService.advance(ticks), `Game flow advanced by ${ticks} ticks.`)
   }
 
+  public loadSnapshot(): void {
+    const tick = this.snapshotTick()
+    this.runGameFlowAction(
+      this.gameFlowService.loadSnapshot(tick),
+      `Loaded snapshot ${tick}.`,
+      `Snapshot ${tick} not found.`
+    )
+  }
+
   public onAdvanceTicksInput(event: Event): void {
     const value = Number((event.target as HTMLInputElement).value)
     this.advanceTicks.set(Number.isFinite(value) ? value : 1)
   }
 
+  public onSnapshotTickInput(event: Event): void {
+    const value = Number((event.target as HTMLInputElement).value)
+    this.snapshotTick.set(Number.isFinite(value) ? value : 0)
+  }
+
   private runGameFlowAction(
     request: ReturnType<GameFlowService['pause']>,
-    successMessage: string
+    successMessage: string,
+    errorMessage = 'Game flow action failed.'
   ): void {
-    this.runAction(request, successMessage, 'Game flow action failed.', (gameFlow) => this.gameFlow.set(gameFlow))
+    this.runAction(request, successMessage, errorMessage, (gameFlow) => this.gameFlow.set(gameFlow))
   }
 
   private runAction<T>(

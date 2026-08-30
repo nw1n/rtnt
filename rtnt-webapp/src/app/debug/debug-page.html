@@ -43,6 +43,20 @@
           Advance
         </button>
       </div>
+      <div class="debug-actions advance-row">
+        <label class="ticks-label">
+          Snapshot ID
+          <input
+            type="number"
+            min="0"
+            [value]="snapshotTick()"
+            (input)="onSnapshotTickInput($event)"
+          />
+        </label>
+        <button mat-flat-button color="primary" type="button" [disabled]="busy()" (click)="loadSnapshot()">
+          Load
+        </button>
+      </div>
     </section>
 
     <div class="debug-actions">

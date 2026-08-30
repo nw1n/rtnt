@@ -6,6 +6,7 @@ import org.jspecify.annotations.NullMarked;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Optional;
 
 @Component
 @NullMarked
@@ -36,6 +37,11 @@ public class MongoWorldSnapshotStore implements WorldSnapshotStore {
     @Override
     public boolean exists(long tick) {
         return this.worldSnapshotMongoRepository.existsById(tick);
+    }
+
+    @Override
+    public Optional<WorldSnapshot> findByTick(long tick) {
+        return this.worldSnapshotMongoRepository.findById(tick).map(WorldSnapshotDocument::toSnapshot);
     }
 
     @Override

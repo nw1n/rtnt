@@ -29,4 +29,8 @@ public class GameCommandQueue {
         }
         return List.copyOf(queued);
     }
+
+    public void clear() {
+        this.byTick.clear();
+    }
 }

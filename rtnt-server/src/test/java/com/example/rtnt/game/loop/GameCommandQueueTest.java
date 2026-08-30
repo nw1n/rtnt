@@ -23,4 +23,16 @@ class GameCommandQueueTest {
         assertEquals(List.of(), queue.drain(3));
         assertEquals(List.of(new GameCommand("c")), queue.drain(4));
     }
+
+    @Test
+    void clearRemovesQueuedCommands() {
+        GameCommandQueue queue = new GameCommandQueue();
+        queue.enqueue(1, new GameCommand("a"));
+        queue.enqueue(2, new GameCommand("b"));
+
+        queue.clear();
+
+        assertEquals(List.of(), queue.drain(1));
+        assertEquals(List.of(), queue.drain(2));
+    }
 }
