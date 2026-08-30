@@ -1,4 +1,4 @@
-package com.example.rtnt.game.core.loop.persistence;
+package com.example.rtnt.game.core.worldsnapshot.persistence;
 
 import com.example.rtnt.game.island.persistence.IslandDocument;
 import com.example.rtnt.game.core.loop.WorldSnapshot;
