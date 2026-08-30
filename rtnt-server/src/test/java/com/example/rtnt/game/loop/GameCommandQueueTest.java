@@ -1,5 +1,7 @@
 package com.example.rtnt.game.loop;
 
+import com.example.rtnt.game.core.loop.GameCommand;
+import com.example.rtnt.game.core.loop.GameCommandQueue;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;

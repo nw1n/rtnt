@@ -1,9 +1,9 @@
 package com.example.rtnt.cli;
 
-import com.example.rtnt.game.loop.GameLoop;
-import com.example.rtnt.game.loop.GameLoopStatus;
-import com.example.rtnt.game.loop.persistence.WorldSnapshotDocument;
-import com.example.rtnt.game.loop.persistence.WorldSnapshotMongoRepository;
+import com.example.rtnt.game.core.loop.GameLoop;
+import com.example.rtnt.game.core.loop.GameLoopStatus;
+import com.example.rtnt.game.core.loop.persistence.WorldSnapshotDocument;
+import com.example.rtnt.game.core.loop.persistence.WorldSnapshotMongoRepository;
 import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;

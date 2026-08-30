@@ -1,10 +1,10 @@
-package com.example.rtnt.game.loop;
+package com.example.rtnt.game.core.loop;
 
 import com.example.rtnt.game.clock.domain.ClockMode;
 import com.example.rtnt.game.clock.domain.GameClock;
 import com.example.rtnt.game.island.service.IslandService;
-import com.example.rtnt.game.loop.persistence.GameLoopStatusDocument;
-import com.example.rtnt.game.loop.persistence.GameLoopStatusMongoRepository;
+import com.example.rtnt.game.core.loop.persistence.GameLoopStatusDocument;
+import com.example.rtnt.game.core.loop.persistence.GameLoopStatusMongoRepository;
 import jakarta.annotation.PostConstruct;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;

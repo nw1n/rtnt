@@ -1,4 +1,4 @@
-package com.example.rtnt.game.loop;
+package com.example.rtnt.game.core.loop;
 
 import org.jspecify.annotations.NonNull;
 import org.springframework.boot.ApplicationArguments;

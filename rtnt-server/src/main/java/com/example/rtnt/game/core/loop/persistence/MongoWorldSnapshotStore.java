@@ -1,7 +1,7 @@
-package com.example.rtnt.game.loop.persistence;
+package com.example.rtnt.game.core.loop.persistence;
 
-import com.example.rtnt.game.loop.WorldSnapshot;
-import com.example.rtnt.game.loop.WorldSnapshotStore;
+import com.example.rtnt.game.core.loop.WorldSnapshot;
+import com.example.rtnt.game.core.loop.WorldSnapshotStore;
 import org.jspecify.annotations.NullMarked;
 import org.springframework.stereotype.Component;
 

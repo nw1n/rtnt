@@ -1,4 +1,4 @@
-package com.example.rtnt.game.loop.persistence;
+package com.example.rtnt.game.core.loop.persistence;
 
 import com.example.rtnt.game.clock.domain.ClockMode;
 import com.example.rtnt.game.clock.domain.GameClock;

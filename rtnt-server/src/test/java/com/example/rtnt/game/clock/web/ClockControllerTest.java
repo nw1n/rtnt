@@ -1,8 +1,8 @@
 package com.example.rtnt.game.clock.web;
 
 import com.example.rtnt.game.clock.domain.ClockMode;
-import com.example.rtnt.game.loop.GameLoopStatus;
-import com.example.rtnt.game.loop.GameLoop;
+import com.example.rtnt.game.core.loop.GameLoopStatus;
+import com.example.rtnt.game.core.loop.GameLoop;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;

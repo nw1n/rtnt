@@ -1,4 +1,4 @@
-package com.example.rtnt.game.loop;
+package com.example.rtnt.game.core.loop;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;

@@ -1,8 +1,8 @@
 package com.example.rtnt.game.clock.web;
 
 import com.example.rtnt.game.clock.domain.ClockMode;
-import com.example.rtnt.game.loop.GameLoop;
-import com.example.rtnt.game.loop.GameLoopStatus;
+import com.example.rtnt.game.core.loop.GameLoop;
+import com.example.rtnt.game.core.loop.GameLoopStatus;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;

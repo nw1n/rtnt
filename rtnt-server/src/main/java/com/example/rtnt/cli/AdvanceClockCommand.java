@@ -1,7 +1,7 @@
 package com.example.rtnt.cli;
 
-import com.example.rtnt.game.loop.GameLoop;
-import com.example.rtnt.game.loop.GameLoopStatus;
+import com.example.rtnt.game.core.loop.GameLoop;
+import com.example.rtnt.game.core.loop.GameLoopStatus;
 import org.jspecify.annotations.NonNull;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
