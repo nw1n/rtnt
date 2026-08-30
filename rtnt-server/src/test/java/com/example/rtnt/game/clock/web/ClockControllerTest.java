@@ -1,7 +1,7 @@
 package com.example.rtnt.game.clock.web;
 
 import com.example.rtnt.game.clock.domain.ClockMode;
-import com.example.rtnt.game.loop.ClockStatus;
+import com.example.rtnt.game.loop.GameLoopStatus;
 import com.example.rtnt.game.loop.GameLoop;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,7 +28,7 @@ class ClockControllerTest {
 
     @Test
     void getReturnsClock() throws Exception {
-        when(this.gameLoop.get()).thenReturn(new ClockStatus(4, ClockMode.LIVE, true));
+        when(this.gameLoop.get()).thenReturn(new GameLoopStatus(4, ClockMode.LIVE, true));
 
         this.mockMvc.perform(get("/api/clock"))
                 .andExpect(status().isOk())
@@ -39,7 +39,7 @@ class ClockControllerTest {
 
     @Test
     void pauseDelegatesToGameLoop() throws Exception {
-        when(this.gameLoop.pause()).thenReturn(new ClockStatus(0, ClockMode.LIVE, true));
+        when(this.gameLoop.pause()).thenReturn(new GameLoopStatus(0, ClockMode.LIVE, true));
 
         this.mockMvc.perform(post("/api/clock/pause"))
                 .andExpect(status().isOk())
@@ -50,7 +50,7 @@ class ClockControllerTest {
     @Test
     void setModeDelegatesToGameLoop() throws Exception {
         when(this.gameLoop.setMode(ClockMode.BATCH))
-                .thenReturn(new ClockStatus(0, ClockMode.BATCH, false));
+                .thenReturn(new GameLoopStatus(0, ClockMode.BATCH, false));
 
         this.mockMvc.perform(post("/api/clock/mode")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -62,7 +62,7 @@ class ClockControllerTest {
 
     @Test
     void advanceDelegatesToGameLoop() throws Exception {
-        when(this.gameLoop.advance(25)).thenReturn(new ClockStatus(25, ClockMode.BATCH, false));
+        when(this.gameLoop.advance(25)).thenReturn(new GameLoopStatus(25, ClockMode.BATCH, false));
 
         this.mockMvc.perform(post("/api/clock/advance")
                         .contentType(MediaType.APPLICATION_JSON)

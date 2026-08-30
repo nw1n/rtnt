@@ -1,4 +1,4 @@
-package com.example.rtnt.game.clock.persistence;
+package com.example.rtnt.game.loop.persistence;
 
 import com.example.rtnt.game.clock.domain.ClockMode;
 import com.example.rtnt.game.clock.domain.GameClock;
@@ -6,9 +6,9 @@ import org.jspecify.annotations.NullMarked;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-@Document(collection = "game_clock")
+@Document(collection = "game_loop_status")
 @NullMarked
-public record GameClockDocument(
+public record GameLoopStatusDocument(
         @Id String id,
         long tick,
         ClockMode mode,
@@ -22,7 +22,7 @@ public record GameClockDocument(
      *                                                                         *
      **************************************************************************/
 
-    public static GameClockDocument from(GameClock clock, ClockMode mode, boolean paused) {
-        return new GameClockDocument(DOCUMENT_ID, clock.tick(), mode, paused);
+    public static GameLoopStatusDocument from(GameClock clock, ClockMode mode, boolean paused) {
+        return new GameLoopStatusDocument(DOCUMENT_ID, clock.tick(), mode, paused);
     }
 }

@@ -1,8 +1,8 @@
 package com.example.rtnt.game.clock.web;
 
 import com.example.rtnt.game.clock.domain.ClockMode;
-import com.example.rtnt.game.loop.ClockStatus;
 import com.example.rtnt.game.loop.GameLoop;
+import com.example.rtnt.game.loop.GameLoopStatus;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -66,7 +66,7 @@ public class ClockController {
      **************************************************************************/
 
     public record ClockDto(long tick, ClockMode mode, boolean paused) {
-        static ClockDto from(ClockStatus status) {
+        static ClockDto from(GameLoopStatus status) {
             return new ClockDto(status.tick(), status.mode(), status.paused());
         }
     }
