@@ -28,6 +28,7 @@ import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.lenient;
@@ -219,6 +220,19 @@ class GameLoopTest {
         assertEquals(FlowMode.BATCH, status.mode());
         verify(this.gameFlowStatusMongoRepository, never()).save(org.mockito.ArgumentMatchers.any());
         verify(this.tickerMongoRepository, never()).save(org.mockito.ArgumentMatchers.any());
+    }
+
+    @Test
+    void setModeLiveUnpausesAndPersists() {
+        this.givenLatest(0, FlowMode.BATCH, true);
+
+        GameFlowStatus status = this.gameLoop.setMode(FlowMode.LIVE);
+
+        assertEquals(FlowMode.LIVE, status.mode());
+        assertFalse(status.paused());
+        GameFlowStatusDocument saved = this.capturedFlow();
+        assertEquals(FlowMode.LIVE, saved.mode());
+        assertFalse(saved.paused());
     }
 
     @Test

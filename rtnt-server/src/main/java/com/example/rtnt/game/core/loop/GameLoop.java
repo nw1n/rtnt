@@ -122,6 +122,9 @@ public class GameLoop {
         synchronized (this.lock) {
             this.ensureLoaded();
             this.mode = mode;
+            if (mode == FlowMode.LIVE) {
+                this.paused = false;
+            }
             this.persistFlowIfLive();
             log.info("Flow mode set to {} at tick {}", mode, this.requireTick().tick());
             return this.status();
