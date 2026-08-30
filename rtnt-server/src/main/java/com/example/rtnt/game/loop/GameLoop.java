@@ -1,5 +1,6 @@
 package com.example.rtnt.game.loop;
 
+import com.example.rtnt.game.clock.domain.ClockMode;
 import com.example.rtnt.game.clock.domain.GameClock;
 import com.example.rtnt.game.clock.service.ClockService;
 import org.jspecify.annotations.NullMarked;
@@ -51,11 +52,16 @@ public class GameLoop {
      **************************************************************************/
 
     public GameClock step() {
-        return this.clockService.runStep(this::execute);
+        return this.clockService.replaceUnderLock(this::execute);
     }
 
     public void stepIfLive() {
-        this.clockService.runLiveStep(this::execute);
+        this.clockService.replaceUnderLock(clock -> {
+            if (clock.mode() != ClockMode.LIVE || clock.paused()) {
+                return clock;
+            }
+            return this.execute(clock);
+        });
     }
 
     public GameClock advance(int ticks) {

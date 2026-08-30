@@ -44,7 +44,7 @@ class GameLoopTest {
 
     @Test
     void stepAdvancesClockAndDrainsCommandsForThatTick() {
-        this.givenClock(GameClock.initial());
+        this.givenClock(GameClock.initial().withMode(ClockMode.BATCH));
         this.gameCommandQueue.enqueue(0, new GameCommand("depart"));
         this.gameCommandQueue.enqueue(1, new GameCommand("later"));
 

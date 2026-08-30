@@ -34,10 +34,10 @@ class ClockServiceTest {
     }
 
     @Test
-    void runLiveStepAdvancesWhenLiveAndUnpaused() {
+    void replaceUnderLockPersistsWhenLiveTickChanges() {
         this.givenClock(GameClock.initial());
 
-        this.clockService.runLiveStep(GameClock::advance);
+        this.clockService.replaceUnderLock(GameClock::advance);
 
         GameClock saved = this.capturedSave();
         assertEquals(1, saved.tick());
@@ -45,30 +45,19 @@ class ClockServiceTest {
     }
 
     @Test
-    void runLiveStepDoesNothingWhenPaused() {
-        this.givenClock(GameClock.initial().pause());
-
-        this.clockService.runLiveStep(GameClock::advance);
-
-        verify(this.gameClockMongoRepository, never()).save(org.mockito.ArgumentMatchers.any());
-        assertEquals(0, this.clockService.get().tick());
-    }
-
-    @Test
-    void runLiveStepDoesNothingInBatchMode() {
-        this.givenClock(GameClock.initial().withMode(ClockMode.BATCH));
-
-        this.clockService.runLiveStep(GameClock::advance);
-
-        verify(this.gameClockMongoRepository, never()).save(org.mockito.ArgumentMatchers.any());
-        assertEquals(0, this.clockService.get().tick());
-    }
-
-    @Test
-    void runStepUpdatesMemoryWithoutPersisting() {
+    void replaceUnderLockDoesNotPersistWhenTickUnchanged() {
         this.givenClock(GameClock.initial());
 
-        GameClock clock = this.clockService.runStep(GameClock::advance);
+        this.clockService.replaceUnderLock(clock -> clock);
+
+        verify(this.gameClockMongoRepository, never()).save(org.mockito.ArgumentMatchers.any());
+    }
+
+    @Test
+    void replaceUnderLockDoesNotPersistInBatchMode() {
+        this.givenClock(GameClock.initial().withMode(ClockMode.BATCH));
+
+        GameClock clock = this.clockService.replaceUnderLock(GameClock::advance);
 
         assertEquals(1, clock.tick());
         verify(this.gameClockMongoRepository, never()).save(org.mockito.ArgumentMatchers.any());
@@ -102,11 +91,10 @@ class ClockServiceTest {
         this.givenClock(GameClock.initial());
 
         this.clockService.get();
-        this.clockService.runStep(GameClock::advance);
-        this.clockService.runLiveStep(GameClock::advance);
+        this.clockService.replaceUnderLock(GameClock::advance);
 
         verify(this.gameClockMongoRepository, times(1)).findById(GameClockDocument.DOCUMENT_ID);
-        assertEquals(2, this.capturedSave().tick());
+        assertEquals(1, this.capturedSave().tick());
     }
 
     private void givenClock(GameClock clock) {

@@ -91,22 +91,15 @@ public class ClockService {
         }
     }
 
-    public GameClock runStep(UnaryOperator<GameClock> body) {
+    public GameClock replaceUnderLock(UnaryOperator<GameClock> update) {
         synchronized (this.lock) {
             this.ensureLoaded();
-            this.clock = body.apply(this.clock);
-            return this.clock;
-        }
-    }
-
-    public void runLiveStep(UnaryOperator<GameClock> body) {
-        synchronized (this.lock) {
-            this.ensureLoaded();
-            if (this.clock.mode() != ClockMode.LIVE || this.clock.paused()) {
-                return;
+            long previousTick = this.clock.tick();
+            this.clock = update.apply(this.clock);
+            if (this.clock.mode() == ClockMode.LIVE && this.clock.tick() != previousTick) {
+                this.save();
             }
-            this.clock = body.apply(this.clock);
-            this.save();
+            return this.clock;
         }
     }
 
