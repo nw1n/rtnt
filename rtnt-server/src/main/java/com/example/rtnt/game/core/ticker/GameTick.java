@@ -1,4 +1,4 @@
-package com.example.rtnt.game.core.flow;
+package com.example.rtnt.game.core.ticker;
 
 import org.jspecify.annotations.NullMarked;
 

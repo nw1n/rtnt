@@ -1,16 +1,15 @@
-package com.example.rtnt.game.core.flow.persistence;
+package com.example.rtnt.game.core.ticker.persistence;
 
-import com.example.rtnt.game.core.flow.TimeMode;
+import com.example.rtnt.game.core.ticker.GameTick;
 import org.jspecify.annotations.NullMarked;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-@Document(collection = "game_flow_status")
+@Document(collection = "ticker")
 @NullMarked
-public record GameFlowStatusDocument(
+public record TickerDocument(
         @Id String id,
-        TimeMode mode,
-        boolean paused
+        long tick
 ) {
     public static final String DOCUMENT_ID = "default";
 
@@ -20,7 +19,7 @@ public record GameFlowStatusDocument(
      *                                                                         *
      **************************************************************************/
 
-    public static GameFlowStatusDocument from(TimeMode mode, boolean paused) {
-        return new GameFlowStatusDocument(DOCUMENT_ID, mode, paused);
+    public static TickerDocument from(GameTick gameTick) {
+        return new TickerDocument(DOCUMENT_ID, gameTick.tick());
     }
 }

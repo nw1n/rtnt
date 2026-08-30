@@ -1,6 +1,6 @@
-package com.example.rtnt.game.flow;
+package com.example.rtnt.game.ticker;
 
-import com.example.rtnt.game.core.flow.GameTick;
+import com.example.rtnt.game.core.ticker.GameTick;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

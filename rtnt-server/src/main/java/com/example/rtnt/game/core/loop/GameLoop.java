@@ -1,10 +1,12 @@
 package com.example.rtnt.game.core.loop;
 
 import com.example.rtnt.game.core.flow.GameFlowStatus;
-import com.example.rtnt.game.core.flow.GameTick;
 import com.example.rtnt.game.core.flow.TimeMode;
 import com.example.rtnt.game.core.flow.persistence.GameFlowStatusDocument;
 import com.example.rtnt.game.core.flow.persistence.GameFlowStatusMongoRepository;
+import com.example.rtnt.game.core.ticker.GameTick;
+import com.example.rtnt.game.core.ticker.persistence.TickerDocument;
+import com.example.rtnt.game.core.ticker.persistence.TickerMongoRepository;
 import com.example.rtnt.game.core.worldsnapshot.WorldSnapshot;
 import com.example.rtnt.game.core.worldsnapshot.WorldSnapshotStore;
 import com.example.rtnt.game.island.service.IslandService;
@@ -27,6 +29,7 @@ public class GameLoop {
      *                                                                         *
      **************************************************************************/
 
+    private final TickerMongoRepository tickerMongoRepository;
     private final GameFlowStatusMongoRepository gameFlowStatusMongoRepository;
     private final GameCommandQueue gameCommandQueue;
     private final WorldSnapshotStore worldSnapshotStore;
@@ -36,6 +39,7 @@ public class GameLoop {
     private @Nullable GameTick gameTick;
     private TimeMode mode = TimeMode.LIVE;
     private boolean paused;
+    private boolean loaded;
 
     /***************************************************************************
      *                                                                         *
@@ -44,6 +48,7 @@ public class GameLoop {
      **************************************************************************/
 
     public GameLoop(
+            TickerMongoRepository tickerMongoRepository,
             GameFlowStatusMongoRepository gameFlowStatusMongoRepository,
             GameCommandQueue gameCommandQueue,
             WorldSnapshotStore worldSnapshotStore,
@@ -53,6 +58,7 @@ public class GameLoop {
         if (snapshotIntervalTicks < 1) {
             throw new IllegalArgumentException("snapshotIntervalTicks must be at least 1");
         }
+        this.tickerMongoRepository = tickerMongoRepository;
         this.gameFlowStatusMongoRepository = gameFlowStatusMongoRepository;
         this.gameCommandQueue = gameCommandQueue;
         this.worldSnapshotStore = worldSnapshotStore;
@@ -90,7 +96,7 @@ public class GameLoop {
         synchronized (this.lock) {
             this.ensureLoaded();
             this.paused = true;
-            this.persistIfLive();
+            this.persistFlowIfLive();
             log.info("Game flow paused at tick {}", this.requireTick().tick());
             return this.status();
         }
@@ -100,7 +106,7 @@ public class GameLoop {
         synchronized (this.lock) {
             this.ensureLoaded();
             this.paused = false;
-            this.persistIfLive();
+            this.persistFlowIfLive();
             log.info("Game flow resumed at tick {}", this.requireTick().tick());
             return this.status();
         }
@@ -110,7 +116,7 @@ public class GameLoop {
         synchronized (this.lock) {
             this.ensureLoaded();
             this.mode = mode;
-            this.persistIfLive();
+            this.persistFlowIfLive();
             log.info("Time mode set to {} at tick {}", mode, this.requireTick().tick());
             return this.status();
         }
@@ -171,13 +177,13 @@ public class GameLoop {
         if (snapshotDue) {
             this.persistSnapshot();
         } else if (eventful) {
-            this.save();
+            this.saveTick();
         }
     }
 
     private void persistSnapshot() {
         this.worldSnapshotStore.save(this.captureWorld());
-        this.save();
+        this.saveTick();
     }
 
     private WorldSnapshot captureWorld() {
@@ -196,30 +202,40 @@ public class GameLoop {
         return new GameFlowStatus(this.requireTick().tick(), this.mode, this.paused);
     }
 
-    private void persistIfLive() {
+    private void persistFlowIfLive() {
         if (this.mode == TimeMode.LIVE) {
-            this.save();
+            this.saveFlow();
         }
     }
 
-    private void save() {
-        this.gameFlowStatusMongoRepository.save(GameFlowStatusDocument.from(this.requireTick(), this.mode, this.paused));
+    private void saveTick() {
+        this.tickerMongoRepository.save(TickerDocument.from(this.requireTick()));
+    }
+
+    private void saveFlow() {
+        this.gameFlowStatusMongoRepository.save(GameFlowStatusDocument.from(this.mode, this.paused));
     }
 
     private void ensureLoaded() {
-        if (this.gameTick != null) {
+        if (this.loaded) {
             return;
         }
+        this.gameTick = this.tickerMongoRepository.findById(TickerDocument.DOCUMENT_ID)
+                .map(document -> new GameTick(document.tick()))
+                .orElseGet(() -> {
+                    GameTick initial = GameTick.initial();
+                    this.tickerMongoRepository.save(TickerDocument.from(initial));
+                    return initial;
+                });
         this.gameFlowStatusMongoRepository.findById(GameFlowStatusDocument.DOCUMENT_ID)
                 .ifPresentOrElse(document -> {
-                    this.gameTick = new GameTick(document.tick());
                     this.mode = document.mode();
                     this.paused = document.paused();
                 }, () -> {
-                    this.gameTick = GameTick.initial();
                     this.mode = TimeMode.LIVE;
                     this.paused = false;
-                    this.save();
+                    this.saveFlow();
                 });
+        this.loaded = true;
     }
 }

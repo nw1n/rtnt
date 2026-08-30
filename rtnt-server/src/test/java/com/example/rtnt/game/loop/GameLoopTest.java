@@ -7,6 +7,8 @@ import com.example.rtnt.game.core.flow.persistence.GameFlowStatusMongoRepository
 import com.example.rtnt.game.core.loop.GameCommand;
 import com.example.rtnt.game.core.loop.GameCommandQueue;
 import com.example.rtnt.game.core.loop.GameLoop;
+import com.example.rtnt.game.core.ticker.persistence.TickerDocument;
+import com.example.rtnt.game.core.ticker.persistence.TickerMongoRepository;
 import com.example.rtnt.game.core.worldsnapshot.WorldSnapshot;
 import com.example.rtnt.game.core.worldsnapshot.WorldSnapshotStore;
 import com.example.rtnt.game.island.service.IslandService;
@@ -33,6 +35,9 @@ import static org.mockito.Mockito.when;
 class GameLoopTest {
 
     @Mock
+    private TickerMongoRepository tickerMongoRepository;
+
+    @Mock
     private GameFlowStatusMongoRepository gameFlowStatusMongoRepository;
 
     @Mock
@@ -49,6 +54,7 @@ class GameLoopTest {
         this.gameCommandQueue = new GameCommandQueue();
         lenient().when(this.islandService.list()).thenReturn(List.of());
         this.gameLoop = new GameLoop(
+                this.tickerMongoRepository,
                 this.gameFlowStatusMongoRepository,
                 this.gameCommandQueue,
                 this.worldSnapshotStore,
@@ -68,8 +74,8 @@ class GameLoopTest {
         assertEquals(1, status.tick());
         assertTrue(this.gameCommandQueue.drain(0).isEmpty());
         assertEquals(1, this.gameCommandQueue.drain(1).size());
-        GameFlowStatusDocument saved = this.capturedLatest();
-        assertEquals(1, saved.tick());
+        assertEquals(1, this.capturedTicker().tick());
+        verify(this.gameFlowStatusMongoRepository, never()).save(org.mockito.ArgumentMatchers.any());
         verify(this.worldSnapshotStore, never()).save(org.mockito.ArgumentMatchers.any());
     }
 
@@ -80,6 +86,7 @@ class GameLoopTest {
         this.gameLoop.stepIfLive();
 
         assertEquals(1, this.gameLoop.get().tick());
+        verify(this.tickerMongoRepository, never()).save(org.mockito.ArgumentMatchers.any());
         verify(this.gameFlowStatusMongoRepository, never()).save(org.mockito.ArgumentMatchers.any());
         verify(this.worldSnapshotStore, never()).save(org.mockito.ArgumentMatchers.any());
     }
@@ -91,6 +98,7 @@ class GameLoopTest {
         this.gameLoop.stepIfLive();
 
         assertEquals(0, this.gameLoop.get().tick());
+        verify(this.tickerMongoRepository, never()).save(org.mockito.ArgumentMatchers.any());
         verify(this.gameFlowStatusMongoRepository, never()).save(org.mockito.ArgumentMatchers.any());
     }
 
@@ -101,6 +109,7 @@ class GameLoopTest {
         GameFlowStatus status = this.gameLoop.advance(1);
 
         assertEquals(1, status.tick());
+        verify(this.tickerMongoRepository, never()).save(org.mockito.ArgumentMatchers.any());
         verify(this.gameFlowStatusMongoRepository, never()).save(org.mockito.ArgumentMatchers.any());
         verify(this.worldSnapshotStore, never()).save(org.mockito.ArgumentMatchers.any());
     }
@@ -119,7 +128,8 @@ class GameLoopTest {
         ArgumentCaptor<WorldSnapshot> captor = ArgumentCaptor.forClass(WorldSnapshot.class);
         verify(this.worldSnapshotStore).save(captor.capture());
         assertEquals(0, captor.getValue().tick());
-        assertEquals(0, this.capturedLatest().tick());
+        assertEquals(0, this.capturedTicker().tick());
+        verify(this.gameFlowStatusMongoRepository, never()).save(org.mockito.ArgumentMatchers.any());
     }
 
     @Test
@@ -132,7 +142,7 @@ class GameLoopTest {
     }
 
     @Test
-    void writesWorldSnapshotAndLatestOnInterval() {
+    void writesWorldSnapshotAndTickerOnInterval() {
         this.givenLatest(0, TimeMode.LIVE, false);
 
         this.gameLoop.advance(4);
@@ -142,9 +152,10 @@ class GameLoopTest {
         assertEquals(2, snapshotCaptor.getAllValues().get(0).tick());
         assertEquals(4, snapshotCaptor.getAllValues().get(1).tick());
 
-        ArgumentCaptor<GameFlowStatusDocument> latestCaptor = ArgumentCaptor.forClass(GameFlowStatusDocument.class);
-        verify(this.gameFlowStatusMongoRepository, times(2)).save(latestCaptor.capture());
-        assertEquals(4, latestCaptor.getAllValues().get(1).tick());
+        ArgumentCaptor<TickerDocument> tickerCaptor = ArgumentCaptor.forClass(TickerDocument.class);
+        verify(this.tickerMongoRepository, times(2)).save(tickerCaptor.capture());
+        assertEquals(4, tickerCaptor.getAllValues().get(1).tick());
+        verify(this.gameFlowStatusMongoRepository, never()).save(org.mockito.ArgumentMatchers.any());
     }
 
     @Test
@@ -155,9 +166,10 @@ class GameLoopTest {
 
         assertTrue(paused.paused());
         assertEquals(12, paused.tick());
-        GameFlowStatusDocument saved = this.capturedLatest();
+        GameFlowStatusDocument saved = this.capturedFlow();
         assertTrue(saved.paused());
-        assertEquals(12, saved.tick());
+        assertEquals(TimeMode.LIVE, saved.mode());
+        verify(this.tickerMongoRepository, never()).save(org.mockito.ArgumentMatchers.any());
     }
 
     @Test
@@ -168,6 +180,7 @@ class GameLoopTest {
 
         assertEquals(TimeMode.BATCH, status.mode());
         verify(this.gameFlowStatusMongoRepository, never()).save(org.mockito.ArgumentMatchers.any());
+        verify(this.tickerMongoRepository, never()).save(org.mockito.ArgumentMatchers.any());
     }
 
     @Test
@@ -178,21 +191,29 @@ class GameLoopTest {
         this.gameLoop.step();
         this.gameLoop.stepIfLive();
 
+        verify(this.tickerMongoRepository, times(1)).findById(TickerDocument.DOCUMENT_ID);
         verify(this.gameFlowStatusMongoRepository, times(1)).findById(GameFlowStatusDocument.DOCUMENT_ID);
-        assertEquals(2, this.capturedLatest().tick());
+        assertEquals(2, this.capturedTicker().tick());
     }
 
     private void givenLatest(long tick, TimeMode mode, boolean paused) {
+        when(this.tickerMongoRepository.findById(TickerDocument.DOCUMENT_ID))
+                .thenReturn(Optional.of(new TickerDocument(TickerDocument.DOCUMENT_ID, tick)));
         when(this.gameFlowStatusMongoRepository.findById(GameFlowStatusDocument.DOCUMENT_ID))
                 .thenReturn(Optional.of(new GameFlowStatusDocument(
                         GameFlowStatusDocument.DOCUMENT_ID,
-                        tick,
                         mode,
                         paused
                 )));
     }
 
-    private GameFlowStatusDocument capturedLatest() {
+    private TickerDocument capturedTicker() {
+        ArgumentCaptor<TickerDocument> captor = ArgumentCaptor.forClass(TickerDocument.class);
+        verify(this.tickerMongoRepository).save(captor.capture());
+        return captor.getValue();
+    }
+
+    private GameFlowStatusDocument capturedFlow() {
         ArgumentCaptor<GameFlowStatusDocument> captor = ArgumentCaptor.forClass(GameFlowStatusDocument.class);
         verify(this.gameFlowStatusMongoRepository).save(captor.capture());
         return captor.getValue();
