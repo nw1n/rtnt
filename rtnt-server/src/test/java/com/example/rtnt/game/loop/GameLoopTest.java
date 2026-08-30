@@ -1,7 +1,7 @@
 package com.example.rtnt.game.loop;
 
 import com.example.rtnt.game.clock.domain.ClockMode;
-import com.example.rtnt.game.clock.domain.GameClock;
+import com.example.rtnt.game.island.service.IslandService;
 import com.example.rtnt.game.loop.persistence.GameLoopStatusDocument;
 import com.example.rtnt.game.loop.persistence.GameLoopStatusMongoRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -11,11 +11,13 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -30,16 +32,21 @@ class GameLoopTest {
     @Mock
     private WorldSnapshotStore worldSnapshotStore;
 
+    @Mock
+    private IslandService islandService;
+
     private GameCommandQueue gameCommandQueue;
     private GameLoop gameLoop;
 
     @BeforeEach
     void setUp() {
         this.gameCommandQueue = new GameCommandQueue();
+        lenient().when(this.islandService.list()).thenReturn(List.of());
         this.gameLoop = new GameLoop(
                 this.gameLoopStatusMongoRepository,
                 this.gameCommandQueue,
                 this.worldSnapshotStore,
+                this.islandService,
                 2
         );
     }
@@ -55,19 +62,20 @@ class GameLoopTest {
         assertEquals(1, status.tick());
         assertTrue(this.gameCommandQueue.drain(0).isEmpty());
         assertEquals(1, this.gameCommandQueue.drain(1).size());
-        verify(this.gameLoopStatusMongoRepository, never()).save(org.mockito.ArgumentMatchers.any());
+        GameLoopStatusDocument saved = this.capturedLatest();
+        assertEquals(1, saved.tick());
         verify(this.worldSnapshotStore, never()).save(org.mockito.ArgumentMatchers.any());
     }
 
     @Test
-    void stepIfLivePersists() {
+    void quietLiveTickDoesNotPersistLatest() {
         this.givenLatest(0, ClockMode.LIVE, false);
 
         this.gameLoop.stepIfLive();
 
-        GameLoopStatusDocument saved = this.capturedLatest();
-        assertEquals(1, saved.tick());
-        assertEquals(ClockMode.LIVE, saved.mode());
+        assertEquals(1, this.gameLoop.get().tick());
+        verify(this.gameLoopStatusMongoRepository, never()).save(org.mockito.ArgumentMatchers.any());
+        verify(this.worldSnapshotStore, never()).save(org.mockito.ArgumentMatchers.any());
     }
 
     @Test
@@ -81,13 +89,14 @@ class GameLoopTest {
     }
 
     @Test
-    void advanceRunsStepNTimesWithoutPersistingLatest() {
-        this.givenLatest(1_000, ClockMode.BATCH, false);
+    void advanceQuietTicksDoesNotPersistUntilSnapshot() {
+        this.givenLatest(0, ClockMode.BATCH, false);
 
-        GameLoopStatus status = this.gameLoop.advance(3);
+        GameLoopStatus status = this.gameLoop.advance(1);
 
-        assertEquals(1_003, status.tick());
+        assertEquals(1, status.tick());
         verify(this.gameLoopStatusMongoRepository, never()).save(org.mockito.ArgumentMatchers.any());
+        verify(this.worldSnapshotStore, never()).save(org.mockito.ArgumentMatchers.any());
     }
 
     @Test
@@ -96,15 +105,19 @@ class GameLoopTest {
     }
 
     @Test
-    void writesSnapshotOnInterval() {
+    void writesWorldSnapshotAndLatestOnInterval() {
         this.givenLatest(0, ClockMode.LIVE, false);
 
         this.gameLoop.advance(4);
 
-        ArgumentCaptor<GameClock> captor = ArgumentCaptor.forClass(GameClock.class);
-        verify(this.worldSnapshotStore, times(2)).save(captor.capture());
-        assertEquals(2, captor.getAllValues().get(0).tick());
-        assertEquals(4, captor.getAllValues().get(1).tick());
+        ArgumentCaptor<WorldSnapshot> snapshotCaptor = ArgumentCaptor.forClass(WorldSnapshot.class);
+        verify(this.worldSnapshotStore, times(2)).save(snapshotCaptor.capture());
+        assertEquals(2, snapshotCaptor.getAllValues().get(0).tick());
+        assertEquals(4, snapshotCaptor.getAllValues().get(1).tick());
+
+        ArgumentCaptor<GameLoopStatusDocument> latestCaptor = ArgumentCaptor.forClass(GameLoopStatusDocument.class);
+        verify(this.gameLoopStatusMongoRepository, times(2)).save(latestCaptor.capture());
+        assertEquals(4, latestCaptor.getAllValues().get(1).tick());
     }
 
     @Test

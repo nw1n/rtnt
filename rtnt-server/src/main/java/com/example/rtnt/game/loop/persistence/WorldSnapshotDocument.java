@@ -1,14 +1,18 @@
 package com.example.rtnt.game.loop.persistence;
 
-import com.example.rtnt.game.clock.domain.GameClock;
+import com.example.rtnt.game.island.persistence.IslandDocument;
+import com.example.rtnt.game.loop.WorldSnapshot;
 import org.jspecify.annotations.NullMarked;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.util.List;
+
 @Document(collection = "world_snapshots")
 @NullMarked
 public record WorldSnapshotDocument(
-        @Id long tick
+        @Id long tick,
+        List<IslandDocument> islands
 ) {
     /***************************************************************************
      *                                                                         *
@@ -16,7 +20,10 @@ public record WorldSnapshotDocument(
      *                                                                         *
      **************************************************************************/
 
-    public static WorldSnapshotDocument from(GameClock clock) {
-        return new WorldSnapshotDocument(clock.tick());
+    public static WorldSnapshotDocument from(WorldSnapshot snapshot) {
+        return new WorldSnapshotDocument(
+                snapshot.tick(),
+                snapshot.islands().stream().map(IslandDocument::fromIsland).toList()
+        );
     }
 }

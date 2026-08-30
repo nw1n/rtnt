@@ -2,6 +2,7 @@ package com.example.rtnt.game.loop;
 
 import com.example.rtnt.game.clock.domain.ClockMode;
 import com.example.rtnt.game.clock.domain.GameClock;
+import com.example.rtnt.game.island.service.IslandService;
 import com.example.rtnt.game.loop.persistence.GameLoopStatusDocument;
 import com.example.rtnt.game.loop.persistence.GameLoopStatusMongoRepository;
 import jakarta.annotation.PostConstruct;
@@ -26,6 +27,7 @@ public class GameLoop {
     private final GameLoopStatusMongoRepository gameLoopStatusMongoRepository;
     private final GameCommandQueue gameCommandQueue;
     private final WorldSnapshotStore worldSnapshotStore;
+    private final IslandService islandService;
     private final int snapshotIntervalTicks;
     private final Object lock = new Object();
     private @Nullable GameClock clock;
@@ -42,6 +44,7 @@ public class GameLoop {
             GameLoopStatusMongoRepository gameLoopStatusMongoRepository,
             GameCommandQueue gameCommandQueue,
             WorldSnapshotStore worldSnapshotStore,
+            IslandService islandService,
             @Value("${rtnt.clock.snapshot-interval-ticks:1000}") int snapshotIntervalTicks
     ) {
         if (snapshotIntervalTicks < 1) {
@@ -50,6 +53,7 @@ public class GameLoop {
         this.gameLoopStatusMongoRepository = gameLoopStatusMongoRepository;
         this.gameCommandQueue = gameCommandQueue;
         this.worldSnapshotStore = worldSnapshotStore;
+        this.islandService = islandService;
         this.snapshotIntervalTicks = snapshotIntervalTicks;
     }
 
@@ -124,7 +128,6 @@ public class GameLoop {
                 return;
             }
             this.execute();
-            this.save();
         }
     }
 
@@ -150,11 +153,19 @@ public class GameLoop {
 
     private void execute() {
         GameClock current = this.requireClock();
-        this.gameCommandQueue.drain(current.tick());
+        boolean eventful = !this.gameCommandQueue.drain(current.tick()).isEmpty();
         this.clock = current.advance();
-        if (this.requireClock().tick() % this.snapshotIntervalTicks == 0) {
-            this.worldSnapshotStore.save(this.requireClock());
+        boolean snapshotDue = this.requireClock().tick() % this.snapshotIntervalTicks == 0;
+        if (snapshotDue) {
+            this.worldSnapshotStore.save(this.captureWorld());
         }
+        if (eventful || snapshotDue) {
+            this.save();
+        }
+    }
+
+    private WorldSnapshot captureWorld() {
+        return new WorldSnapshot(this.requireClock().tick(), this.islandService.list());
     }
 
     private GameClock requireClock() {

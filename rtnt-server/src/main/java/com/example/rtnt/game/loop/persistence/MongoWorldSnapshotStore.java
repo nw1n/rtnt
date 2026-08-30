@@ -1,6 +1,6 @@
 package com.example.rtnt.game.loop.persistence;
 
-import com.example.rtnt.game.clock.domain.GameClock;
+import com.example.rtnt.game.loop.WorldSnapshot;
 import com.example.rtnt.game.loop.WorldSnapshotStore;
 import org.jspecify.annotations.NullMarked;
 import org.springframework.stereotype.Component;
@@ -27,7 +27,7 @@ public class MongoWorldSnapshotStore implements WorldSnapshotStore {
      **************************************************************************/
 
     @Override
-    public void save(GameClock clock) {
-        this.worldSnapshotMongoRepository.save(WorldSnapshotDocument.from(clock));
+    public void save(WorldSnapshot snapshot) {
+        this.worldSnapshotMongoRepository.save(WorldSnapshotDocument.from(snapshot));
     }
 }
