@@ -4,6 +4,7 @@ import com.example.rtnt.game.clock.domain.ClockMode;
 import com.example.rtnt.game.clock.domain.GameClock;
 import com.example.rtnt.game.clock.persistence.GameClockDocument;
 import com.example.rtnt.game.clock.persistence.GameClockMongoRepository;
+import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -20,6 +21,7 @@ public class ClockService {
 
     private final GameClockMongoRepository gameClockMongoRepository;
     private final Object lock = new Object();
+    private GameClock clock;
 
     /***************************************************************************
      *                                                                         *
@@ -33,40 +35,57 @@ public class ClockService {
 
     /***************************************************************************
      *                                                                         *
+     * Lifecycle                                                               *
+     *                                                                         *
+     **************************************************************************/
+
+    @PostConstruct
+    void loadOnStartup() {
+        synchronized (this.lock) {
+            this.ensureLoaded();
+        }
+    }
+
+    /***************************************************************************
+     *                                                                         *
      * Public API                                                              *
      *                                                                         *
      **************************************************************************/
 
     public GameClock get() {
         synchronized (this.lock) {
-            return this.load();
+            this.ensureLoaded();
+            return this.clock;
         }
     }
 
     public GameClock pause() {
         synchronized (this.lock) {
-            GameClock clock = this.load().pause();
-            this.save(clock);
-            log.info("Clock paused at tick {}", clock.tick());
-            return clock;
+            this.ensureLoaded();
+            this.clock = this.clock.pause();
+            this.persistIfLive();
+            log.info("Clock paused at tick {}", this.clock.tick());
+            return this.clock;
         }
     }
 
     public GameClock resume() {
         synchronized (this.lock) {
-            GameClock clock = this.load().resume();
-            this.save(clock);
-            log.info("Clock resumed at tick {}", clock.tick());
-            return clock;
+            this.ensureLoaded();
+            this.clock = this.clock.resume();
+            this.persistIfLive();
+            log.info("Clock resumed at tick {}", this.clock.tick());
+            return this.clock;
         }
     }
 
     public GameClock setMode(ClockMode mode) {
         synchronized (this.lock) {
-            GameClock clock = this.load().withMode(mode);
-            this.save(clock);
-            log.info("Clock mode set to {} at tick {}", mode, clock.tick());
-            return clock;
+            this.ensureLoaded();
+            this.clock = this.clock.withMode(mode);
+            this.persistIfLive();
+            log.info("Clock mode set to {} at tick {}", mode, this.clock.tick());
+            return this.clock;
         }
     }
 
@@ -75,23 +94,23 @@ public class ClockService {
             throw new IllegalArgumentException("ticks must be at least 1");
         }
         synchronized (this.lock) {
-            GameClock clock = this.load();
+            this.ensureLoaded();
             for (int i = 0; i < ticks; i++) {
-                clock = clock.advance();
+                this.clock = this.clock.advance();
             }
-            this.save(clock);
-            log.info("Clock advanced by {} ticks to {}", ticks, clock.tick());
-            return clock;
+            log.info("Clock advanced by {} ticks to {}", ticks, this.clock.tick());
+            return this.clock;
         }
     }
 
     public void tickIfLive() {
         synchronized (this.lock) {
-            GameClock clock = this.load();
-            if (clock.mode() != ClockMode.LIVE || clock.paused()) {
+            this.ensureLoaded();
+            if (this.clock.mode() != ClockMode.LIVE || this.clock.paused()) {
                 return;
             }
-            this.save(clock.advance());
+            this.clock = this.clock.advance();
+            this.save();
         }
     }
 
@@ -101,17 +120,26 @@ public class ClockService {
      *                                                                         *
      **************************************************************************/
 
-    private GameClock load() {
-        return this.gameClockMongoRepository.findById(GameClockDocument.DOCUMENT_ID)
+    private void ensureLoaded() {
+        if (this.clock != null) {
+            return;
+        }
+        this.clock = this.gameClockMongoRepository.findById(GameClockDocument.DOCUMENT_ID)
                 .map(GameClockDocument::toClock)
                 .orElseGet(() -> {
                     GameClock initial = GameClock.initial();
-                    this.save(initial);
+                    this.gameClockMongoRepository.save(GameClockDocument.from(initial));
                     return initial;
                 });
     }
 
-    private void save(GameClock clock) {
-        this.gameClockMongoRepository.save(GameClockDocument.from(clock));
+    private void persistIfLive() {
+        if (this.clock.mode() == ClockMode.LIVE) {
+            this.save();
+        }
+    }
+
+    private void save() {
+        this.gameClockMongoRepository.save(GameClockDocument.from(this.clock));
     }
 }

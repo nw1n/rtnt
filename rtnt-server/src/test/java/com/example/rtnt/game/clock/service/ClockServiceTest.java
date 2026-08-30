@@ -18,6 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -36,8 +37,7 @@ class ClockServiceTest {
 
     @Test
     void tickIfLiveAdvancesWhenLiveAndUnpaused() {
-        when(this.gameClockMongoRepository.findById(GameClockDocument.DOCUMENT_ID))
-                .thenReturn(Optional.of(GameClockDocument.from(GameClock.initial())));
+        this.givenClock(GameClock.initial());
 
         this.clockService.tickIfLive();
 
@@ -49,9 +49,7 @@ class ClockServiceTest {
 
     @Test
     void tickIfLiveDoesNothingWhenPaused() {
-        GameClock paused = GameClock.initial().pause();
-        when(this.gameClockMongoRepository.findById(GameClockDocument.DOCUMENT_ID))
-                .thenReturn(Optional.of(GameClockDocument.from(paused)));
+        this.givenClock(GameClock.initial().pause());
 
         this.clockService.tickIfLive();
 
@@ -60,9 +58,7 @@ class ClockServiceTest {
 
     @Test
     void tickIfLiveDoesNothingInBatchMode() {
-        GameClock batch = GameClock.initial().withMode(ClockMode.BATCH);
-        when(this.gameClockMongoRepository.findById(GameClockDocument.DOCUMENT_ID))
-                .thenReturn(Optional.of(GameClockDocument.from(batch)));
+        this.givenClock(GameClock.initial().withMode(ClockMode.BATCH));
 
         this.clockService.tickIfLive();
 
@@ -70,27 +66,24 @@ class ClockServiceTest {
     }
 
     @Test
-    void advancePersistsOnceAtTheEnd() {
-        when(this.gameClockMongoRepository.findById(GameClockDocument.DOCUMENT_ID))
-                .thenReturn(Optional.of(GameClockDocument.from(GameClock.initial())));
+    void advanceUpdatesMemoryWithoutPersisting() {
+        this.givenClock(GameClock.initial());
 
         GameClock clock = this.clockService.advance(3);
 
         assertEquals(3, clock.tick());
-        GameClock saved = this.capturedSave();
-        assertEquals(3, saved.tick());
+        verify(this.gameClockMongoRepository, never()).save(org.mockito.ArgumentMatchers.any());
     }
 
     @Test
     void advanceFromCurrentTick() {
-        GameClock start = new GameClock(1_000, ClockMode.BATCH, false);
-        when(this.gameClockMongoRepository.findById(GameClockDocument.DOCUMENT_ID))
-                .thenReturn(Optional.of(GameClockDocument.from(start)));
+        this.givenClock(new GameClock(1_000, ClockMode.BATCH, false));
 
         GameClock clock = this.clockService.advance(100_000);
 
         assertEquals(101_000, clock.tick());
         assertEquals(ClockMode.BATCH, clock.mode());
+        verify(this.gameClockMongoRepository, never()).save(org.mockito.ArgumentMatchers.any());
     }
 
     @Test
@@ -101,13 +94,42 @@ class ClockServiceTest {
 
     @Test
     void pauseAndResumeUpdateFlagWithoutTicking() {
-        when(this.gameClockMongoRepository.findById(GameClockDocument.DOCUMENT_ID))
-                .thenReturn(Optional.of(GameClockDocument.from(new GameClock(12, ClockMode.LIVE, false))));
+        this.givenClock(new GameClock(12, ClockMode.LIVE, false));
 
         GameClock paused = this.clockService.pause();
 
         assertTrue(paused.paused());
         assertEquals(12, paused.tick());
+        GameClock saved = this.capturedSave();
+        assertTrue(saved.paused());
+        assertEquals(12, saved.tick());
+    }
+
+    @Test
+    void setModeBatchDoesNotPersist() {
+        this.givenClock(GameClock.initial());
+
+        GameClock clock = this.clockService.setMode(ClockMode.BATCH);
+
+        assertEquals(ClockMode.BATCH, clock.mode());
+        verify(this.gameClockMongoRepository, never()).save(org.mockito.ArgumentMatchers.any());
+    }
+
+    @Test
+    void readsMongoOnceThenUsesMemory() {
+        this.givenClock(GameClock.initial());
+
+        this.clockService.get();
+        this.clockService.advance(2);
+        this.clockService.tickIfLive();
+
+        verify(this.gameClockMongoRepository, times(1)).findById(GameClockDocument.DOCUMENT_ID);
+        assertEquals(3, this.capturedSave().tick());
+    }
+
+    private void givenClock(GameClock clock) {
+        when(this.gameClockMongoRepository.findById(GameClockDocument.DOCUMENT_ID))
+                .thenReturn(Optional.of(GameClockDocument.from(clock)));
     }
 
     private GameClock capturedSave() {
