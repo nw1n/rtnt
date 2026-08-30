@@ -19,9 +19,9 @@ class BatchClockDriverTest {
     void runAdvancesManyTicksFromCurrent() {
         GameClock start = new GameClock(1_000, ClockMode.BATCH, false);
 
-        GameClock clock = new BatchClockDriver().run(start, 100_000);
+        GameClock clock = new BatchClockDriver().run(start, 1_000_000_000);
 
-        assertEquals(101_000, clock.tick());
+        assertEquals(1_000_001_000, clock.tick());
         assertEquals(ClockMode.BATCH, clock.mode());
     }
 
