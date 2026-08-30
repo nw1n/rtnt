@@ -9,6 +9,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.util.function.UnaryOperator;
+
 @Service
 public class ClockService {
     private static final Logger log = LoggerFactory.getLogger(ClockService.class);
@@ -89,27 +91,21 @@ public class ClockService {
         }
     }
 
-    public GameClock advance(int ticks) {
-        if (ticks < 1) {
-            throw new IllegalArgumentException("ticks must be at least 1");
-        }
+    public GameClock runStep(UnaryOperator<GameClock> body) {
         synchronized (this.lock) {
             this.ensureLoaded();
-            for (int i = 0; i < ticks; i++) {
-                this.clock = this.clock.advance();
-            }
-            log.info("Clock advanced by {} ticks to {}", ticks, this.clock.tick());
+            this.clock = body.apply(this.clock);
             return this.clock;
         }
     }
 
-    public void tickIfLive() {
+    public void runLiveStep(UnaryOperator<GameClock> body) {
         synchronized (this.lock) {
             this.ensureLoaded();
             if (this.clock.mode() != ClockMode.LIVE || this.clock.paused()) {
                 return;
             }
-            this.clock = this.clock.advance();
+            this.clock = body.apply(this.clock);
             this.save();
         }
     }

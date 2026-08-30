@@ -3,6 +3,7 @@ package com.example.rtnt.game.clock.web;
 import com.example.rtnt.game.clock.domain.ClockMode;
 import com.example.rtnt.game.clock.domain.GameClock;
 import com.example.rtnt.game.clock.service.ClockService;
+import com.example.rtnt.game.loop.GameLoop;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -25,6 +26,9 @@ class ClockControllerTest {
 
     @MockitoBean
     private ClockService clockService;
+
+    @MockitoBean
+    private GameLoop gameLoop;
 
     @Test
     void getReturnsClock() throws Exception {
@@ -62,14 +66,14 @@ class ClockControllerTest {
 
     @Test
     void advanceDelegatesToService() throws Exception {
-        when(this.clockService.advance(25)).thenReturn(new GameClock(25, ClockMode.BATCH, false));
+        when(this.gameLoop.advance(25)).thenReturn(new GameClock(25, ClockMode.BATCH, false));
 
         this.mockMvc.perform(post("/api/clock/advance")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"ticks\":25}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.tick").value(25));
-        verify(this.clockService).advance(25);
+        verify(this.gameLoop).advance(25);
     }
 
     @Test

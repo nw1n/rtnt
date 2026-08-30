@@ -1,7 +1,7 @@
 package com.example.rtnt.cli;
 
 import com.example.rtnt.game.clock.domain.GameClock;
-import com.example.rtnt.game.clock.service.ClockService;
+import com.example.rtnt.game.loop.GameLoop;
 import org.jspecify.annotations.NonNull;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -17,7 +17,7 @@ import java.util.List;
 public class AdvanceClockCommand implements ApplicationRunner {
     public static final String ARG = "advance-clock";
 
-    private final ClockService clockService;
+    private final GameLoop gameLoop;
     private final ConfigurableApplicationContext context;
 
     /***************************************************************************
@@ -26,8 +26,8 @@ public class AdvanceClockCommand implements ApplicationRunner {
      *                                                                         *
      **************************************************************************/
 
-    public AdvanceClockCommand(ClockService clockService, ConfigurableApplicationContext context) {
-        this.clockService = clockService;
+    public AdvanceClockCommand(GameLoop gameLoop, ConfigurableApplicationContext context) {
+        this.gameLoop = gameLoop;
         this.context = context;
     }
 
@@ -43,7 +43,7 @@ public class AdvanceClockCommand implements ApplicationRunner {
             return;
         }
         int ticks = this.parseTicks(args);
-        GameClock clock = this.clockService.advance(ticks);
+        GameClock clock = this.gameLoop.advance(ticks);
         System.out.println("Clock advanced to tick " + clock.tick());
         System.exit(SpringApplication.exit(this.context, () -> 0));
     }

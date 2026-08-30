@@ -1,14 +1,14 @@
-package com.example.rtnt.game.clock.service;
+package com.example.rtnt.game.loop.persistence;
 
-import com.example.rtnt.game.loop.GameLoop;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.scheduling.annotation.Scheduled;
+import com.example.rtnt.game.clock.domain.GameClock;
+import com.example.rtnt.game.loop.WorldSnapshotStore;
+import org.jspecify.annotations.NullMarked;
 import org.springframework.stereotype.Component;
 
 @Component
-@ConditionalOnProperty(name = "rtnt.clock.live-enabled", havingValue = "true", matchIfMissing = true)
-public class LiveClockScheduler {
-    private final GameLoop gameLoop;
+@NullMarked
+public class MongoWorldSnapshotStore implements WorldSnapshotStore {
+    private final WorldSnapshotMongoRepository worldSnapshotMongoRepository;
 
     /***************************************************************************
      *                                                                         *
@@ -16,18 +16,18 @@ public class LiveClockScheduler {
      *                                                                         *
      **************************************************************************/
 
-    public LiveClockScheduler(GameLoop gameLoop) {
-        this.gameLoop = gameLoop;
+    public MongoWorldSnapshotStore(WorldSnapshotMongoRepository worldSnapshotMongoRepository) {
+        this.worldSnapshotMongoRepository = worldSnapshotMongoRepository;
     }
 
     /***************************************************************************
      *                                                                         *
-     * Scheduled                                                               *
+     * Public API                                                              *
      *                                                                         *
      **************************************************************************/
 
-    @Scheduled(fixedRateString = "${rtnt.clock.live-interval-ms:1000}")
-    public void onInterval() {
-        this.gameLoop.stepIfLive();
+    @Override
+    public void save(GameClock clock) {
+        this.worldSnapshotMongoRepository.save(WorldSnapshotDocument.from(clock));
     }
 }

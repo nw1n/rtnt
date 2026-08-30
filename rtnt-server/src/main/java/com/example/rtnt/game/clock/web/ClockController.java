@@ -3,6 +3,7 @@ package com.example.rtnt.game.clock.web;
 import com.example.rtnt.game.clock.domain.ClockMode;
 import com.example.rtnt.game.clock.domain.GameClock;
 import com.example.rtnt.game.clock.service.ClockService;
+import com.example.rtnt.game.loop.GameLoop;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/clock")
 public class ClockController {
     private final ClockService clockService;
+    private final GameLoop gameLoop;
 
     /***************************************************************************
      *                                                                         *
@@ -24,8 +26,9 @@ public class ClockController {
      *                                                                         *
      **************************************************************************/
 
-    public ClockController(ClockService clockService) {
+    public ClockController(ClockService clockService, GameLoop gameLoop) {
         this.clockService = clockService;
+        this.gameLoop = gameLoop;
     }
 
     /***************************************************************************
@@ -56,7 +59,7 @@ public class ClockController {
 
     @PostMapping("/advance")
     public ClockDto advance(@Valid @RequestBody AdvanceRequest request) {
-        return ClockDto.from(this.clockService.advance(request.ticks()));
+        return ClockDto.from(this.gameLoop.advance(request.ticks()));
     }
 
     /***************************************************************************

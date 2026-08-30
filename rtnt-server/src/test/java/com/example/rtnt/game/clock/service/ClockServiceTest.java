@@ -14,8 +14,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -36,59 +34,43 @@ class ClockServiceTest {
     }
 
     @Test
-    void tickIfLiveAdvancesWhenLiveAndUnpaused() {
+    void runLiveStepAdvancesWhenLiveAndUnpaused() {
         this.givenClock(GameClock.initial());
 
-        this.clockService.tickIfLive();
+        this.clockService.runLiveStep(GameClock::advance);
 
         GameClock saved = this.capturedSave();
         assertEquals(1, saved.tick());
         assertEquals(ClockMode.LIVE, saved.mode());
-        assertFalse(saved.paused());
     }
 
     @Test
-    void tickIfLiveDoesNothingWhenPaused() {
+    void runLiveStepDoesNothingWhenPaused() {
         this.givenClock(GameClock.initial().pause());
 
-        this.clockService.tickIfLive();
+        this.clockService.runLiveStep(GameClock::advance);
 
         verify(this.gameClockMongoRepository, never()).save(org.mockito.ArgumentMatchers.any());
+        assertEquals(0, this.clockService.get().tick());
     }
 
     @Test
-    void tickIfLiveDoesNothingInBatchMode() {
+    void runLiveStepDoesNothingInBatchMode() {
         this.givenClock(GameClock.initial().withMode(ClockMode.BATCH));
 
-        this.clockService.tickIfLive();
+        this.clockService.runLiveStep(GameClock::advance);
 
         verify(this.gameClockMongoRepository, never()).save(org.mockito.ArgumentMatchers.any());
+        assertEquals(0, this.clockService.get().tick());
     }
 
     @Test
-    void advanceUpdatesMemoryWithoutPersisting() {
+    void runStepUpdatesMemoryWithoutPersisting() {
         this.givenClock(GameClock.initial());
 
-        GameClock clock = this.clockService.advance(3);
+        GameClock clock = this.clockService.runStep(GameClock::advance);
 
-        assertEquals(3, clock.tick());
-        verify(this.gameClockMongoRepository, never()).save(org.mockito.ArgumentMatchers.any());
-    }
-
-    @Test
-    void advanceFromCurrentTick() {
-        this.givenClock(new GameClock(1_000, ClockMode.BATCH, false));
-
-        GameClock clock = this.clockService.advance(100_000);
-
-        assertEquals(101_000, clock.tick());
-        assertEquals(ClockMode.BATCH, clock.mode());
-        verify(this.gameClockMongoRepository, never()).save(org.mockito.ArgumentMatchers.any());
-    }
-
-    @Test
-    void advanceRejectsNonPositiveTicks() {
-        assertThrows(IllegalArgumentException.class, () -> this.clockService.advance(0));
+        assertEquals(1, clock.tick());
         verify(this.gameClockMongoRepository, never()).save(org.mockito.ArgumentMatchers.any());
     }
 
@@ -120,11 +102,11 @@ class ClockServiceTest {
         this.givenClock(GameClock.initial());
 
         this.clockService.get();
-        this.clockService.advance(2);
-        this.clockService.tickIfLive();
+        this.clockService.runStep(GameClock::advance);
+        this.clockService.runLiveStep(GameClock::advance);
 
         verify(this.gameClockMongoRepository, times(1)).findById(GameClockDocument.DOCUMENT_ID);
-        assertEquals(3, this.capturedSave().tick());
+        assertEquals(2, this.capturedSave().tick());
     }
 
     private void givenClock(GameClock clock) {
