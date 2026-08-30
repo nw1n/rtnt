@@ -2,7 +2,6 @@ package com.example.rtnt.game.clock.web;
 
 import com.example.rtnt.game.clock.domain.ClockMode;
 import com.example.rtnt.game.clock.domain.GameClock;
-import com.example.rtnt.game.clock.service.ClockService;
 import com.example.rtnt.game.loop.GameLoop;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,14 +24,11 @@ class ClockControllerTest {
     private MockMvc mockMvc;
 
     @MockitoBean
-    private ClockService clockService;
-
-    @MockitoBean
     private GameLoop gameLoop;
 
     @Test
     void getReturnsClock() throws Exception {
-        when(this.clockService.get()).thenReturn(new GameClock(4, ClockMode.LIVE, true));
+        when(this.gameLoop.get()).thenReturn(new GameClock(4, ClockMode.LIVE, true));
 
         this.mockMvc.perform(get("/api/clock"))
                 .andExpect(status().isOk())
@@ -42,18 +38,18 @@ class ClockControllerTest {
     }
 
     @Test
-    void pauseDelegatesToService() throws Exception {
-        when(this.clockService.pause()).thenReturn(GameClock.initial().pause());
+    void pauseDelegatesToGameLoop() throws Exception {
+        when(this.gameLoop.pause()).thenReturn(GameClock.initial().pause());
 
         this.mockMvc.perform(post("/api/clock/pause"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.paused").value(true));
-        verify(this.clockService).pause();
+        verify(this.gameLoop).pause();
     }
 
     @Test
-    void setModeDelegatesToService() throws Exception {
-        when(this.clockService.setMode(ClockMode.BATCH))
+    void setModeDelegatesToGameLoop() throws Exception {
+        when(this.gameLoop.setMode(ClockMode.BATCH))
                 .thenReturn(GameClock.initial().withMode(ClockMode.BATCH));
 
         this.mockMvc.perform(post("/api/clock/mode")
@@ -61,11 +57,11 @@ class ClockControllerTest {
                         .content("{\"mode\":\"BATCH\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.mode").value("BATCH"));
-        verify(this.clockService).setMode(ClockMode.BATCH);
+        verify(this.gameLoop).setMode(ClockMode.BATCH);
     }
 
     @Test
-    void advanceDelegatesToService() throws Exception {
+    void advanceDelegatesToGameLoop() throws Exception {
         when(this.gameLoop.advance(25)).thenReturn(new GameClock(25, ClockMode.BATCH, false));
 
         this.mockMvc.perform(post("/api/clock/advance")

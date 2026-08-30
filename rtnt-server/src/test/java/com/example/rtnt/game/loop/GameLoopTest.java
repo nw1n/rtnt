@@ -4,7 +4,6 @@ import com.example.rtnt.game.clock.domain.ClockMode;
 import com.example.rtnt.game.clock.domain.GameClock;
 import com.example.rtnt.game.clock.persistence.GameClockDocument;
 import com.example.rtnt.game.clock.persistence.GameClockMongoRepository;
-import com.example.rtnt.game.clock.service.ClockService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -32,14 +31,17 @@ class GameLoopTest {
     private WorldSnapshotStore worldSnapshotStore;
 
     private GameCommandQueue gameCommandQueue;
-    private ClockService clockService;
     private GameLoop gameLoop;
 
     @BeforeEach
     void setUp() {
         this.gameCommandQueue = new GameCommandQueue();
-        this.clockService = new ClockService(this.gameClockMongoRepository);
-        this.gameLoop = new GameLoop(this.clockService, this.gameCommandQueue, this.worldSnapshotStore, 2);
+        this.gameLoop = new GameLoop(
+                this.gameClockMongoRepository,
+                this.gameCommandQueue,
+                this.worldSnapshotStore,
+                2
+        );
     }
 
     @Test
@@ -73,7 +75,7 @@ class GameLoopTest {
 
         this.gameLoop.stepIfLive();
 
-        assertEquals(0, this.clockService.get().tick());
+        assertEquals(0, this.gameLoop.get().tick());
         verify(this.gameClockMongoRepository, never()).save(org.mockito.ArgumentMatchers.any());
     }
 
@@ -102,6 +104,41 @@ class GameLoopTest {
         verify(this.worldSnapshotStore, times(2)).save(captor.capture());
         assertEquals(2, captor.getAllValues().get(0).tick());
         assertEquals(4, captor.getAllValues().get(1).tick());
+    }
+
+    @Test
+    void pauseUpdatesFlagWithoutTicking() {
+        this.givenClock(new GameClock(12, ClockMode.LIVE, false));
+
+        GameClock paused = this.gameLoop.pause();
+
+        assertTrue(paused.paused());
+        assertEquals(12, paused.tick());
+        GameClock saved = this.capturedLatest();
+        assertTrue(saved.paused());
+        assertEquals(12, saved.tick());
+    }
+
+    @Test
+    void setModeBatchDoesNotPersist() {
+        this.givenClock(GameClock.initial());
+
+        GameClock clock = this.gameLoop.setMode(ClockMode.BATCH);
+
+        assertEquals(ClockMode.BATCH, clock.mode());
+        verify(this.gameClockMongoRepository, never()).save(org.mockito.ArgumentMatchers.any());
+    }
+
+    @Test
+    void readsMongoOnceThenUsesMemory() {
+        this.givenClock(GameClock.initial());
+
+        this.gameLoop.get();
+        this.gameLoop.step();
+        this.gameLoop.stepIfLive();
+
+        verify(this.gameClockMongoRepository, times(1)).findById(GameClockDocument.DOCUMENT_ID);
+        assertEquals(2, this.capturedLatest().tick());
     }
 
     private void givenClock(GameClock clock) {
