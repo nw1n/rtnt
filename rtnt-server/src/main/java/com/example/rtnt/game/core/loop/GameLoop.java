@@ -9,6 +9,7 @@ import com.example.rtnt.game.core.ticker.persistence.TickerDocument;
 import com.example.rtnt.game.core.ticker.persistence.TickerMongoRepository;
 import com.example.rtnt.game.core.worldsnapshot.WorldSnapshot;
 import com.example.rtnt.game.core.worldsnapshot.WorldSnapshotStore;
+import com.example.rtnt.game.island.service.IslandPopulationGrowth;
 import com.example.rtnt.game.island.service.IslandService;
 import jakarta.annotation.PostConstruct;
 import org.jspecify.annotations.NullMarked;
@@ -34,6 +35,7 @@ public class GameLoop {
     private final GameCommandQueue gameCommandQueue;
     private final WorldSnapshotStore worldSnapshotStore;
     private final IslandService islandService;
+    private final IslandPopulationGrowth islandPopulationGrowth;
     private final int snapshotIntervalTicks;
     private final Object lock = new Object();
     private @Nullable GameTick gameTick;
@@ -53,6 +55,7 @@ public class GameLoop {
             GameCommandQueue gameCommandQueue,
             WorldSnapshotStore worldSnapshotStore,
             IslandService islandService,
+            IslandPopulationGrowth islandPopulationGrowth,
             @Value("${rtnt.snapshot.interval-ticks:1000}") int snapshotIntervalTicks
     ) {
         if (snapshotIntervalTicks < 1) {
@@ -63,6 +66,7 @@ public class GameLoop {
         this.gameCommandQueue = gameCommandQueue;
         this.worldSnapshotStore = worldSnapshotStore;
         this.islandService = islandService;
+        this.islandPopulationGrowth = islandPopulationGrowth;
         this.snapshotIntervalTicks = snapshotIntervalTicks;
     }
 
@@ -173,6 +177,9 @@ public class GameLoop {
         GameTick current = this.requireTick();
         boolean eventful = !this.gameCommandQueue.drain(current.tick()).isEmpty();
         this.gameTick = current.advance();
+        if (this.islandPopulationGrowth.applyIfDue(this.requireTick().tick())) {
+            eventful = true;
+        }
         boolean snapshotDue = this.requireTick().tick() % this.snapshotIntervalTicks == 0;
         if (snapshotDue) {
             this.persistSnapshot();

@@ -11,6 +11,7 @@ import com.example.rtnt.game.core.ticker.persistence.TickerDocument;
 import com.example.rtnt.game.core.ticker.persistence.TickerMongoRepository;
 import com.example.rtnt.game.core.worldsnapshot.WorldSnapshot;
 import com.example.rtnt.game.core.worldsnapshot.WorldSnapshotStore;
+import com.example.rtnt.game.island.service.IslandPopulationGrowth;
 import com.example.rtnt.game.island.service.IslandService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -46,6 +47,9 @@ class GameLoopTest {
     @Mock
     private IslandService islandService;
 
+    @Mock
+    private IslandPopulationGrowth islandPopulationGrowth;
+
     private GameCommandQueue gameCommandQueue;
     private GameLoop gameLoop;
 
@@ -54,12 +58,14 @@ class GameLoopTest {
         this.gameCommandQueue = new GameCommandQueue();
         lenient().when(this.islandService.list()).thenReturn(List.of());
         lenient().when(this.islandService.listStatuses()).thenReturn(List.of());
+        lenient().when(this.islandPopulationGrowth.applyIfDue(org.mockito.ArgumentMatchers.anyLong())).thenReturn(false);
         this.gameLoop = new GameLoop(
                 this.tickerMongoRepository,
                 this.gameFlowStatusMongoRepository,
                 this.gameCommandQueue,
                 this.worldSnapshotStore,
                 this.islandService,
+                this.islandPopulationGrowth,
                 2
         );
     }
@@ -112,6 +118,17 @@ class GameLoopTest {
         assertEquals(1, status.tick());
         verify(this.tickerMongoRepository, never()).save(org.mockito.ArgumentMatchers.any());
         verify(this.gameFlowStatusMongoRepository, never()).save(org.mockito.ArgumentMatchers.any());
+        verify(this.worldSnapshotStore, never()).save(org.mockito.ArgumentMatchers.any());
+    }
+
+    @Test
+    void populationGrowthPersistsTicker() {
+        this.givenLatest(2, FlowMode.BATCH, false);
+        when(this.islandPopulationGrowth.applyIfDue(3)).thenReturn(true);
+
+        this.gameLoop.step();
+
+        assertEquals(3, this.capturedTicker().tick());
         verify(this.worldSnapshotStore, never()).save(org.mockito.ArgumentMatchers.any());
     }
 

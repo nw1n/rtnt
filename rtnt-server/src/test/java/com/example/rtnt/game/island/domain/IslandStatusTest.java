@@ -12,4 +12,11 @@ class IslandStatusTest {
         assertEquals("island-1", status.islandId());
         assertEquals(0, status.population());
     }
+
+    @Test
+    void growIncreasesPopulation() {
+        IslandStatus grown = IslandStatus.initial("island-1").grow(4);
+        assertEquals(4, grown.population());
+        assertEquals("island-1", grown.islandId());
+    }
 }
