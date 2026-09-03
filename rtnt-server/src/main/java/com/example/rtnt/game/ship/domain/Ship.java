@@ -1,6 +1,5 @@
 package com.example.rtnt.game.ship.domain;
 
-import com.example.rtnt.game.inventory.domain.Inventory;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
@@ -16,9 +15,7 @@ public class Ship {
     private final String id;
     private final String name;
     private final @Nullable String islandId;
-    private final @Nullable Journey journey;
     private final @Nullable String playerId;
-    private final Inventory inventory;
 
     /***************************************************************************
      *                                                                         *
@@ -26,20 +23,11 @@ public class Ship {
      *                                                                         *
      **************************************************************************/
 
-    private Ship(
-            String id,
-            String name,
-            @Nullable String islandId,
-            @Nullable Journey journey,
-            @Nullable String playerId,
-            Inventory inventory
-    ) {
+    private Ship(String id, String name, @Nullable String islandId, @Nullable String playerId) {
         this.id = Objects.requireNonNull(id, "Ship id cannot be null");
         this.name = Objects.requireNonNull(name, "Ship name cannot be null");
         this.islandId = islandId;
-        this.journey = journey;
         this.playerId = playerId;
-        this.inventory = Objects.requireNonNull(inventory, "Ship inventory cannot be null");
     }
 
     /***************************************************************************
@@ -48,25 +36,12 @@ public class Ship {
      *                                                                         *
      **************************************************************************/
 
-    public static Ship create(
-            String name,
-            @Nullable String islandId,
-            @Nullable Journey journey,
-            @Nullable String playerId,
-            Inventory inventory
-    ) {
-        return new Ship(UUID.randomUUID().toString(), name, islandId, journey, playerId, inventory);
+    public static Ship create(String name, @Nullable String islandId, @Nullable String playerId) {
+        return new Ship(UUID.randomUUID().toString(), name, islandId, playerId);
     }
 
-    public static Ship existing(
-            String id,
-            String name,
-            @Nullable String islandId,
-            @Nullable Journey journey,
-            @Nullable String playerId,
-            Inventory inventory
-    ) {
-        return new Ship(id, name, islandId, journey, playerId, inventory);
+    public static Ship existing(String id, String name, @Nullable String islandId, @Nullable String playerId) {
+        return new Ship(id, name, islandId, playerId);
     }
 
     /***************************************************************************
@@ -87,10 +62,6 @@ public class Ship {
         return this.islandId;
     }
 
-    public @Nullable Journey getJourney() {
-        return this.journey;
-    }
-
     public @Nullable String getPlayerId() {
         return this.playerId;
     }
@@ -101,10 +72,6 @@ public class Ship {
 
     public int getCargoCapacity() {
         return CARGO_CAPACITY_UNITS;
-    }
-
-    public Inventory getInventory() {
-        return this.inventory;
     }
 
     @Override
@@ -126,6 +93,6 @@ public class Ship {
     @Override
     public String toString() {
         return "Ship{id='" + this.id + "', name='" + this.name + "', islandId='" + this.islandId
-                + "', journey=" + this.journey + ", playerId='" + this.playerId + "', inventory=" + this.inventory + "}";
+                + "', playerId='" + this.playerId + "'}";
     }
 }
