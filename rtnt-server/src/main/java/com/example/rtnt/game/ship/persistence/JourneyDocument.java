@@ -6,8 +6,6 @@ import org.jspecify.annotations.Nullable;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.time.Instant;
-
 @Document(collection = "journeys")
 @NullMarked
 public record JourneyDocument(
@@ -15,9 +13,9 @@ public record JourneyDocument(
         String shipId,
         String startIslandId,
         String targetIslandId,
-        Instant departed,
-        @Nullable Instant arrived,
-        Instant estimatedArrival,
+        long departedTick,
+        @Nullable Long arrivedTick,
+        long estimatedArrivalTick,
         @Nullable Boolean active
 ) {
     /***************************************************************************
@@ -32,9 +30,9 @@ public record JourneyDocument(
                 journey.shipId(),
                 journey.startIslandId(),
                 journey.targetIslandId(),
-                journey.departed(),
-                journey.arrived(),
-                journey.estimatedArrival(),
+                journey.departedTick(),
+                journey.arrivedTick(),
+                journey.estimatedArrivalTick(),
                 journey.active()
         );
     }
@@ -51,9 +49,9 @@ public record JourneyDocument(
                 this.shipId,
                 this.startIslandId,
                 this.targetIslandId,
-                this.departed,
-                this.arrived,
-                this.estimatedArrival,
+                this.departedTick,
+                this.arrivedTick,
+                this.estimatedArrivalTick,
                 Journey.resolveActiveFromStorage(this.active)
         );
     }

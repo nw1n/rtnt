@@ -3,7 +3,6 @@ package com.example.rtnt.game.ship.domain;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
-import java.time.Instant;
 import java.util.UUID;
 
 @NullMarked
@@ -12,9 +11,9 @@ public record Journey(
         String shipId,
         String startIslandId,
         String targetIslandId,
-        Instant departed,
-        @Nullable Instant arrived,
-        Instant estimatedArrival,
+        long departedTick,
+        @Nullable Long arrivedTick,
+        long estimatedArrivalTick,
         boolean active
 ) {
     /***************************************************************************
@@ -27,17 +26,17 @@ public record Journey(
             String shipId,
             String startIslandId,
             String targetIslandId,
-            Instant departed,
-            Instant estimatedArrival
+            long departedTick,
+            long estimatedArrivalTick
     ) {
         return new Journey(
                 UUID.randomUUID().toString(),
                 shipId,
                 startIslandId,
                 targetIslandId,
-                departed,
+                departedTick,
                 null,
-                estimatedArrival,
+                estimatedArrivalTick,
                 true
         );
     }
@@ -47,9 +46,9 @@ public record Journey(
             String shipId,
             String startIslandId,
             String targetIslandId,
-            Instant departed,
-            @Nullable Instant arrived,
-            Instant estimatedArrival,
+            long departedTick,
+            @Nullable Long arrivedTick,
+            long estimatedArrivalTick,
             boolean active
     ) {
         return new Journey(
@@ -57,9 +56,9 @@ public record Journey(
                 shipId,
                 startIslandId,
                 targetIslandId,
-                departed,
-                arrived,
-                estimatedArrival,
+                departedTick,
+                arrivedTick,
+                estimatedArrivalTick,
                 active
         );
     }
