@@ -45,10 +45,10 @@ class IslandStatusTest {
     }
 
     @Test
-    void consumeFoodOrStarveEatsOneFoodPerHundredPeople() {
+    void consumeFoodOrStarveEatsOneFoodPerTwoHundredFiftyPeople() {
         IslandStatus fed = IslandStatus.initial("island-1").consumeFoodOrStarve();
         assertEquals(1_000, fed.population());
-        assertEquals(5, fed.inventory().getAmount(GoodType.FOOD));
+        assertEquals(11, fed.inventory().getAmount(GoodType.FOOD));
     }
 
     @Test

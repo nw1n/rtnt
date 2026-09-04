@@ -156,7 +156,7 @@ class IslandEconomyTest {
         IslandStatus hungry = new IslandStatus(
                 "a",
                 1_000,
-                Inventory.of(Map.of(GoodType.FOOD, 4)),
+                Inventory.of(Map.of(GoodType.FOOD, 3)),
                 TradePriceList.defaultPrices()
         );
         when(this.islandStatusMongoRepository.findAll()).thenReturn(List.of(IslandStatusDocument.from(hungry)));

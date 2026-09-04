@@ -69,7 +69,7 @@ public record IslandStatus(
         if (population < 1) {
             return 0;
         }
-        return (int) ((population + 99) / 100);
+        return (int) ((population + 249) / 250);
     }
 
     public IslandStatus consumeFoodOrStarve() {
