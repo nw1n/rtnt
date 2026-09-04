@@ -3,6 +3,7 @@ import { MatButtonModule } from '@angular/material/button'
 import { MatTabsModule } from '@angular/material/tabs'
 import { ElderSinglePaneWrapperComponent } from '@elderbyte/ngx-starter'
 import type { EChartsOption } from 'echarts'
+import { TradePricesDto } from '../../models/island.dto'
 import { WorldSnapshotDto } from '../../models/world-snapshot.dto'
 import { EchartsDirective } from './echarts.directive'
 import { WorldSnapshotService } from './world-snapshot.service'
@@ -24,6 +25,7 @@ export class HistoryPage {
 
   public chartOption = computed<EChartsOption>(() => this.buildPopulationChart(this.snapshots()))
   public shipGoldChartOption = computed<EChartsOption>(() => this.buildShipGoldChart(this.snapshots()))
+  public averagePriceChartOption = computed<EChartsOption>(() => this.buildAveragePriceChart(this.snapshots()))
 
   constructor() {
     this.refresh()
@@ -67,6 +69,35 @@ export class HistoryPage {
     })
   }
 
+  private buildAveragePriceChart(snapshots: WorldSnapshotDto[]): EChartsOption {
+    const goods: { id: keyof TradePricesDto; name: string }[] = [
+      { id: 'food', name: 'Food' },
+      { id: 'rum', name: 'Rum' },
+      { id: 'sugar', name: 'Sugar' },
+      { id: 'spices', name: 'Spices' },
+      { id: 'tobacco', name: 'Tobacco' },
+    ]
+    return this.buildLineChart(
+      snapshots,
+      'Price',
+      (snapshot) => {
+        const statuses = snapshot.islandStatuses ?? []
+        if (statuses.length === 0) {
+          return []
+        }
+        return goods.map((good) => {
+          const total = statuses.reduce((sum, status) => sum + (status.tradePrices?.[good.id] ?? 0), 0)
+          return {
+            id: good.id,
+            name: good.name,
+            value: total / statuses.length,
+          }
+        })
+      },
+      false
+    )
+  }
+
   private buildShipGoldChart(snapshots: WorldSnapshotDto[]): EChartsOption {
     return this.buildLineChart(
       snapshots,
@@ -83,7 +114,8 @@ export class HistoryPage {
   private buildLineChart(
     snapshots: WorldSnapshotDto[],
     yAxisName: string,
-    pointsOf: (snapshot: WorldSnapshotDto) => { id: string; name: string; value: number }[]
+    pointsOf: (snapshot: WorldSnapshotDto) => { id: string; name: string; value: number }[],
+    integerAxis = true
   ): EChartsOption {
     const seriesById = new Map<string, { name: string; data: [number, number][] }>()
     for (const snapshot of snapshots) {
@@ -136,7 +168,7 @@ export class HistoryPage {
         type: 'value',
         name: yAxisName,
         min: 0,
-        minInterval: 1,
+        ...(integerAxis ? { minInterval: 1 } : {}),
       },
       series,
     }
