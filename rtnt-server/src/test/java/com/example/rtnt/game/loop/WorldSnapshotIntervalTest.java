@@ -52,5 +52,9 @@ class WorldSnapshotIntervalTest {
 
         WorldSnapshotDocument last = this.worldSnapshotMongoRepository.findById(endTick).orElseThrow();
         assertFalse(last.islands().isEmpty());
+        assertFalse(last.islandStatuses().isEmpty());
+        assertFalse(last.islandStatuses().getFirst().inventory() == null);
+        assertFalse(last.ships() == null || last.ships().isEmpty());
+        assertFalse(last.ships().getFirst().inventory() == null);
     }
 }

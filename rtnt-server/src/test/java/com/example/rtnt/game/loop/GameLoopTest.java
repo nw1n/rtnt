@@ -17,7 +17,9 @@ import com.example.rtnt.game.island.domain.Island;
 import com.example.rtnt.game.island.domain.IslandStatus;
 import com.example.rtnt.game.island.service.IslandPopulationGrowth;
 import com.example.rtnt.game.island.service.IslandService;
+import com.example.rtnt.game.ship.domain.Ship;
 import com.example.rtnt.game.ship.service.ShipJourneyCheck;
+import com.example.rtnt.game.ship.service.ShipService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -60,6 +62,9 @@ class GameLoopTest {
     @Mock
     private ShipJourneyCheck shipJourneyCheck;
 
+    @Mock
+    private ShipService shipService;
+
     private GameCommandQueue gameCommandQueue;
     private GameLoop gameLoop;
 
@@ -70,6 +75,7 @@ class GameLoopTest {
         lenient().when(this.islandService.listStatuses()).thenReturn(List.of());
         lenient().when(this.islandPopulationGrowth.applyIfDue(org.mockito.ArgumentMatchers.anyLong())).thenReturn(false);
         lenient().when(this.shipJourneyCheck.applyIfDue(org.mockito.ArgumentMatchers.anyLong())).thenReturn(false);
+        lenient().when(this.shipService.list()).thenReturn(List.of());
         this.gameLoop = new GameLoop(
                 this.tickerMongoRepository,
                 this.gameFlowStatusMongoRepository,
@@ -78,6 +84,7 @@ class GameLoopTest {
                 this.islandService,
                 this.islandPopulationGrowth,
                 this.shipJourneyCheck,
+                this.shipService,
                 2,
                 1000
         );
@@ -188,6 +195,7 @@ class GameLoopTest {
         ArgumentCaptor<WorldSnapshot> captor = ArgumentCaptor.forClass(WorldSnapshot.class);
         verify(this.worldSnapshotStore).save(captor.capture());
         assertEquals(0, captor.getValue().tick());
+        assertEquals(List.of(), captor.getValue().ships());
         assertEquals(0, this.capturedTicker().tick());
         verify(this.gameFlowStatusMongoRepository, never()).save(org.mockito.ArgumentMatchers.any());
     }
@@ -298,7 +306,8 @@ class GameLoopTest {
         this.givenLatest(500, FlowMode.LIVE, false);
         Island island = Island.existing("i1", "North", new Footprint(1, 2, 10, 12));
         IslandStatus status = new IslandStatus("i1", 42, Inventory.empty());
-        WorldSnapshot snapshot = new WorldSnapshot(200, List.of(island), List.of(status));
+        Ship ship = Ship.create("Black Pearl", island.id(), null);
+        WorldSnapshot snapshot = new WorldSnapshot(200, List.of(island), List.of(status), List.of(ship));
         when(this.worldSnapshotStore.findByTick(200)).thenReturn(Optional.of(snapshot));
         this.gameCommandQueue.enqueue(10, new GameCommand("stale"));
 
@@ -308,6 +317,7 @@ class GameLoopTest {
         assertEquals(FlowMode.LIVE, restored.mode());
         assertTrue(restored.paused());
         verify(this.islandService).replaceAll(snapshot.islands(), snapshot.islandStatuses());
+        verify(this.shipService).replaceAll(snapshot.ships());
         assertEquals(200, this.capturedTicker().tick());
         assertTrue(this.capturedFlow().paused());
         assertTrue(this.gameCommandQueue.drain(10).isEmpty());

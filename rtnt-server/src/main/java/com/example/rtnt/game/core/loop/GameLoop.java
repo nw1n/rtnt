@@ -12,6 +12,7 @@ import com.example.rtnt.game.core.worldsnapshot.WorldSnapshotStore;
 import com.example.rtnt.game.island.service.IslandPopulationGrowth;
 import com.example.rtnt.game.island.service.IslandService;
 import com.example.rtnt.game.ship.service.ShipJourneyCheck;
+import com.example.rtnt.game.ship.service.ShipService;
 import jakarta.annotation.PostConstruct;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
@@ -40,6 +41,7 @@ public class GameLoop {
     private final IslandService islandService;
     private final IslandPopulationGrowth islandPopulationGrowth;
     private final ShipJourneyCheck shipJourneyCheck;
+    private final ShipService shipService;
     private final int snapshotIntervalTicks;
     private final int defaultLiveIntervalMs;
     private final Object lock = new Object();
@@ -64,6 +66,7 @@ public class GameLoop {
             IslandService islandService,
             IslandPopulationGrowth islandPopulationGrowth,
             ShipJourneyCheck shipJourneyCheck,
+            ShipService shipService,
             @Value("${rtnt.snapshot.interval-ticks:1000}") int snapshotIntervalTicks,
             @Value("${rtnt.flow.live-interval-ms:1000}") int liveIntervalMs
     ) {
@@ -80,6 +83,7 @@ public class GameLoop {
         this.islandService = islandService;
         this.islandPopulationGrowth = islandPopulationGrowth;
         this.shipJourneyCheck = shipJourneyCheck;
+        this.shipService = shipService;
         this.snapshotIntervalTicks = snapshotIntervalTicks;
         this.defaultLiveIntervalMs = liveIntervalMs;
         this.liveIntervalMs = liveIntervalMs;
@@ -203,6 +207,7 @@ public class GameLoop {
             WorldSnapshot snapshot = this.worldSnapshotStore.findByTick(tick)
                     .orElseThrow(() -> new NoSuchElementException("snapshot not found for tick " + tick));
             this.islandService.replaceAll(snapshot.islands(), snapshot.islandStatuses());
+            this.shipService.replaceAll(snapshot.ships());
             this.gameCommandQueue.clear();
             this.gameTick = new GameTick(snapshot.tick());
             this.saveTick();
@@ -255,7 +260,8 @@ public class GameLoop {
         return new WorldSnapshot(
                 this.requireTick().tick(),
                 this.islandService.list(),
-                this.islandService.listStatuses()
+                this.islandService.listStatuses(),
+                this.shipService.list()
         );
     }
 

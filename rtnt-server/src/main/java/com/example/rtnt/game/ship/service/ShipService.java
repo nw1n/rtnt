@@ -69,6 +69,12 @@ public class ShipService {
         log.info("Seeded {} ships", this.seed().size());
     }
 
+    public void replaceAll(List<Ship> ships) {
+        this.shipMongoRepository.deleteAll();
+        this.shipMongoRepository.saveAll(ships.stream().map(ShipDocument::from).toList());
+        log.info("Replaced world with {} ships from snapshot", ships.size());
+    }
+
     /***************************************************************************
      *                                                                         *
      * Private Methods                                                         *
