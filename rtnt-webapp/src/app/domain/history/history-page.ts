@@ -3,6 +3,7 @@ import { MatButtonModule } from '@angular/material/button'
 import { MatTabsModule } from '@angular/material/tabs'
 import { ElderSinglePaneWrapperComponent } from '@elderbyte/ngx-starter'
 import type { EChartsOption } from 'echarts'
+import { InventoryDto } from '../../models/inventory.dto'
 import { TradePricesDto } from '../../models/island.dto'
 import { WorldSnapshotDto } from '../../models/world-snapshot.dto'
 import { EchartsDirective } from './echarts.directive'
@@ -27,6 +28,7 @@ export class HistoryPage {
   public shipGoldChartOption = computed<EChartsOption>(() => this.buildShipGoldChart(this.snapshots()))
   public averagePriceChartOption = computed<EChartsOption>(() => this.buildAveragePriceChart(this.snapshots()))
   public worldGoldChartOption = computed<EChartsOption>(() => this.buildWorldGoldChart(this.snapshots()))
+  public worldGoodsChartOption = computed<EChartsOption>(() => this.buildWorldGoodsChart(this.snapshots()))
 
   constructor() {
     this.refresh()
@@ -112,6 +114,50 @@ export class HistoryPage {
         { id: 'world', name: 'World', value: islandGold + shipGold },
       ]
     })
+  }
+
+  private buildWorldGoodsChart(snapshots: WorldSnapshotDto[]): EChartsOption {
+    const goods: { id: keyof InventoryDto; name: string }[] = [
+      { id: 'food', name: 'Food' },
+      { id: 'rum', name: 'Rum' },
+      { id: 'sugar', name: 'Sugar' },
+      { id: 'spices', name: 'Spices' },
+      { id: 'tobacco', name: 'Tobacco' },
+    ]
+    return this.buildLineChart(snapshots, 'Goods', (snapshot) => {
+      const inventories = [
+        ...(snapshot.islandStatuses ?? []).map((status) => status.inventory),
+        ...(snapshot.ships ?? []).map((ship) => ship.inventory),
+      ]
+      const islandGoods = (snapshot.islandStatuses ?? []).reduce(
+        (sum, status) => sum + this.tradeableGoods(status.inventory),
+        0
+      )
+      const shipGoods = (snapshot.ships ?? []).reduce((sum, ship) => sum + this.tradeableGoods(ship.inventory), 0)
+      return [
+        { id: 'islands', name: 'Islands', value: islandGoods },
+        { id: 'ships', name: 'Ships', value: shipGoods },
+        { id: 'world', name: 'World', value: islandGoods + shipGoods },
+        ...goods.map((good) => ({
+          id: good.id,
+          name: good.name,
+          value: inventories.reduce((sum, inventory) => sum + (inventory?.[good.id] ?? 0), 0),
+        })),
+      ]
+    })
+  }
+
+  private tradeableGoods(inventory: InventoryDto | undefined): number {
+    if (!inventory) {
+      return 0
+    }
+    return (
+      (inventory.food ?? 0) +
+      (inventory.rum ?? 0) +
+      (inventory.sugar ?? 0) +
+      (inventory.spices ?? 0) +
+      (inventory.tobacco ?? 0)
+    )
   }
 
   private buildShipGoldChart(snapshots: WorldSnapshotDto[]): EChartsOption {
