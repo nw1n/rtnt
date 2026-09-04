@@ -1,5 +1,6 @@
 package com.example.rtnt.game.ship.web;
 
+import com.example.rtnt.game.inventory.web.InventoryDto;
 import com.example.rtnt.game.island.domain.Island;
 import com.example.rtnt.game.island.service.IslandService;
 import com.example.rtnt.game.ship.domain.Journey;
@@ -60,6 +61,7 @@ public class ShipController {
             @Nullable String playerId,
             int speed,
             int cargoCapacity,
+            InventoryDto inventory,
             @Nullable JourneyDto journey
     ) {
         static ShipDto from(Ship ship, Map<String, String> islandNameById) {
@@ -72,6 +74,7 @@ public class ShipController {
                     ship.getPlayerId(),
                     ship.getSpeed(),
                     ship.getCargoCapacity(),
+                    InventoryDto.from(ship.getInventory()),
                     JourneyDto.from(ship.getJourney(), islandNameById)
             );
         }

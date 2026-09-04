@@ -1,5 +1,6 @@
 package com.example.rtnt.game.ship.persistence;
 
+import com.example.rtnt.game.inventory.persistence.InventoryDocument;
 import com.example.rtnt.game.ship.domain.Journey;
 import com.example.rtnt.game.ship.domain.Ship;
 import org.jspecify.annotations.NullMarked;
@@ -14,7 +15,8 @@ public record ShipDocument(
         String name,
         @Nullable String islandId,
         @Nullable String playerId,
-        @Nullable JourneyDocument journey
+        @Nullable JourneyDocument journey,
+        @Nullable InventoryDocument inventory
 ) {
     /***************************************************************************
      *                                                                         *
@@ -29,7 +31,8 @@ public record ShipDocument(
                 ship.getName(),
                 ship.getIslandId(),
                 ship.getPlayerId(),
-                journey == null ? null : JourneyDocument.from(journey)
+                journey == null ? null : JourneyDocument.from(journey),
+                InventoryDocument.from(ship.getInventory())
         );
     }
 
@@ -46,7 +49,8 @@ public record ShipDocument(
                 this.name,
                 this.islandId,
                 this.playerId,
-                journey == null ? null : journey.toJourney()
+                journey == null ? null : journey.toJourney(),
+                InventoryDocument.toInventory(this.inventory)
         );
     }
 }

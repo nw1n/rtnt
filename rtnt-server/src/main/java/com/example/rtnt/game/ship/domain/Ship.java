@@ -1,5 +1,6 @@
 package com.example.rtnt.game.ship.domain;
 
+import com.example.rtnt.game.inventory.domain.Inventory;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
@@ -17,6 +18,7 @@ public class Ship {
     private final @Nullable String islandId;
     private final @Nullable String playerId;
     private final @Nullable Journey journey;
+    private final Inventory inventory;
 
     /***************************************************************************
      *                                                                         *
@@ -29,13 +31,15 @@ public class Ship {
             String name,
             @Nullable String islandId,
             @Nullable String playerId,
-            @Nullable Journey journey
+            @Nullable Journey journey,
+            Inventory inventory
     ) {
         this.id = Objects.requireNonNull(id, "Ship id cannot be null");
         this.name = Objects.requireNonNull(name, "Ship name cannot be null");
         this.islandId = islandId;
         this.playerId = playerId;
         this.journey = journey;
+        this.inventory = Objects.requireNonNull(inventory, "Ship inventory cannot be null");
     }
 
     /***************************************************************************
@@ -45,7 +49,7 @@ public class Ship {
      **************************************************************************/
 
     public static Ship create(String name, @Nullable String islandId, @Nullable String playerId) {
-        return create(name, islandId, playerId, null);
+        return create(name, islandId, playerId, null, Inventory.shipSeed());
     }
 
     public static Ship create(
@@ -54,7 +58,17 @@ public class Ship {
             @Nullable String playerId,
             @Nullable Journey journey
     ) {
-        return new Ship(UUID.randomUUID().toString(), name, islandId, playerId, journey);
+        return create(name, islandId, playerId, journey, Inventory.shipSeed());
+    }
+
+    public static Ship create(
+            String name,
+            @Nullable String islandId,
+            @Nullable String playerId,
+            @Nullable Journey journey,
+            Inventory inventory
+    ) {
+        return new Ship(UUID.randomUUID().toString(), name, islandId, playerId, journey, inventory);
     }
 
     public static Ship existing(
@@ -62,9 +76,10 @@ public class Ship {
             String name,
             @Nullable String islandId,
             @Nullable String playerId,
-            @Nullable Journey journey
+            @Nullable Journey journey,
+            Inventory inventory
     ) {
-        return new Ship(id, name, islandId, playerId, journey);
+        return new Ship(id, name, islandId, playerId, journey, inventory);
     }
 
     /***************************************************************************
@@ -93,6 +108,10 @@ public class Ship {
         return this.journey;
     }
 
+    public Inventory getInventory() {
+        return this.inventory;
+    }
+
     public int getSpeed() {
         return SPEED;
     }
@@ -106,11 +125,15 @@ public class Ship {
     }
 
     public Ship withJourney(@Nullable Journey journey) {
-        return new Ship(this.id, this.name, this.islandId, this.playerId, journey);
+        return new Ship(this.id, this.name, this.islandId, this.playerId, journey, this.inventory);
     }
 
     public Ship withIslandAndJourney(@Nullable String islandId, @Nullable Journey journey) {
-        return new Ship(this.id, this.name, islandId, this.playerId, journey);
+        return new Ship(this.id, this.name, islandId, this.playerId, journey, this.inventory);
+    }
+
+    public Ship withInventory(Inventory inventory) {
+        return new Ship(this.id, this.name, this.islandId, this.playerId, this.journey, inventory);
     }
 
     @Override
@@ -132,6 +155,6 @@ public class Ship {
     @Override
     public String toString() {
         return "Ship{id='" + this.id + "', name='" + this.name + "', islandId='" + this.islandId
-                + "', playerId='" + this.playerId + "', journey=" + this.journey + "}";
+                + "', playerId='" + this.playerId + "', journey=" + this.journey + ", inventory=" + this.inventory + "}";
     }
 }

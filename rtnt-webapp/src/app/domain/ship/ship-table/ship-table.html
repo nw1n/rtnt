@@ -45,6 +45,26 @@
             <th mat-header-cell *matHeaderCellDef mat-sort-header>Speed</th>
             <td mat-cell *matCellDef="let ship">{{ ship.speed }}</td>
           </ng-container>
+          <ng-container matColumnDef="gold">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Gold</th>
+            <td mat-cell *matCellDef="let ship">{{ ship.inventory.gold }}</td>
+          </ng-container>
+          <ng-container matColumnDef="rum">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Rum</th>
+            <td mat-cell *matCellDef="let ship">{{ ship.inventory.rum }}</td>
+          </ng-container>
+          <ng-container matColumnDef="sugar">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Sugar</th>
+            <td mat-cell *matCellDef="let ship">{{ ship.inventory.sugar }}</td>
+          </ng-container>
+          <ng-container matColumnDef="spices">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Spices</th>
+            <td mat-cell *matCellDef="let ship">{{ ship.inventory.spices }}</td>
+          </ng-container>
+          <ng-container matColumnDef="tobacco">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Tobacco</th>
+            <td mat-cell *matCellDef="let ship">{{ ship.inventory.tobacco }}</td>
+          </ng-container>
           <ng-container matColumnDef="cargoCapacity">
             <th mat-header-cell *matHeaderCellDef mat-sort-header>Cargo</th>
             <td mat-cell *matCellDef="let ship">{{ ship.cargoCapacity }}</td>

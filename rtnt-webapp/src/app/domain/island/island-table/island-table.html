@@ -22,6 +22,26 @@
             <th mat-header-cell *matHeaderCellDef mat-sort-header>Population</th>
             <td mat-cell *matCellDef="let island">{{ island.population }}</td>
           </ng-container>
+          <ng-container matColumnDef="gold">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Gold</th>
+            <td mat-cell *matCellDef="let island">{{ island.inventory.gold }}</td>
+          </ng-container>
+          <ng-container matColumnDef="rum">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Rum</th>
+            <td mat-cell *matCellDef="let island">{{ island.inventory.rum }}</td>
+          </ng-container>
+          <ng-container matColumnDef="sugar">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Sugar</th>
+            <td mat-cell *matCellDef="let island">{{ island.inventory.sugar }}</td>
+          </ng-container>
+          <ng-container matColumnDef="spices">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Spices</th>
+            <td mat-cell *matCellDef="let island">{{ island.inventory.spices }}</td>
+          </ng-container>
+          <ng-container matColumnDef="tobacco">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Tobacco</th>
+            <td mat-cell *matCellDef="let island">{{ island.inventory.tobacco }}</td>
+          </ng-container>
           <ng-container matColumnDef="x">
             <th mat-header-cell *matHeaderCellDef mat-sort-header>X</th>
             <td mat-cell *matCellDef="let island">{{ island.x }}</td>

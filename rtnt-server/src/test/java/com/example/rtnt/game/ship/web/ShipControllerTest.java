@@ -46,6 +46,8 @@ class ShipControllerTest {
                 .andExpect(jsonPath("$[0].islandName").value("Jamaica"))
                 .andExpect(jsonPath("$[0].speed").value(20))
                 .andExpect(jsonPath("$[0].cargoCapacity").value(100))
+                .andExpect(jsonPath("$[0].inventory.gold").value(1000))
+                .andExpect(jsonPath("$[0].inventory.rum").value(5))
                 .andExpect(jsonPath("$[0].journey").value(nullValue()));
     }
 

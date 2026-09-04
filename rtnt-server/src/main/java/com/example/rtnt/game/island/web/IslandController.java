@@ -1,5 +1,7 @@
 package com.example.rtnt.game.island.web;
 
+import com.example.rtnt.game.inventory.domain.Inventory;
+import com.example.rtnt.game.inventory.web.InventoryDto;
 import com.example.rtnt.game.island.domain.Island;
 import com.example.rtnt.game.island.domain.IslandStatus;
 import com.example.rtnt.game.island.service.IslandService;
@@ -37,10 +39,13 @@ public class IslandController {
 
     @GetMapping
     public List<IslandDto> getAll() {
-        Map<String, Long> populationByIslandId = this.islandService.listStatuses().stream()
-                .collect(Collectors.toMap(IslandStatus::islandId, IslandStatus::population, (left, right) -> left));
+        Map<String, IslandStatus> statusByIslandId = this.islandService.listStatuses().stream()
+                .collect(Collectors.toMap(IslandStatus::islandId, status -> status, (left, right) -> left));
         return this.islandService.list().stream()
-                .map(island -> IslandDto.from(island, populationByIslandId.getOrDefault(island.id(), 0L)))
+                .map(island -> IslandDto.from(
+                        island,
+                        statusByIslandId.getOrDefault(island.id(), new IslandStatus(island.id(), 0, Inventory.empty()))
+                ))
                 .toList();
     }
 
@@ -57,8 +62,17 @@ public class IslandController {
      *                                                                         *
      **************************************************************************/
 
-    public record IslandDto(String id, String name, int x, int y, int width, int length, long population) {
-        static IslandDto from(Island island, long population) {
+    public record IslandDto(
+            String id,
+            String name,
+            int x,
+            int y,
+            int width,
+            int length,
+            long population,
+            InventoryDto inventory
+    ) {
+        static IslandDto from(Island island, IslandStatus status) {
             return new IslandDto(
                     island.id(),
                     island.name(),
@@ -66,7 +80,8 @@ public class IslandController {
                     island.footprint().y(),
                     island.footprint().width(),
                     island.footprint().length(),
-                    population
+                    status.population(),
+                    InventoryDto.from(status.inventory())
             );
         }
     }

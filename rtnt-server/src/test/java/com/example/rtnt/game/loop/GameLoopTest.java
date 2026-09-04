@@ -11,6 +11,7 @@ import com.example.rtnt.game.core.ticker.persistence.TickerDocument;
 import com.example.rtnt.game.core.ticker.persistence.TickerMongoRepository;
 import com.example.rtnt.game.core.worldsnapshot.WorldSnapshot;
 import com.example.rtnt.game.core.worldsnapshot.WorldSnapshotStore;
+import com.example.rtnt.game.inventory.domain.Inventory;
 import com.example.rtnt.game.island.domain.Footprint;
 import com.example.rtnt.game.island.domain.Island;
 import com.example.rtnt.game.island.domain.IslandStatus;
@@ -296,7 +297,7 @@ class GameLoopTest {
     void loadFromSnapshotRestoresWorldAndPauses() {
         this.givenLatest(500, FlowMode.LIVE, false);
         Island island = Island.existing("i1", "North", new Footprint(1, 2, 10, 12));
-        IslandStatus status = new IslandStatus("i1", 42);
+        IslandStatus status = new IslandStatus("i1", 42, Inventory.empty());
         WorldSnapshot snapshot = new WorldSnapshot(200, List.of(island), List.of(status));
         when(this.worldSnapshotStore.findByTick(200)).thenReturn(Optional.of(snapshot));
         this.gameCommandQueue.enqueue(10, new GameCommand("stale"));

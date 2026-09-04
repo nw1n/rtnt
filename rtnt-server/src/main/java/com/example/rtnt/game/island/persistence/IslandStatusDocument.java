@@ -1,7 +1,9 @@
 package com.example.rtnt.game.island.persistence;
 
+import com.example.rtnt.game.inventory.persistence.InventoryDocument;
 import com.example.rtnt.game.island.domain.IslandStatus;
 import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -9,7 +11,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @NullMarked
 public record IslandStatusDocument(
         @Id String islandId,
-        long population
+        long population,
+        @Nullable InventoryDocument inventory
 ) {
     /***************************************************************************
      *                                                                         *
@@ -18,7 +21,11 @@ public record IslandStatusDocument(
      **************************************************************************/
 
     public static IslandStatusDocument from(IslandStatus status) {
-        return new IslandStatusDocument(status.islandId(), status.population());
+        return new IslandStatusDocument(
+                status.islandId(),
+                status.population(),
+                InventoryDocument.from(status.inventory())
+        );
     }
 
     /***************************************************************************
@@ -28,6 +35,6 @@ public record IslandStatusDocument(
      **************************************************************************/
 
     public IslandStatus toIslandStatus() {
-        return new IslandStatus(this.islandId, this.population);
+        return new IslandStatus(this.islandId, this.population, InventoryDocument.toInventory(this.inventory));
     }
 }

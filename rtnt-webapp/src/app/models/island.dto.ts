@@ -1,3 +1,5 @@
+import { InventoryDto } from './inventory.dto'
+
 export interface IslandDto {
   id: string
   name: string
@@ -6,4 +8,5 @@ export interface IslandDto {
   width: number
   length: number
   population: number
+  inventory: InventoryDto
 }

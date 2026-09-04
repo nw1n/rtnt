@@ -1,3 +1,5 @@
+import { InventoryDto } from './inventory.dto'
+
 export interface JourneyDto {
   id: string
   startIslandId: string
@@ -18,5 +20,6 @@ export interface ShipDto {
   playerId: string | null
   speed: number
   cargoCapacity: number
+  inventory: InventoryDto
   journey: JourneyDto | null
 }

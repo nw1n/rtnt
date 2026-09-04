@@ -1,6 +1,7 @@
 package com.example.rtnt.game.island.web;
 
 import com.example.rtnt.game.island.domain.Footprint;
+import com.example.rtnt.game.inventory.domain.Inventory;
 import com.example.rtnt.game.island.domain.Island;
 import com.example.rtnt.game.island.domain.IslandStatus;
 import com.example.rtnt.game.island.service.IslandService;
@@ -32,7 +33,7 @@ class IslandControllerTest {
     void getAllReturnsNameGeographyAndPopulation() throws Exception {
         Island island = Island.create("Jamaica", new Footprint(10, 20, 60, 40));
         when(this.islandService.list()).thenReturn(List.of(island));
-        when(this.islandService.listStatuses()).thenReturn(List.of(new IslandStatus(island.id(), 42)));
+        when(this.islandService.listStatuses()).thenReturn(List.of(new IslandStatus(island.id(), 42, Inventory.empty())));
 
         this.mockMvc.perform(get("/api/islands"))
                 .andExpect(status().isOk())
@@ -42,7 +43,8 @@ class IslandControllerTest {
                 .andExpect(jsonPath("$[0].width").value(60))
                 .andExpect(jsonPath("$[0].length").value(40))
                 .andExpect(jsonPath("$[0].population").value(42))
-                .andExpect(jsonPath("$[0].inventory").doesNotExist());
+                .andExpect(jsonPath("$[0].inventory.gold").value(0))
+                .andExpect(jsonPath("$[0].inventory.rum").value(0));
     }
 
     @Test
