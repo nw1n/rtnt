@@ -13,7 +13,7 @@
       <p class="status-text">No snapshots available yet.</p>
     } @else if (snapshots().length > 0) {
       <p class="status-text">{{ snapshots().length }} snapshots</p>
-      <mat-tab-group class="chart-tabs" animationDuration="0ms">
+      <mat-tab-group class="chart-tabs" animationDuration="0ms" preserveContent>
         <mat-tab label="Island population">
           <ng-template matTabContent>
             <div class="chart-host" [appEcharts]="chartOption()" [dark]="darkTheme()"></div>
