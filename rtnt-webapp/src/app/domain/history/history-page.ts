@@ -26,6 +26,7 @@ export class HistoryPage {
   public chartOption = computed<EChartsOption>(() => this.buildPopulationChart(this.snapshots()))
   public shipGoldChartOption = computed<EChartsOption>(() => this.buildShipGoldChart(this.snapshots()))
   public averagePriceChartOption = computed<EChartsOption>(() => this.buildAveragePriceChart(this.snapshots()))
+  public worldGoldChartOption = computed<EChartsOption>(() => this.buildWorldGoldChart(this.snapshots()))
 
   constructor() {
     this.refresh()
@@ -96,6 +97,21 @@ export class HistoryPage {
       },
       false
     )
+  }
+
+  private buildWorldGoldChart(snapshots: WorldSnapshotDto[]): EChartsOption {
+    return this.buildLineChart(snapshots, 'Gold', (snapshot) => {
+      const islandGold = (snapshot.islandStatuses ?? []).reduce(
+        (sum, status) => sum + (status.inventory?.gold ?? 0),
+        0
+      )
+      const shipGold = (snapshot.ships ?? []).reduce((sum, ship) => sum + (ship.inventory?.gold ?? 0), 0)
+      return [
+        { id: 'islands', name: 'Islands', value: islandGold },
+        { id: 'ships', name: 'Ships', value: shipGold },
+        { id: 'world', name: 'World', value: islandGold + shipGold },
+      ]
+    })
   }
 
   private buildShipGoldChart(snapshots: WorldSnapshotDto[]): EChartsOption {

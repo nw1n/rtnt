@@ -29,6 +29,11 @@
             <div class="chart-host" [appEcharts]="averagePriceChartOption()" [dark]="darkTheme()"></div>
           </ng-template>
         </mat-tab>
+        <mat-tab label="World gold">
+          <ng-template matTabContent>
+            <div class="chart-host" [appEcharts]="worldGoldChartOption()" [dark]="darkTheme()"></div>
+          </ng-template>
+        </mat-tab>
       </mat-tab-group>
     }
   </div>
