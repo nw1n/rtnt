@@ -24,6 +24,13 @@ export class ShipTable {
   public error = signal<string | null>(null)
 
   constructor() {
+    this.dataSource.sortingDataAccessor = (ship, header): string | number => {
+      const value = ship[header as keyof ShipDto]
+      if (value == null) {
+        return ''
+      }
+      return value
+    }
     effect(() => {
       const sort = this.sort()
       if (sort) {
