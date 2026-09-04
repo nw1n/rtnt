@@ -101,8 +101,16 @@ public class Ship {
         return CARGO_CAPACITY_UNITS;
     }
 
+    public boolean hasActiveJourney() {
+        return this.journey != null && this.journey.active();
+    }
+
     public Ship withJourney(@Nullable Journey journey) {
         return new Ship(this.id, this.name, this.islandId, this.playerId, journey);
+    }
+
+    public Ship withIslandAndJourney(@Nullable String islandId, @Nullable Journey journey) {
+        return new Ship(this.id, this.name, islandId, this.playerId, journey);
     }
 
     @Override

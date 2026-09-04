@@ -11,6 +11,7 @@ import com.example.rtnt.game.core.worldsnapshot.WorldSnapshot;
 import com.example.rtnt.game.core.worldsnapshot.WorldSnapshotStore;
 import com.example.rtnt.game.island.service.IslandPopulationGrowth;
 import com.example.rtnt.game.island.service.IslandService;
+import com.example.rtnt.game.ship.service.ShipJourneyCheck;
 import jakarta.annotation.PostConstruct;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
@@ -38,6 +39,7 @@ public class GameLoop {
     private final WorldSnapshotStore worldSnapshotStore;
     private final IslandService islandService;
     private final IslandPopulationGrowth islandPopulationGrowth;
+    private final ShipJourneyCheck shipJourneyCheck;
     private final int snapshotIntervalTicks;
     private final Object lock = new Object();
     private @Nullable GameTick gameTick;
@@ -58,6 +60,7 @@ public class GameLoop {
             WorldSnapshotStore worldSnapshotStore,
             IslandService islandService,
             IslandPopulationGrowth islandPopulationGrowth,
+            ShipJourneyCheck shipJourneyCheck,
             @Value("${rtnt.snapshot.interval-ticks:1000}") int snapshotIntervalTicks
     ) {
         if (snapshotIntervalTicks < 1) {
@@ -69,6 +72,7 @@ public class GameLoop {
         this.worldSnapshotStore = worldSnapshotStore;
         this.islandService = islandService;
         this.islandPopulationGrowth = islandPopulationGrowth;
+        this.shipJourneyCheck = shipJourneyCheck;
         this.snapshotIntervalTicks = snapshotIntervalTicks;
     }
 
@@ -202,6 +206,9 @@ public class GameLoop {
         boolean eventful = !this.gameCommandQueue.drain(current.tick()).isEmpty();
         this.gameTick = current.advance();
         if (this.islandPopulationGrowth.applyIfDue(this.requireTick().tick())) {
+            eventful = true;
+        }
+        if (this.shipJourneyCheck.applyIfDue(this.requireTick().tick())) {
             eventful = true;
         }
         boolean snapshotDue = this.requireTick().tick() % this.snapshotIntervalTicks == 0;

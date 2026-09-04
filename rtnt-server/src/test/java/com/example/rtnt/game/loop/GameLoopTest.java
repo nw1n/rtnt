@@ -16,6 +16,7 @@ import com.example.rtnt.game.island.domain.Island;
 import com.example.rtnt.game.island.domain.IslandStatus;
 import com.example.rtnt.game.island.service.IslandPopulationGrowth;
 import com.example.rtnt.game.island.service.IslandService;
+import com.example.rtnt.game.ship.service.ShipJourneyCheck;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -55,6 +56,9 @@ class GameLoopTest {
     @Mock
     private IslandPopulationGrowth islandPopulationGrowth;
 
+    @Mock
+    private ShipJourneyCheck shipJourneyCheck;
+
     private GameCommandQueue gameCommandQueue;
     private GameLoop gameLoop;
 
@@ -64,6 +68,7 @@ class GameLoopTest {
         lenient().when(this.islandService.list()).thenReturn(List.of());
         lenient().when(this.islandService.listStatuses()).thenReturn(List.of());
         lenient().when(this.islandPopulationGrowth.applyIfDue(org.mockito.ArgumentMatchers.anyLong())).thenReturn(false);
+        lenient().when(this.shipJourneyCheck.applyIfDue(org.mockito.ArgumentMatchers.anyLong())).thenReturn(false);
         this.gameLoop = new GameLoop(
                 this.tickerMongoRepository,
                 this.gameFlowStatusMongoRepository,
@@ -71,6 +76,7 @@ class GameLoopTest {
                 this.worldSnapshotStore,
                 this.islandService,
                 this.islandPopulationGrowth,
+                this.shipJourneyCheck,
                 2
         );
     }
@@ -146,6 +152,17 @@ class GameLoopTest {
     void populationGrowthPersistsTicker() {
         this.givenLatest(2, FlowMode.BATCH, false);
         when(this.islandPopulationGrowth.applyIfDue(3)).thenReturn(true);
+
+        this.gameLoop.step();
+
+        assertEquals(3, this.capturedTicker().tick());
+        verify(this.worldSnapshotStore, never()).save(org.mockito.ArgumentMatchers.any());
+    }
+
+    @Test
+    void shipJourneyCheckPersistsTicker() {
+        this.givenLatest(2, FlowMode.BATCH, false);
+        when(this.shipJourneyCheck.applyIfDue(3)).thenReturn(true);
 
         this.gameLoop.step();
 
