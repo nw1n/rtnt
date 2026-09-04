@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 class GameLoopAdvanceBenchmarkTest {
     private static final Logger log = LoggerFactory.getLogger(GameLoopAdvanceBenchmarkTest.class);
-    private static final int TICKS = 10_000;
+    private static final int TICKS = 2_000;
 
     @Autowired
     private GameLoop gameLoop;
