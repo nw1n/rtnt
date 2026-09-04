@@ -152,6 +152,24 @@ class IslandEconomyTest {
     }
 
     @Test
+    void starvesWhenALargeIslandCannotFeedEveryone() {
+        IslandStatus hungry = new IslandStatus(
+                "a",
+                1_000,
+                Inventory.of(Map.of(GoodType.FOOD, 4)),
+                TradePriceList.defaultPrices()
+        );
+        when(this.islandStatusMongoRepository.findAll()).thenReturn(List.of(IslandStatusDocument.from(hungry)));
+        IslandEconomy economy = this.foodEconomy();
+
+        assertTrue(economy.applyIfDue(20));
+
+        IslandStatus saved = this.savedStatus();
+        assertEquals(900, saved.population());
+        assertEquals(0, saved.inventory().getAmount(GoodType.FOOD));
+    }
+
+    @Test
     void spoilsOnlyGoodsOverThreshold() {
         IslandStatus overstocked = new IslandStatus(
                 "a",

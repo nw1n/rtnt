@@ -43,7 +43,7 @@ public class IslandEconomy {
     public IslandEconomy(
             IslandStatusMongoRepository islandStatusMongoRepository,
             @Value("${rtnt.island.economy-interval-ticks:100}") int intervalTicks,
-            @Value("${rtnt.island.food-interval-ticks:500}") int foodIntervalTicks,
+            @Value("${rtnt.island.food-interval-ticks:250}") int foodIntervalTicks,
             @Value("${rtnt.island.production-chance:0.45}") double productionChance,
             @Value("${rtnt.island.production-min:2}") int productionMin,
             @Value("${rtnt.island.production-max:8}") int productionMax,
@@ -179,7 +179,7 @@ public class IslandEconomy {
         if (economyDue && this.productionChance > 0) {
             for (GoodType good : GoodType.tradeableGoods()) {
                 double chance = good == GoodType.FOOD
-                        ? Math.min(1.0, this.productionChance * FOOD_PRODUCTION_WEIGHT)
+                        ? Math.min(0.75, this.productionChance * FOOD_PRODUCTION_WEIGHT)
                         : this.productionChance;
                 if (this.random.nextDouble() >= chance) {
                     continue;

@@ -45,10 +45,22 @@ class IslandStatusTest {
     }
 
     @Test
-    void consumeFoodOrStarveEatsOneFood() {
+    void consumeFoodOrStarveEatsOneFoodPerHundredPeople() {
         IslandStatus fed = IslandStatus.initial("island-1").consumeFoodOrStarve();
         assertEquals(1_000, fed.population());
-        assertEquals(14, fed.inventory().getAmount(GoodType.FOOD));
+        assertEquals(5, fed.inventory().getAmount(GoodType.FOOD));
+    }
+
+    @Test
+    void consumeFoodOrStarveCutsPopulationWhenRationsFallShort() {
+        IslandStatus hungry = new IslandStatus(
+                "island-1",
+                1_000,
+                Inventory.of(Map.of(GoodType.FOOD, 3)),
+                TradePriceList.defaultPrices()
+        ).consumeFoodOrStarve();
+        assertEquals(900, hungry.population());
+        assertEquals(0, hungry.inventory().getAmount(GoodType.FOOD));
     }
 
     @Test
