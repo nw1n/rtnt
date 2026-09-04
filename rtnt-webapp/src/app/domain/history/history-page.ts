@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core'
 import { MatButtonModule } from '@angular/material/button'
-import { MatTabsModule } from '@angular/material/tabs'
+import { MatTabChangeEvent, MatTabsModule } from '@angular/material/tabs'
 import { ElderSinglePaneWrapperComponent } from '@elderbyte/ngx-starter'
 import type { EChartsOption } from 'echarts'
 import { InventoryDto } from '../../models/inventory.dto'
@@ -8,6 +8,14 @@ import { TradePricesDto } from '../../models/island.dto'
 import { WorldSnapshotDto } from '../../models/world-snapshot.dto'
 import { EchartsDirective } from './echarts.directive'
 import { WorldSnapshotService } from './world-snapshot.service'
+
+type HistoryChartTab =
+  | 'population'
+  | 'shipGold'
+  | 'averagePrices'
+  | 'worldGold'
+  | 'worldGoods'
+  | 'priceSpread'
 
 @Component({
   selector: 'app-history-page',
@@ -23,16 +31,40 @@ export class HistoryPage {
   public busy = signal(false)
   public error = signal<string | null>(null)
   public darkTheme = signal(document.body.classList.contains('elder-dark-theme'))
+  public visitedTabs = signal(new Set<HistoryChartTab>(['population']))
 
-  public chartOption = computed<EChartsOption>(() => this.buildPopulationChart(this.snapshots()))
-  public shipGoldChartOption = computed<EChartsOption>(() => this.buildShipGoldChart(this.snapshots()))
-  public averagePriceChartOption = computed<EChartsOption>(() => this.buildAveragePriceChart(this.snapshots()))
-  public worldGoldChartOption = computed<EChartsOption>(() => this.buildWorldGoldChart(this.snapshots()))
-  public worldGoodsChartOption = computed<EChartsOption>(() => this.buildWorldGoodsChart(this.snapshots()))
-  public priceSpreadChartOption = computed<EChartsOption>(() => this.buildPriceSpreadChart(this.snapshots()))
+  private readonly tabByIndex: HistoryChartTab[] = [
+    'population',
+    'shipGold',
+    'averagePrices',
+    'worldGold',
+    'worldGoods',
+    'priceSpread',
+  ]
+
+  public chartOption = computed(() => this.chartWhenVisited('population', (s) => this.buildPopulationChart(s)))
+  public shipGoldChartOption = computed(() => this.chartWhenVisited('shipGold', (s) => this.buildShipGoldChart(s)))
+  public averagePriceChartOption = computed(() =>
+    this.chartWhenVisited('averagePrices', (s) => this.buildAveragePriceChart(s))
+  )
+  public worldGoldChartOption = computed(() => this.chartWhenVisited('worldGold', (s) => this.buildWorldGoldChart(s)))
+  public worldGoodsChartOption = computed(() => this.chartWhenVisited('worldGoods', (s) => this.buildWorldGoodsChart(s)))
+  public priceSpreadChartOption = computed(() =>
+    this.chartWhenVisited('priceSpread', (s) => this.buildPriceSpreadChart(s))
+  )
 
   constructor() {
     this.refresh()
+  }
+
+  public onTabChange(event: MatTabChangeEvent): void {
+    const tab = this.tabByIndex[event.index]
+    if (!tab || this.visitedTabs().has(tab)) {
+      return
+    }
+    const visited = new Set(this.visitedTabs())
+    visited.add(tab)
+    this.visitedTabs.set(visited)
   }
 
   public refresh(): void {
@@ -52,6 +84,16 @@ export class HistoryPage {
         this.error.set('Failed to load history.')
       },
     })
+  }
+
+  private chartWhenVisited(
+    tab: HistoryChartTab,
+    build: (snapshots: WorldSnapshotDto[]) => EChartsOption
+  ): EChartsOption {
+    if (!this.visitedTabs().has(tab)) {
+      return {}
+    }
+    return build(this.snapshots())
   }
 
   private buildPopulationChart(snapshots: WorldSnapshotDto[]): EChartsOption {
