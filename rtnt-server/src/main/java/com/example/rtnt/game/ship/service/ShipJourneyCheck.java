@@ -42,7 +42,7 @@ public class ShipJourneyCheck {
     public ShipJourneyCheck(
             ShipMongoRepository shipMongoRepository,
             IslandService islandService,
-            @Value("${rtnt.ship.journey-check-interval-ticks:100}") int checkIntervalTicks
+            @Value("${rtnt.ship.journey-check-interval-ticks:5}") int checkIntervalTicks
     ) {
         this(shipMongoRepository, islandService, checkIntervalTicks, new Random());
     }
