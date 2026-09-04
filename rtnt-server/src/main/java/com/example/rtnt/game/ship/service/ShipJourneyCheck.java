@@ -1,12 +1,17 @@
 package com.example.rtnt.game.ship.service;
 
 import com.example.rtnt.game.island.domain.Island;
+import com.example.rtnt.game.island.domain.IslandStatus;
 import com.example.rtnt.game.island.service.IslandService;
 import com.example.rtnt.game.ship.domain.Journey;
 import com.example.rtnt.game.ship.domain.Ship;
 import com.example.rtnt.game.ship.domain.ShipTravel;
 import com.example.rtnt.game.ship.persistence.ShipDocument;
 import com.example.rtnt.game.ship.persistence.ShipMongoRepository;
+import com.example.rtnt.game.trade.domain.TradeEvent;
+import com.example.rtnt.game.trade.domain.TradeResult;
+import com.example.rtnt.game.trade.service.ArrivalTrade;
+import com.example.rtnt.game.trade.service.TradeEventStore;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
@@ -16,9 +21,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -29,6 +37,8 @@ public class ShipJourneyCheck {
 
     private final ShipMongoRepository shipMongoRepository;
     private final IslandService islandService;
+    private final ArrivalTrade arrivalTrade;
+    private final TradeEventStore tradeEventStore;
     private final int checkIntervalTicks;
     private final Random random;
 
@@ -42,14 +52,18 @@ public class ShipJourneyCheck {
     public ShipJourneyCheck(
             ShipMongoRepository shipMongoRepository,
             IslandService islandService,
+            ArrivalTrade arrivalTrade,
+            TradeEventStore tradeEventStore,
             @Value("${rtnt.ship.journey-check-interval-ticks:5}") int checkIntervalTicks
     ) {
-        this(shipMongoRepository, islandService, checkIntervalTicks, new Random());
+        this(shipMongoRepository, islandService, arrivalTrade, tradeEventStore, checkIntervalTicks, new Random());
     }
 
     ShipJourneyCheck(
             ShipMongoRepository shipMongoRepository,
             IslandService islandService,
+            ArrivalTrade arrivalTrade,
+            TradeEventStore tradeEventStore,
             int checkIntervalTicks,
             Random random
     ) {
@@ -58,6 +72,8 @@ public class ShipJourneyCheck {
         }
         this.shipMongoRepository = shipMongoRepository;
         this.islandService = islandService;
+        this.arrivalTrade = arrivalTrade;
+        this.tradeEventStore = tradeEventStore;
         this.checkIntervalTicks = checkIntervalTicks;
         this.random = random;
     }
@@ -78,17 +94,38 @@ public class ShipJourneyCheck {
         }
         Map<String, Island> islandsById = islands.stream()
                 .collect(Collectors.toMap(Island::id, Function.identity(), (left, right) -> left));
-        List<ShipDocument> updated = new ArrayList<>();
-        for (ShipDocument document : this.shipMongoRepository.findAll()) {
-            Ship changed = this.apply(document.toShip(), islands, islandsById, tick);
-            if (changed != null) {
-                updated.add(ShipDocument.from(changed));
-            }
+        Map<String, IslandStatus> statusesById = new HashMap<>();
+        for (IslandStatus status : this.islandService.listStatuses()) {
+            statusesById.put(status.islandId(), status);
         }
-        if (updated.isEmpty()) {
+        List<ShipDocument> updatedShips = new ArrayList<>();
+        Set<String> changedStatusIds = new HashSet<>();
+        List<TradeEvent> events = new ArrayList<>();
+        for (ShipDocument document : this.shipMongoRepository.findAll()) {
+            ArrivalUpdate update = this.apply(document.toShip(), islands, islandsById, statusesById, tick);
+            if (update == null) {
+                continue;
+            }
+            updatedShips.add(ShipDocument.from(update.ship()));
+            if (update.status() != null) {
+                statusesById.put(update.status().islandId(), update.status());
+                changedStatusIds.add(update.status().islandId());
+            }
+            events.addAll(update.events());
+        }
+        if (updatedShips.isEmpty()) {
             return false;
         }
-        this.shipMongoRepository.saveAll(updated);
+        this.shipMongoRepository.saveAll(updatedShips);
+        List<IslandStatus> statusesToSave = new ArrayList<>();
+        for (String statusId : changedStatusIds) {
+            IslandStatus status = statusesById.get(statusId);
+            if (status != null) {
+                statusesToSave.add(status);
+            }
+        }
+        this.islandService.saveStatuses(statusesToSave);
+        this.tradeEventStore.record(events);
         return true;
     }
 
@@ -98,15 +135,17 @@ public class ShipJourneyCheck {
      *                                                                         *
      **************************************************************************/
 
-    private @Nullable Ship apply(
+    private @Nullable ArrivalUpdate apply(
             Ship ship,
             List<Island> islands,
             Map<String, Island> islandsById,
+            Map<String, IslandStatus> statusesById,
             long tick
     ) {
         Journey journey = ship.getJourney();
         if (journey == null || !journey.active()) {
-            return this.departIdleShip(ship, islands, islandsById, tick);
+            Ship departed = this.departIdleShip(ship, islands, islandsById, tick);
+            return departed == null ? null : new ArrivalUpdate(departed, null, List.of());
         }
         if (journey.estimatedArrivalTick() > tick) {
             return null;
@@ -118,7 +157,30 @@ public class ShipJourneyCheck {
                 journey.targetIslandId(),
                 journey.id()
         );
-        return arrived;
+        return this.tradeOnArrival(arrived, islandsById, statusesById, tick);
+    }
+
+    private ArrivalUpdate tradeOnArrival(
+            Ship arrived,
+            Map<String, Island> islandsById,
+            Map<String, IslandStatus> statusesById,
+            long tick
+    ) {
+        String playerId = arrived.getPlayerId();
+        if (playerId != null && !playerId.isBlank()) {
+            return new ArrivalUpdate(arrived, null, List.of());
+        }
+        String islandId = arrived.getIslandId();
+        if (islandId == null) {
+            return new ArrivalUpdate(arrived, null, List.of());
+        }
+        Island island = islandsById.get(islandId);
+        IslandStatus status = statusesById.get(islandId);
+        if (island == null || status == null) {
+            return new ArrivalUpdate(arrived, null, List.of());
+        }
+        TradeResult result = this.arrivalTrade.execute(arrived, island, status, tick);
+        return new ArrivalUpdate(result.ship(), result.islandStatus(), result.events());
     }
 
     private @Nullable Ship departIdleShip(
@@ -161,5 +223,8 @@ public class ShipJourneyCheck {
                 estimatedArrivalTick
         );
         return departed;
+    }
+
+    private record ArrivalUpdate(Ship ship, @Nullable IslandStatus status, List<TradeEvent> events) {
     }
 }

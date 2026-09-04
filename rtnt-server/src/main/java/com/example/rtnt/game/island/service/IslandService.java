@@ -95,6 +95,13 @@ public class IslandService {
         log.info("Seeded {} islands", this.seed().size());
     }
 
+    public void saveStatuses(List<IslandStatus> statuses) {
+        if (statuses.isEmpty()) {
+            return;
+        }
+        this.islandStatusMongoRepository.saveAll(statuses.stream().map(IslandStatusDocument::from).toList());
+    }
+
     /***************************************************************************
      *                                                                         *
      * Private Methods                                                         *
