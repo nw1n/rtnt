@@ -37,9 +37,9 @@ class TradePriceListTest {
     void withPriceReturnsNewList() {
         TradePriceList start = TradePriceList.islandSeed();
         TradePriceList next = start.withPrice(GoodType.RUM, 9);
-        assertEquals(3, start.getPrice(GoodType.RUM));
+        assertEquals(18, start.getPrice(GoodType.RUM));
         assertEquals(9, next.getPrice(GoodType.RUM));
-        assertEquals(2, next.getPrice(GoodType.SUGAR));
+        assertEquals(18, next.getPrice(GoodType.SUGAR));
     }
 
     @Test

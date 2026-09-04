@@ -70,7 +70,7 @@ class WorldSnapshotControllerTest {
                 .andExpect(jsonPath("$[0].islandStatuses[0].population").value(12))
                 .andExpect(jsonPath("$[0].islandStatuses[0].inventory.gold").value(40))
                 .andExpect(jsonPath("$[0].islandStatuses[0].inventory.rum").value(7))
-                .andExpect(jsonPath("$[0].islandStatuses[0].tradePrices.rum").value(3))
+                .andExpect(jsonPath("$[0].islandStatuses[0].tradePrices.rum").value(18))
                 .andExpect(jsonPath("$[0].ships[0].name").value("Black Pearl"))
                 .andExpect(jsonPath("$[0].ships[0].inventory.gold").value(200))
                 .andExpect(jsonPath("$[1].islandStatuses[0].population").value(18));

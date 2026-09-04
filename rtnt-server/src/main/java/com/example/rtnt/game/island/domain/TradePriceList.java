@@ -35,11 +35,11 @@ public final class TradePriceList {
 
     public static TradePriceList islandSeed() {
         return of(Map.of(
-                GoodType.FOOD, 2,
-                GoodType.RUM, 3,
-                GoodType.SUGAR, 2,
-                GoodType.SPICES, 4,
-                GoodType.TOBACCO, 5
+                GoodType.FOOD, 18,
+                GoodType.RUM, 18,
+                GoodType.SUGAR, 18,
+                GoodType.SPICES, 18,
+                GoodType.TOBACCO, 18
         ));
     }
 
