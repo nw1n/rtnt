@@ -16,7 +16,8 @@ import java.util.Random;
 @Component
 @NullMarked
 public class IslandEconomy {
-    private static final List<GoodType> TRADEABLE_GOODS = List.copyOf(GoodType.tradeableGoods());
+    private static final int FOOD_PRODUCTION_WEIGHT = 3;
+    private static final List<GoodType> PRODUCTION_BAG = productionBag();
 
     private final IslandStatusMongoRepository islandStatusMongoRepository;
     private final int intervalTicks;
@@ -145,7 +146,7 @@ public class IslandEconomy {
     private IslandStatus applyTo(IslandStatus status, boolean economyDue, boolean foodDue) {
         IslandStatus next = status;
         if (economyDue && this.productionChance > 0 && this.random.nextDouble() < this.productionChance) {
-            GoodType good = TRADEABLE_GOODS.get(this.random.nextInt(TRADEABLE_GOODS.size()));
+            GoodType good = PRODUCTION_BAG.get(this.random.nextInt(PRODUCTION_BAG.size()));
             int amount = this.productionMin + this.random.nextInt(this.productionMax - this.productionMin + 1);
             next = next.produce(good, amount);
         }
@@ -161,5 +162,16 @@ public class IslandEconomy {
 
     private boolean due(long tick, int interval) {
         return tick != 0 && tick % interval == 0;
+    }
+
+    static List<GoodType> productionBag() {
+        List<GoodType> bag = new ArrayList<>();
+        for (GoodType goodType : GoodType.tradeableGoods()) {
+            int weight = goodType == GoodType.FOOD ? FOOD_PRODUCTION_WEIGHT : 1;
+            for (int i = 0; i < weight; i++) {
+                bag.add(goodType);
+            }
+        }
+        return List.copyOf(bag);
     }
 }

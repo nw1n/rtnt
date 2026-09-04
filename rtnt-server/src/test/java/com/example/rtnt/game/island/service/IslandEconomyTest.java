@@ -39,6 +39,20 @@ class IslandEconomyTest {
     }
 
     @Test
+    void foodAppearsThreeTimesAsOftenInProductionBag() {
+        List<GoodType> bag = IslandEconomy.productionBag();
+        long food = bag.stream().filter(good -> good == GoodType.FOOD).count();
+        for (GoodType goodType : GoodType.tradeableGoods()) {
+            if (goodType == GoodType.FOOD) {
+                continue;
+            }
+            long other = bag.stream().filter(good -> good == goodType).count();
+            assertEquals(1, other);
+            assertEquals(3 * other, food);
+        }
+    }
+
+    @Test
     void producesTradeableGoodWhenChanceIsCertain() {
         IslandStatus empty = new IslandStatus("a", 0, Inventory.empty(), TradePriceList.defaultPrices());
         when(this.islandStatusMongoRepository.findAll()).thenReturn(List.of(IslandStatusDocument.from(empty)));
