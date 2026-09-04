@@ -4,6 +4,7 @@ import com.example.rtnt.game.inventory.domain.GoodType;
 import com.example.rtnt.game.inventory.domain.Inventory;
 import com.example.rtnt.game.island.domain.Island;
 import com.example.rtnt.game.island.domain.IslandStatus;
+import com.example.rtnt.game.island.domain.TradePriceList;
 import com.example.rtnt.game.ship.domain.Ship;
 import com.example.rtnt.game.trade.domain.TradeEvent;
 import com.example.rtnt.game.trade.domain.TradeResult;
@@ -19,6 +20,10 @@ import java.util.Random;
 @Component
 @NullMarked
 public class ArrivalTrade {
+    private static final TradePriceList FAIR_PRICES = TradePriceList.islandSeed();
+    private static final double MIN_SELL_CHANCE = 0.2;
+    private static final double MAX_SELL_CHANCE = 0.8;
+
     private final Random random;
 
     /***************************************************************************
@@ -61,7 +66,7 @@ public class ArrivalTrade {
             if (!canBuy && !canSell) {
                 continue;
             }
-            boolean sell = canSell && (!canBuy || this.random.nextBoolean());
+            boolean sell = canSell && (!canBuy || this.prefersSell(unitPrice, good));
             int amount = 1 + this.random.nextInt(sell ? maxSell : maxBuy);
             AppliedTrade applied = apply(
                     ship,
@@ -108,6 +113,13 @@ public class ArrivalTrade {
         return Math.min(holdRoom, Math.min(islandStock, maxByGold));
     }
 
+    static double sellProbability(int unitPrice, int fairPrice) {
+        int safeFair = Math.max(fairPrice, 1);
+        double ratio = unitPrice / (double) safeFair;
+        double probability = 0.5 + 0.25 * (ratio - 1.0);
+        return Math.min(MAX_SELL_CHANCE, Math.max(MIN_SELL_CHANCE, probability));
+    }
+
     static int maxSellAmount(Inventory shipInventory, Inventory islandInventory, GoodType good, int unitPrice) {
         if (unitPrice <= 0) {
             return 0;
@@ -122,6 +134,10 @@ public class ArrivalTrade {
      * Private Methods                                                         *
      *                                                                         *
      **************************************************************************/
+
+    private boolean prefersSell(int unitPrice, GoodType good) {
+        return this.random.nextDouble() < sellProbability(unitPrice, FAIR_PRICES.getPrice(good));
+    }
 
     private void shuffle(List<GoodType> goods) {
         for (int i = goods.size() - 1; i > 0; i--) {

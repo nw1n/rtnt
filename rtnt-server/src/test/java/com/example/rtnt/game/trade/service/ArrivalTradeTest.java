@@ -20,6 +20,16 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class ArrivalTradeTest {
 
     @Test
+    void sellProbabilityBiasesTowardHighPricesButNeverLocks() {
+        assertEquals(0.5, ArrivalTrade.sellProbability(3, 3));
+        assertTrue(ArrivalTrade.sellProbability(6, 3) > 0.5);
+        assertTrue(ArrivalTrade.sellProbability(1, 3) < 0.5);
+        assertTrue(ArrivalTrade.sellProbability(1, 20) >= 0.2);
+        assertTrue(ArrivalTrade.sellProbability(1, 20) < 0.5);
+        assertEquals(0.8, ArrivalTrade.sellProbability(20, 1));
+    }
+
+    @Test
     void maxBuyIsLimitedByHoldStockAndGold() {
         Inventory ship = Inventory.of(Map.of(GoodType.GOLD, 9, GoodType.RUM, 98));
         Inventory island = Inventory.of(Map.of(GoodType.RUM, 50));
