@@ -1,0 +1,43 @@
+<elder-single-pane-wrapper>
+  <div class="ship-table-view">
+    <div class="table-header">
+      <h1>Ships</h1>
+      <button mat-flat-button color="primary" type="button" [disabled]="busy()" (click)="refresh()">
+        Refresh
+      </button>
+    </div>
+    @if (error(); as message) {
+      <p class="state-text">{{ message }}</p>
+    }
+    @if (ships().length === 0 && !busy() && !error()) {
+      <p class="state-text">No ships available.</p>
+    } @else if (ships().length > 0) {
+      <div class="scrollable">
+        <table mat-table [dataSource]="dataSource" matSort class="ship-table">
+          <ng-container matColumnDef="name">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Name</th>
+            <td mat-cell *matCellDef="let ship">{{ ship.name }}</td>
+          </ng-container>
+          <ng-container matColumnDef="islandName">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Island</th>
+            <td mat-cell *matCellDef="let ship">{{ ship.islandName ?? '—' }}</td>
+          </ng-container>
+          <ng-container matColumnDef="playerId">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Player</th>
+            <td mat-cell *matCellDef="let ship">{{ ship.playerId ?? '—' }}</td>
+          </ng-container>
+          <ng-container matColumnDef="speed">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Speed</th>
+            <td mat-cell *matCellDef="let ship">{{ ship.speed }}</td>
+          </ng-container>
+          <ng-container matColumnDef="cargoCapacity">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Cargo</th>
+            <td mat-cell *matCellDef="let ship">{{ ship.cargoCapacity }}</td>
+          </ng-container>
+          <tr mat-header-row *matHeaderRowDef="columns"></tr>
+          <tr mat-row *matRowDef="let row; columns: columns"></tr>
+        </table>
+      </div>
+    }
+  </div>
+</elder-single-pane-wrapper>
