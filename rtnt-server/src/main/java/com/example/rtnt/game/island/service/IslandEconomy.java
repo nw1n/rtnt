@@ -17,7 +17,6 @@ import java.util.Random;
 @NullMarked
 public class IslandEconomy {
     private static final int FOOD_PRODUCTION_WEIGHT = 3;
-    private static final List<GoodType> PRODUCTION_BAG = productionBag();
 
     private final IslandStatusMongoRepository islandStatusMongoRepository;
     private final int intervalTicks;
@@ -31,8 +30,7 @@ public class IslandEconomy {
     private final int priceSurplusThreshold;
     private final int priceMin;
     private final int priceMax;
-    private final int growthMin;
-    private final int growthMax;
+    private final int growthPercent;
     private final Random random;
 
     /***************************************************************************
@@ -46,17 +44,16 @@ public class IslandEconomy {
             IslandStatusMongoRepository islandStatusMongoRepository,
             @Value("${rtnt.island.economy-interval-ticks:100}") int intervalTicks,
             @Value("${rtnt.island.food-interval-ticks:500}") int foodIntervalTicks,
-            @Value("${rtnt.island.production-chance:0.25}") double productionChance,
-            @Value("${rtnt.island.production-min:1}") int productionMin,
-            @Value("${rtnt.island.production-max:5}") int productionMax,
-            @Value("${rtnt.island.growth-goods-threshold:20}") int growthGoodsThreshold,
+            @Value("${rtnt.island.production-chance:0.45}") double productionChance,
+            @Value("${rtnt.island.production-min:2}") int productionMin,
+            @Value("${rtnt.island.production-max:8}") int productionMax,
+            @Value("${rtnt.island.growth-goods-threshold:15}") int growthGoodsThreshold,
             @Value("${rtnt.island.spoilage-threshold:40}") int spoilageThreshold,
             @Value("${rtnt.island.price-need-threshold:10}") int priceNeedThreshold,
             @Value("${rtnt.island.price-surplus-threshold:30}") int priceSurplusThreshold,
             @Value("${rtnt.island.price-min:1}") int priceMin,
             @Value("${rtnt.island.price-max:20}") int priceMax,
-            @Value("${rtnt.island.population-growth-min:1}") int growthMin,
-            @Value("${rtnt.island.population-growth-max:3}") int growthMax
+            @Value("${rtnt.island.population-growth-percent:5}") int growthPercent
     ) {
         this(
                 islandStatusMongoRepository,
@@ -71,8 +68,7 @@ public class IslandEconomy {
                 priceSurplusThreshold,
                 priceMin,
                 priceMax,
-                growthMin,
-                growthMax,
+                growthPercent,
                 new Random()
         );
     }
@@ -90,8 +86,7 @@ public class IslandEconomy {
             int priceSurplusThreshold,
             int priceMin,
             int priceMax,
-            int growthMin,
-            int growthMax,
+            int growthPercent,
             Random random
     ) {
         if (intervalTicks < 1) {
@@ -127,11 +122,8 @@ public class IslandEconomy {
         if (priceMax < priceMin) {
             throw new IllegalArgumentException("priceMax must be >= priceMin");
         }
-        if (growthMin < 1) {
-            throw new IllegalArgumentException("growthMin must be at least 1");
-        }
-        if (growthMax < growthMin) {
-            throw new IllegalArgumentException("growthMax must be >= growthMin");
+        if (growthPercent < 1 || growthPercent > 100) {
+            throw new IllegalArgumentException("growthPercent must be between 1 and 100");
         }
         this.islandStatusMongoRepository = islandStatusMongoRepository;
         this.intervalTicks = intervalTicks;
@@ -145,8 +137,7 @@ public class IslandEconomy {
         this.priceSurplusThreshold = priceSurplusThreshold;
         this.priceMin = priceMin;
         this.priceMax = priceMax;
-        this.growthMin = growthMin;
-        this.growthMax = growthMax;
+        this.growthPercent = growthPercent;
         this.random = random;
     }
 
@@ -185,10 +176,17 @@ public class IslandEconomy {
 
     private IslandStatus applyTo(IslandStatus status, boolean economyDue, boolean foodDue) {
         IslandStatus next = status;
-        if (economyDue && this.productionChance > 0 && this.random.nextDouble() < this.productionChance) {
-            GoodType good = PRODUCTION_BAG.get(this.random.nextInt(PRODUCTION_BAG.size()));
-            int amount = this.productionMin + this.random.nextInt(this.productionMax - this.productionMin + 1);
-            next = next.produce(good, amount);
+        if (economyDue && this.productionChance > 0) {
+            for (GoodType good : GoodType.tradeableGoods()) {
+                double chance = good == GoodType.FOOD
+                        ? Math.min(1.0, this.productionChance * FOOD_PRODUCTION_WEIGHT)
+                        : this.productionChance;
+                if (this.random.nextDouble() >= chance) {
+                    continue;
+                }
+                int amount = this.productionMin + this.random.nextInt(this.productionMax - this.productionMin + 1);
+                next = next.produce(good, amount);
+            }
         }
         if (economyDue) {
             next = next.spoilOverstockedGoods(this.spoilageThreshold);
@@ -197,8 +195,7 @@ public class IslandEconomy {
             next = next.consumeFoodOrStarve();
         }
         if (economyDue && next.canFlourish(this.growthGoodsThreshold)) {
-            int growth = this.growthMin + this.random.nextInt(this.growthMax - this.growthMin + 1);
-            next = next.consumeHalfGoodsAndGrow(growth);
+            next = next.consumeHalfGoodsAndGrow(this.growthAmount(next.population()));
         }
         if (economyDue) {
             next = next.adjustPrices(
@@ -211,18 +208,11 @@ public class IslandEconomy {
         return next;
     }
 
-    private boolean due(long tick, int interval) {
-        return tick != 0 && tick % interval == 0;
+    private long growthAmount(long population) {
+        return Math.max(1L, (population * this.growthPercent + 99) / 100);
     }
 
-    static List<GoodType> productionBag() {
-        List<GoodType> bag = new ArrayList<>();
-        for (GoodType goodType : GoodType.tradeableGoods()) {
-            int weight = goodType == GoodType.FOOD ? FOOD_PRODUCTION_WEIGHT : 1;
-            for (int i = 0; i < weight; i++) {
-                bag.add(goodType);
-            }
-        }
-        return List.copyOf(bag);
+    private boolean due(long tick, int interval) {
+        return tick != 0 && tick % interval == 0;
     }
 }

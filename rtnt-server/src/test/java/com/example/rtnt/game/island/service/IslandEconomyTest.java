@@ -39,21 +39,7 @@ class IslandEconomyTest {
     }
 
     @Test
-    void foodAppearsThreeTimesAsOftenInProductionBag() {
-        List<GoodType> bag = IslandEconomy.productionBag();
-        long food = bag.stream().filter(good -> good == GoodType.FOOD).count();
-        for (GoodType goodType : GoodType.tradeableGoods()) {
-            if (goodType == GoodType.FOOD) {
-                continue;
-            }
-            long other = bag.stream().filter(good -> good == goodType).count();
-            assertEquals(1, other);
-            assertEquals(3 * other, food);
-        }
-    }
-
-    @Test
-    void producesTradeableGoodWhenChanceIsCertain() {
+    void producesEveryTradeableGoodWhenChanceIsCertain() {
         IslandStatus empty = new IslandStatus("a", 0, Inventory.empty(), TradePriceList.defaultPrices());
         when(this.islandStatusMongoRepository.findAll()).thenReturn(List.of(IslandStatusDocument.from(empty)));
         IslandEconomy economy = this.economy(1.0, 20);
@@ -62,7 +48,9 @@ class IslandEconomyTest {
 
         IslandStatus saved = this.savedStatus();
         assertEquals(0, saved.population());
-        assertTrue(saved.inventory().sumTradeableGoods() >= 1);
+        for (GoodType goodType : GoodType.tradeableGoods()) {
+            assertTrue(saved.inventory().getAmount(goodType) >= 1);
+        }
         assertEquals(0, saved.inventory().getAmount(GoodType.GOLD));
     }
 
@@ -237,6 +225,29 @@ class IslandEconomyTest {
         assertEquals(1, saved.tradePrices().getPrice(GoodType.SUGAR));
     }
 
+    @Test
+    void growsFivePercentWhenStartingPopulationIsLarge() {
+        IslandStatus town = new IslandStatus(
+                "a",
+                1_000,
+                Inventory.of(Map.of(
+                        GoodType.FOOD, 15,
+                        GoodType.RUM, 15,
+                        GoodType.SUGAR, 15,
+                        GoodType.SPICES, 15,
+                        GoodType.TOBACCO, 15
+                )),
+                TradePriceList.defaultPrices()
+        );
+        when(this.islandStatusMongoRepository.findAll()).thenReturn(List.of(IslandStatusDocument.from(town)));
+        IslandEconomy economy = this.economy(0.0, 15);
+
+        assertTrue(economy.applyIfDue(10));
+
+        IslandStatus saved = this.savedStatus();
+        assertEquals(1_050, saved.population());
+    }
+
     private IslandStatus savedStatus() {
         ArgumentCaptor<List<IslandStatusDocument>> captor = ArgumentCaptor.forClass(List.class);
         verify(this.islandStatusMongoRepository).saveAll(captor.capture());
@@ -258,8 +269,7 @@ class IslandEconomyTest {
                 30,
                 1,
                 20,
-                1,
-                3,
+                5,
                 new Random(1)
         );
     }
@@ -278,8 +288,7 @@ class IslandEconomyTest {
                 30,
                 1,
                 20,
-                1,
-                3,
+                5,
                 new Random(1)
         );
     }

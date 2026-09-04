@@ -18,7 +18,7 @@ public record IslandStatus(
      **************************************************************************/
 
     public static IslandStatus initial(String islandId) {
-        return new IslandStatus(islandId, 0, Inventory.islandSeed(), TradePriceList.islandSeed());
+        return new IslandStatus(islandId, 1_000, Inventory.islandSeed(), TradePriceList.islandSeed());
     }
 
     public static IslandStatus empty(String islandId) {

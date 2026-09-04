@@ -28,11 +28,11 @@ public final class Inventory {
     public static Inventory islandSeed() {
         return of(Map.of(
                 GoodType.GOLD, 100,
-                GoodType.FOOD, 10,
-                GoodType.RUM, 10,
-                GoodType.SUGAR, 10,
-                GoodType.SPICES, 10,
-                GoodType.TOBACCO, 10
+                GoodType.FOOD, 15,
+                GoodType.RUM, 15,
+                GoodType.SUGAR, 15,
+                GoodType.SPICES, 15,
+                GoodType.TOBACCO, 15
         ));
     }
 

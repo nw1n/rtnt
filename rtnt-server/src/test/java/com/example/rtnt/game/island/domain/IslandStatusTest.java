@@ -11,10 +11,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class IslandStatusTest {
 
     @Test
-    void initialPopulationIsZero() {
+    void initialPopulationIsOneThousand() {
         IslandStatus status = IslandStatus.initial("island-1");
         assertEquals("island-1", status.islandId());
-        assertEquals(0, status.population());
+        assertEquals(1_000, status.population());
         assertEquals(Inventory.islandSeed(), status.inventory());
         assertEquals(TradePriceList.islandSeed(), status.tradePrices());
     }
@@ -22,7 +22,7 @@ class IslandStatusTest {
     @Test
     void growIncreasesPopulation() {
         IslandStatus grown = IslandStatus.initial("island-1").grow(4);
-        assertEquals(4, grown.population());
+        assertEquals(1_004, grown.population());
         assertEquals("island-1", grown.islandId());
         assertEquals(Inventory.islandSeed(), grown.inventory());
         assertEquals(TradePriceList.islandSeed(), grown.tradePrices());
@@ -31,24 +31,24 @@ class IslandStatusTest {
     @Test
     void produceAddsTradeableGood() {
         IslandStatus produced = IslandStatus.initial("island-1").produce(GoodType.RUM, 5);
-        assertEquals(15, produced.inventory().getAmount(GoodType.RUM));
-        assertEquals(0, produced.population());
+        assertEquals(20, produced.inventory().getAmount(GoodType.RUM));
+        assertEquals(1_000, produced.population());
     }
 
     @Test
     void consumeHalfGoodsAndGrowHalvesTradeables() {
         IslandStatus flourished = IslandStatus.initial("island-1").consumeHalfGoodsAndGrow(2);
-        assertEquals(2, flourished.population());
-        assertEquals(5, flourished.inventory().getAmount(GoodType.RUM));
-        assertEquals(5, flourished.inventory().getAmount(GoodType.SUGAR));
+        assertEquals(1_002, flourished.population());
+        assertEquals(7, flourished.inventory().getAmount(GoodType.RUM));
+        assertEquals(7, flourished.inventory().getAmount(GoodType.SUGAR));
         assertEquals(100, flourished.inventory().getAmount(GoodType.GOLD));
     }
 
     @Test
     void consumeFoodOrStarveEatsOneFood() {
-        IslandStatus fed = IslandStatus.initial("island-1").grow(10).consumeFoodOrStarve();
-        assertEquals(10, fed.population());
-        assertEquals(9, fed.inventory().getAmount(GoodType.FOOD));
+        IslandStatus fed = IslandStatus.initial("island-1").consumeFoodOrStarve();
+        assertEquals(1_000, fed.population());
+        assertEquals(14, fed.inventory().getAmount(GoodType.FOOD));
     }
 
     @Test
