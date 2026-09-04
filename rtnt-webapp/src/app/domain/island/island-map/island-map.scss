@@ -41,6 +41,22 @@
   pointer-events: none;
 }
 
+.ship-shape {
+  fill: #0f766e;
+  stroke: #134e4a;
+  stroke-width: 2;
+}
+
+.ship-marker.underway .ship-shape {
+  fill: #1d4ed8;
+  stroke: #1e3a8a;
+}
+
+.ship-marker.player-owned .ship-shape {
+  fill: #b45309;
+  stroke: #7c2d12;
+}
+
 .state-text {
   margin: 0;
   font-size: 0.95rem;

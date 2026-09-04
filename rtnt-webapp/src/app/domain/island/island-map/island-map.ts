@@ -2,11 +2,14 @@ import { CommonModule } from '@angular/common'
 import { ChangeDetectionStrategy, Component, computed, DestroyRef, inject, signal } from '@angular/core'
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop'
 import { ElderSinglePaneWrapperComponent } from '@elderbyte/ngx-starter'
-import { catchError, EMPTY, interval, startWith, switchMap } from 'rxjs'
+import { catchError, forkJoin, of, interval, startWith, switchMap } from 'rxjs'
 import { GameFlowDto } from '../../../models/game-flow.dto'
 import { IslandDto } from '../../../models/island.dto'
+import { ShipDto } from '../../../models/ship.dto'
 import { GameFlowService } from '../../game-flow/game-flow.service'
+import { ShipService } from '../../ship/ship.service'
 import { IslandService } from '../island.service'
+import { shipMapMarkers } from './ship-map-markers'
 
 const MAP_MIN_PADDING = 40
 const MAP_PADDING_RATIO = 0.08
@@ -21,11 +24,16 @@ const MAP_FALLBACK_SIZE = 600
 })
 export class IslandMap {
   private readonly islandService = inject(IslandService)
+  private readonly shipService = inject(ShipService)
   private readonly gameFlowService = inject(GameFlowService)
   private readonly destroyRef = inject(DestroyRef)
 
   public islands = signal<IslandDto[]>([])
+  public ships = signal<ShipDto[]>([])
   public gameFlow = signal<GameFlowDto | null>(null)
+  public shipMarkers = computed(() =>
+    shipMapMarkers(this.ships(), this.islands(), this.gameFlow()?.tick ?? 0)
+  )
 
   public mapBoundsString = computed(() => {
     const islands = this.islands()
@@ -56,9 +64,19 @@ export class IslandMap {
     interval(1000)
       .pipe(
         startWith(0),
-        switchMap(() => this.gameFlowService.get().pipe(catchError(() => EMPTY))),
+        switchMap(() =>
+          forkJoin({
+            gameFlow: this.gameFlowService.get().pipe(catchError(() => of(null))),
+            ships: this.shipService.listShips().pipe(catchError(() => of([] as ShipDto[]))),
+          })
+        ),
         takeUntilDestroyed(this.destroyRef)
       )
-      .subscribe((gameFlow) => this.gameFlow.set(gameFlow))
+      .subscribe(({ gameFlow, ships }) => {
+        if (gameFlow) {
+          this.gameFlow.set(gameFlow)
+        }
+        this.ships.set(ships)
+      })
   }
 }
