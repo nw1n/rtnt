@@ -25,6 +25,8 @@ export class DebugPage {
   public batchSize = signal(100)
   public batchCount = signal(1)
   public snapshotTick = signal(0)
+  public frameMs = signal(1000)
+  private frameMsLoaded = false
 
   constructor() {
     interval(1000)
@@ -33,7 +35,13 @@ export class DebugPage {
         switchMap(() => this.gameFlowService.get().pipe(catchError(() => EMPTY))),
         takeUntilDestroyed(this.destroyRef)
       )
-      .subscribe((gameFlow) => this.gameFlow.set(gameFlow))
+      .subscribe((gameFlow) => {
+        this.gameFlow.set(gameFlow)
+        if (!this.frameMsLoaded) {
+          this.frameMs.set(gameFlow.liveIntervalMs)
+          this.frameMsLoaded = true
+        }
+      })
   }
 
   public recreateIslands(): void {
@@ -81,6 +89,15 @@ export class DebugPage {
     }
   }
 
+  public setLiveInterval(): void {
+    const milliseconds = Math.max(1, Math.min(60_000, Math.trunc(this.frameMs()) || 1))
+    this.frameMs.set(milliseconds)
+    this.runGameFlowAction(
+      this.gameFlowService.setLiveInterval(milliseconds),
+      `Live interval set to ${milliseconds} ms.`
+    )
+  }
+
   public loadSnapshot(): void {
     const tick = this.snapshotTick()
     this.runGameFlowAction(
@@ -103,6 +120,11 @@ export class DebugPage {
   public onSnapshotTickInput(event: Event): void {
     const value = Number((event.target as HTMLInputElement).value)
     this.snapshotTick.set(Number.isFinite(value) ? value : 0)
+  }
+
+  public onFrameMsInput(event: Event): void {
+    const value = Number((event.target as HTMLInputElement).value)
+    this.frameMs.set(Number.isFinite(value) ? value : 1)
   }
 
   private runGameFlowAction(

@@ -31,18 +31,19 @@ class GameFlowControllerTest {
 
     @Test
     void getReturnsStatus() throws Exception {
-        when(this.gameLoop.get()).thenReturn(new GameFlowStatus(4, FlowMode.LIVE, true));
+        when(this.gameLoop.get()).thenReturn(new GameFlowStatus(4, FlowMode.LIVE, true, 1000));
 
         this.mockMvc.perform(get("/api/game-flow"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.tick").value(4))
                 .andExpect(jsonPath("$.mode").value("LIVE"))
-                .andExpect(jsonPath("$.paused").value(true));
+                .andExpect(jsonPath("$.paused").value(true))
+                .andExpect(jsonPath("$.liveIntervalMs").value(1000));
     }
 
     @Test
     void pauseDelegatesToGameLoop() throws Exception {
-        when(this.gameLoop.pause()).thenReturn(new GameFlowStatus(0, FlowMode.LIVE, true));
+        when(this.gameLoop.pause()).thenReturn(new GameFlowStatus(0, FlowMode.LIVE, true, 1000));
 
         this.mockMvc.perform(post("/api/game-flow/pause"))
                 .andExpect(status().isOk())
@@ -53,7 +54,7 @@ class GameFlowControllerTest {
     @Test
     void setModeDelegatesToGameLoop() throws Exception {
         when(this.gameLoop.setMode(FlowMode.BATCH))
-                .thenReturn(new GameFlowStatus(0, FlowMode.BATCH, false));
+                .thenReturn(new GameFlowStatus(0, FlowMode.BATCH, false, 1000));
 
         this.mockMvc.perform(post("/api/game-flow/mode")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -65,7 +66,7 @@ class GameFlowControllerTest {
 
     @Test
     void advanceDelegatesToGameLoop() throws Exception {
-        when(this.gameLoop.advance(25)).thenReturn(new GameFlowStatus(25, FlowMode.BATCH, false));
+        when(this.gameLoop.advance(25)).thenReturn(new GameFlowStatus(25, FlowMode.BATCH, false, 1000));
 
         this.mockMvc.perform(post("/api/game-flow/advance")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -78,7 +79,7 @@ class GameFlowControllerTest {
     @Test
     void loadSnapshotDelegatesToGameLoop() throws Exception {
         when(this.gameLoop.loadFromSnapshot(200))
-                .thenReturn(new GameFlowStatus(200, FlowMode.BATCH, true));
+                .thenReturn(new GameFlowStatus(200, FlowMode.BATCH, true, 1000));
 
         this.mockMvc.perform(post("/api/game-flow/load-snapshot")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -97,6 +98,27 @@ class GameFlowControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"tick\":99}"))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void setLiveIntervalDelegatesToGameLoop() throws Exception {
+        when(this.gameLoop.setLiveIntervalMs(250))
+                .thenReturn(new GameFlowStatus(0, FlowMode.BATCH, true, 250));
+
+        this.mockMvc.perform(post("/api/game-flow/live-interval")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"milliseconds\":250}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.liveIntervalMs").value(250));
+        verify(this.gameLoop).setLiveIntervalMs(250);
+    }
+
+    @Test
+    void setLiveIntervalRejectsZero() throws Exception {
+        this.mockMvc.perform(post("/api/game-flow/live-interval")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"milliseconds\":0}"))
+                .andExpect(status().isBadRequest());
     }
 
     @Test

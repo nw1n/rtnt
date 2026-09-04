@@ -41,10 +41,13 @@ public class GameLoop {
     private final IslandPopulationGrowth islandPopulationGrowth;
     private final ShipJourneyCheck shipJourneyCheck;
     private final int snapshotIntervalTicks;
+    private final int defaultLiveIntervalMs;
     private final Object lock = new Object();
     private @Nullable GameTick gameTick;
     private FlowMode mode = FlowMode.BATCH;
     private boolean paused = true;
+    private int liveIntervalMs;
+    private long lastLiveStepAtMs;
     private boolean loaded;
 
     /***************************************************************************
@@ -61,10 +64,14 @@ public class GameLoop {
             IslandService islandService,
             IslandPopulationGrowth islandPopulationGrowth,
             ShipJourneyCheck shipJourneyCheck,
-            @Value("${rtnt.snapshot.interval-ticks:1000}") int snapshotIntervalTicks
+            @Value("${rtnt.snapshot.interval-ticks:1000}") int snapshotIntervalTicks,
+            @Value("${rtnt.flow.live-interval-ms:1000}") int liveIntervalMs
     ) {
         if (snapshotIntervalTicks < 1) {
             throw new IllegalArgumentException("snapshotIntervalTicks must be at least 1");
+        }
+        if (liveIntervalMs < 1) {
+            throw new IllegalArgumentException("liveIntervalMs must be at least 1");
         }
         this.tickerMongoRepository = tickerMongoRepository;
         this.gameFlowStatusMongoRepository = gameFlowStatusMongoRepository;
@@ -74,6 +81,8 @@ public class GameLoop {
         this.islandPopulationGrowth = islandPopulationGrowth;
         this.shipJourneyCheck = shipJourneyCheck;
         this.snapshotIntervalTicks = snapshotIntervalTicks;
+        this.defaultLiveIntervalMs = liveIntervalMs;
+        this.liveIntervalMs = liveIntervalMs;
     }
 
     /***************************************************************************
@@ -135,6 +144,19 @@ public class GameLoop {
         }
     }
 
+    public GameFlowStatus setLiveIntervalMs(int milliseconds) {
+        if (milliseconds < 1 || milliseconds > 60_000) {
+            throw new IllegalArgumentException("liveIntervalMs must be between 1 and 60000");
+        }
+        synchronized (this.lock) {
+            this.ensureLoaded();
+            this.liveIntervalMs = milliseconds;
+            this.saveFlow();
+            log.info("Live interval set to {} ms at tick {}", milliseconds, this.requireTick().tick());
+            return this.status();
+        }
+    }
+
     public GameFlowStatus step() {
         synchronized (this.lock) {
             this.ensureLoaded();
@@ -149,6 +171,11 @@ public class GameLoop {
             if (this.mode != FlowMode.LIVE || this.paused) {
                 return;
             }
+            long now = System.currentTimeMillis();
+            if (now - this.lastLiveStepAtMs < this.liveIntervalMs) {
+                return;
+            }
+            this.lastLiveStepAtMs = now;
             this.execute();
         }
     }
@@ -241,7 +268,7 @@ public class GameLoop {
     }
 
     private GameFlowStatus status() {
-        return new GameFlowStatus(this.requireTick().tick(), this.mode, this.paused);
+        return new GameFlowStatus(this.requireTick().tick(), this.mode, this.paused, this.liveIntervalMs);
     }
 
     private void persistFlowIfLive() {
@@ -255,7 +282,9 @@ public class GameLoop {
     }
 
     private void saveFlow() {
-        this.gameFlowStatusMongoRepository.save(GameFlowStatusDocument.from(this.mode, this.paused));
+        this.gameFlowStatusMongoRepository.save(
+                GameFlowStatusDocument.from(this.mode, this.paused, this.liveIntervalMs)
+        );
     }
 
     private void ensureLoaded() {
@@ -273,9 +302,11 @@ public class GameLoop {
                 .ifPresentOrElse(document -> {
                     this.mode = document.mode();
                     this.paused = document.paused();
+                    this.liveIntervalMs = document.resolvedLiveIntervalMs(this.defaultLiveIntervalMs);
                 }, () -> {
                     this.mode = FlowMode.BATCH;
                     this.paused = true;
+                    this.liveIntervalMs = this.defaultLiveIntervalMs;
                     this.saveFlow();
                 });
         this.loaded = true;

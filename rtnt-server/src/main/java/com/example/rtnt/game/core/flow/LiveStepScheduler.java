@@ -24,7 +24,7 @@ public class LiveStepScheduler {
      *                                                                         *
      **************************************************************************/
 
-    @Scheduled(fixedRateString = "${rtnt.flow.live-interval-ms:1000}")
+    @Scheduled(fixedRate = 10)
     public void onInterval() {
         this.gameLoop.stepIfLive();
     }

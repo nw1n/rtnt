@@ -35,4 +35,8 @@ export class GameFlowService {
   public loadSnapshot(tick: number): Observable<GameFlowDto> {
     return this.httpClient.post<GameFlowDto>(`${this.baseApiUrl}/load-snapshot`, { tick })
   }
+
+  public setLiveInterval(milliseconds: number): Observable<GameFlowDto> {
+    return this.httpClient.post<GameFlowDto>(`${this.baseApiUrl}/live-interval`, { milliseconds })
+  }
 }

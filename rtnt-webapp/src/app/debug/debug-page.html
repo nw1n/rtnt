@@ -10,6 +10,7 @@
           @if (gameFlowState.paused) {
             · paused
           }
+          · {{ gameFlowState.liveIntervalMs }}ms/tick
         </p>
       } @else {
         <p class="status-text">Loading game flow…</p>
@@ -26,6 +27,21 @@
         </button>
         <button mat-stroked-button type="button" [disabled]="busy()" (click)="setMode('BATCH')">
           Batch
+        </button>
+      </div>
+      <div class="debug-actions advance-row">
+        <label class="ticks-label">
+          Frame ms
+          <input
+            type="number"
+            min="1"
+            max="60000"
+            [value]="frameMs()"
+            (input)="onFrameMsInput($event)"
+          />
+        </label>
+        <button mat-flat-button color="primary" type="button" [disabled]="busy()" (click)="setLiveInterval()">
+          Set
         </button>
       </div>
       <div class="debug-actions advance-row">

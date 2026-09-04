@@ -77,7 +77,8 @@ class GameLoopTest {
                 this.islandService,
                 this.islandPopulationGrowth,
                 this.shipJourneyCheck,
-                2
+                2,
+                1000
         );
     }
 
@@ -92,9 +93,11 @@ class GameLoopTest {
         assertEquals(0, status.tick());
         assertEquals(FlowMode.BATCH, status.mode());
         assertTrue(status.paused());
+        assertEquals(1000, status.liveIntervalMs());
         GameFlowStatusDocument saved = this.capturedFlow();
         assertEquals(FlowMode.BATCH, saved.mode());
         assertTrue(saved.paused());
+        assertEquals(1000, saved.liveIntervalMs());
     }
 
     @Test
@@ -240,6 +243,29 @@ class GameLoopTest {
     }
 
     @Test
+    void setLiveIntervalMsPersistsInBatch() {
+        this.givenLatest(0, FlowMode.BATCH, true);
+
+        GameFlowStatus status = this.gameLoop.setLiveIntervalMs(250);
+
+        assertEquals(250, status.liveIntervalMs());
+        GameFlowStatusDocument saved = this.capturedFlow();
+        assertEquals(250, saved.liveIntervalMs());
+        assertEquals(FlowMode.BATCH, saved.mode());
+        assertTrue(saved.paused());
+    }
+
+    @Test
+    void stepIfLiveSkipsUntilIntervalElapsed() {
+        this.givenLatest(0, FlowMode.LIVE, false, 60_000);
+
+        this.gameLoop.stepIfLive();
+        this.gameLoop.stepIfLive();
+
+        assertEquals(1, this.gameLoop.get().tick());
+    }
+
+    @Test
     void setModeLiveUnpausesAndPersists() {
         this.givenLatest(0, FlowMode.BATCH, true);
 
@@ -250,6 +276,7 @@ class GameLoopTest {
         GameFlowStatusDocument saved = this.capturedFlow();
         assertEquals(FlowMode.LIVE, saved.mode());
         assertFalse(saved.paused());
+        assertEquals(1000, saved.liveIntervalMs());
     }
 
     @Test
@@ -299,13 +326,18 @@ class GameLoopTest {
     }
 
     private void givenLatest(long tick, FlowMode mode, boolean paused) {
+        this.givenLatest(tick, mode, paused, null);
+    }
+
+    private void givenLatest(long tick, FlowMode mode, boolean paused, Integer liveIntervalMs) {
         when(this.tickerMongoRepository.findById(TickerDocument.DOCUMENT_ID))
                 .thenReturn(Optional.of(new TickerDocument(TickerDocument.DOCUMENT_ID, tick)));
         when(this.gameFlowStatusMongoRepository.findById(GameFlowStatusDocument.DOCUMENT_ID))
                 .thenReturn(Optional.of(new GameFlowStatusDocument(
                         GameFlowStatusDocument.DOCUMENT_ID,
                         mode,
-                        paused
+                        paused,
+                        liveIntervalMs
                 )));
     }
 

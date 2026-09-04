@@ -72,15 +72,20 @@ public class GameFlowController {
         }
     }
 
+    @PostMapping("/live-interval")
+    public GameFlowDto setLiveInterval(@Valid @RequestBody LiveIntervalRequest request) {
+        return GameFlowDto.from(this.gameLoop.setLiveIntervalMs(request.milliseconds()));
+    }
+
     /***************************************************************************
      *                                                                         *
      * DTOs                                                                    *
      *                                                                         *
      **************************************************************************/
 
-    public record GameFlowDto(long tick, FlowMode mode, boolean paused) {
+    public record GameFlowDto(long tick, FlowMode mode, boolean paused, int liveIntervalMs) {
         static GameFlowDto from(GameFlowStatus status) {
-            return new GameFlowDto(status.tick(), status.mode(), status.paused());
+            return new GameFlowDto(status.tick(), status.mode(), status.paused(), status.liveIntervalMs());
         }
     }
 
@@ -91,5 +96,8 @@ public class GameFlowController {
     }
 
     public record LoadSnapshotRequest(@Min(0) long tick) {
+    }
+
+    public record LiveIntervalRequest(@Min(1) @Max(60_000) int milliseconds) {
     }
 }
