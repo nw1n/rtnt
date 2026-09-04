@@ -5,7 +5,6 @@
   box-sizing: border-box;
   padding: 16px;
   gap: 12px;
-  overflow: auto;
 }
 
 .history-header {
@@ -20,43 +19,21 @@
   font-size: 1.4rem;
 }
 
-.chart-title {
-  margin: 8px 0 0;
-  font-size: 1.1rem;
-}
-
-.state-text {
+.status-text {
   margin: 0;
   font-size: 0.95rem;
   color: #374151;
 }
 
-.chart-host {
+.chart-tabs {
   flex: 1 1 auto;
-  min-height: 420px;
-  width: 100%;
-}
-
-.history-header {
+  min-height: 0;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.history-header h1 {
-  margin: 0;
-  font-size: 1.4rem;
-}
-
-.state-text {
-  margin: 0;
-  font-size: 0.95rem;
-  color: #374151;
+  flex-direction: column;
 }
 
 .chart-host {
-  flex: 1 1 auto;
+  height: 100%;
   min-height: 420px;
   width: 100%;
 }

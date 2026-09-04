@@ -7,16 +7,28 @@
       </button>
     </div>
     @if (error(); as message) {
-      <p class="state-text">{{ message }}</p>
+      <p class="status-text">{{ message }}</p>
     }
     @if (snapshots().length === 0 && !busy() && !error()) {
-      <p class="state-text">No snapshots available yet.</p>
+      <p class="status-text">No snapshots available yet.</p>
     } @else if (snapshots().length > 0) {
-      <p class="state-text">{{ snapshots().length }} snapshots</p>
-      <h2 class="chart-title">Island population</h2>
-      <div class="chart-host" [appEcharts]="chartOption()" [dark]="darkTheme()"></div>
-      <h2 class="chart-title">Ship gold</h2>
-      <div class="chart-host" [appEcharts]="shipGoldChartOption()" [dark]="darkTheme()"></div>
+      <p class="status-text">{{ snapshots().length }} snapshots</p>
+      <mat-tab-group
+        class="chart-tabs"
+        [selectedIndex]="selectedTab()"
+        (selectedIndexChange)="selectedTab.set($event)"
+      >
+        <mat-tab label="Island population">
+          @if (selectedTab() === 0) {
+            <div class="chart-host" [appEcharts]="chartOption()" [dark]="darkTheme()"></div>
+          }
+        </mat-tab>
+        <mat-tab label="Ship gold">
+          @if (selectedTab() === 1) {
+            <div class="chart-host" [appEcharts]="shipGoldChartOption()" [dark]="darkTheme()"></div>
+          }
+        </mat-tab>
+      </mat-tab-group>
     }
   </div>
 </elder-single-pane-wrapper>
