@@ -2,6 +2,7 @@ package com.example.rtnt.game.ship.web;
 
 import com.example.rtnt.game.island.domain.Island;
 import com.example.rtnt.game.island.service.IslandService;
+import com.example.rtnt.game.ship.domain.Journey;
 import com.example.rtnt.game.ship.domain.Ship;
 import com.example.rtnt.game.ship.service.ShipService;
 import org.jspecify.annotations.Nullable;
@@ -41,7 +42,7 @@ public class ShipController {
         Map<String, String> islandNameById = this.islandService.list().stream()
                 .collect(Collectors.toMap(Island::id, Island::name, (left, right) -> left));
         return this.shipService.list().stream()
-                .map(ship -> ShipDto.from(ship, islandNameById.get(ship.getIslandId())))
+                .map(ship -> ShipDto.from(ship, islandNameById))
                 .toList();
     }
 
@@ -58,17 +59,49 @@ public class ShipController {
             @Nullable String islandName,
             @Nullable String playerId,
             int speed,
-            int cargoCapacity
+            int cargoCapacity,
+            @Nullable JourneyDto journey
     ) {
-        static ShipDto from(Ship ship, @Nullable String islandName) {
+        static ShipDto from(Ship ship, Map<String, String> islandNameById) {
+            String islandId = ship.getIslandId();
             return new ShipDto(
                     ship.getId(),
                     ship.getName(),
-                    ship.getIslandId(),
-                    islandName,
+                    islandId,
+                    islandId == null ? null : islandNameById.get(islandId),
                     ship.getPlayerId(),
                     ship.getSpeed(),
-                    ship.getCargoCapacity()
+                    ship.getCargoCapacity(),
+                    JourneyDto.from(ship.getJourney(), islandNameById)
+            );
+        }
+    }
+
+    public record JourneyDto(
+            String id,
+            String startIslandId,
+            @Nullable String startIslandName,
+            String targetIslandId,
+            @Nullable String targetIslandName,
+            long departedTick,
+            @Nullable Long arrivedTick,
+            long estimatedArrivalTick,
+            boolean active
+    ) {
+        static @Nullable JourneyDto from(@Nullable Journey journey, Map<String, String> islandNameById) {
+            if (journey == null) {
+                return null;
+            }
+            return new JourneyDto(
+                    journey.id(),
+                    journey.startIslandId(),
+                    islandNameById.get(journey.startIslandId()),
+                    journey.targetIslandId(),
+                    islandNameById.get(journey.targetIslandId()),
+                    journey.departedTick(),
+                    journey.arrivedTick(),
+                    journey.estimatedArrivalTick(),
+                    journey.active()
             );
         }
     }

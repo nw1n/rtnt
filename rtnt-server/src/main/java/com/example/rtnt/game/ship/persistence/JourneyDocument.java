@@ -3,14 +3,10 @@ package com.example.rtnt.game.ship.persistence;
 import com.example.rtnt.game.ship.domain.Journey;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
 
-@Document(collection = "journeys")
 @NullMarked
 public record JourneyDocument(
-        @Id String id,
-        String shipId,
+        String id,
         String startIslandId,
         String targetIslandId,
         long departedTick,
@@ -27,7 +23,6 @@ public record JourneyDocument(
     public static JourneyDocument from(Journey journey) {
         return new JourneyDocument(
                 journey.id(),
-                journey.shipId(),
                 journey.startIslandId(),
                 journey.targetIslandId(),
                 journey.departedTick(),
@@ -46,7 +41,6 @@ public record JourneyDocument(
     public Journey toJourney() {
         return Journey.existing(
                 this.id,
-                this.shipId,
                 this.startIslandId,
                 this.targetIslandId,
                 this.departedTick,

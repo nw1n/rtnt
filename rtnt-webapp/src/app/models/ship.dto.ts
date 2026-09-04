@@ -1,3 +1,15 @@
+export interface JourneyDto {
+  id: string
+  startIslandId: string
+  startIslandName: string | null
+  targetIslandId: string
+  targetIslandName: string | null
+  departedTick: number
+  arrivedTick: number | null
+  estimatedArrivalTick: number
+  active: boolean
+}
+
 export interface ShipDto {
   id: string
   name: string
@@ -6,4 +18,5 @@ export interface ShipDto {
   playerId: string | null
   speed: number
   cargoCapacity: number
+  journey: JourneyDto | null
 }

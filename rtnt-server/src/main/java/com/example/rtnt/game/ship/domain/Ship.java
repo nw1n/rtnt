@@ -16,6 +16,7 @@ public class Ship {
     private final String name;
     private final @Nullable String islandId;
     private final @Nullable String playerId;
+    private final @Nullable Journey journey;
 
     /***************************************************************************
      *                                                                         *
@@ -23,11 +24,18 @@ public class Ship {
      *                                                                         *
      **************************************************************************/
 
-    private Ship(String id, String name, @Nullable String islandId, @Nullable String playerId) {
+    private Ship(
+            String id,
+            String name,
+            @Nullable String islandId,
+            @Nullable String playerId,
+            @Nullable Journey journey
+    ) {
         this.id = Objects.requireNonNull(id, "Ship id cannot be null");
         this.name = Objects.requireNonNull(name, "Ship name cannot be null");
         this.islandId = islandId;
         this.playerId = playerId;
+        this.journey = journey;
     }
 
     /***************************************************************************
@@ -37,11 +45,26 @@ public class Ship {
      **************************************************************************/
 
     public static Ship create(String name, @Nullable String islandId, @Nullable String playerId) {
-        return new Ship(UUID.randomUUID().toString(), name, islandId, playerId);
+        return create(name, islandId, playerId, null);
     }
 
-    public static Ship existing(String id, String name, @Nullable String islandId, @Nullable String playerId) {
-        return new Ship(id, name, islandId, playerId);
+    public static Ship create(
+            String name,
+            @Nullable String islandId,
+            @Nullable String playerId,
+            @Nullable Journey journey
+    ) {
+        return new Ship(UUID.randomUUID().toString(), name, islandId, playerId, journey);
+    }
+
+    public static Ship existing(
+            String id,
+            String name,
+            @Nullable String islandId,
+            @Nullable String playerId,
+            @Nullable Journey journey
+    ) {
+        return new Ship(id, name, islandId, playerId, journey);
     }
 
     /***************************************************************************
@@ -66,12 +89,20 @@ public class Ship {
         return this.playerId;
     }
 
+    public @Nullable Journey getJourney() {
+        return this.journey;
+    }
+
     public int getSpeed() {
         return SPEED;
     }
 
     public int getCargoCapacity() {
         return CARGO_CAPACITY_UNITS;
+    }
+
+    public Ship withJourney(@Nullable Journey journey) {
+        return new Ship(this.id, this.name, this.islandId, this.playerId, journey);
     }
 
     @Override
@@ -93,6 +124,6 @@ public class Ship {
     @Override
     public String toString() {
         return "Ship{id='" + this.id + "', name='" + this.name + "', islandId='" + this.islandId
-                + "', playerId='" + this.playerId + "'}";
+                + "', playerId='" + this.playerId + "', journey=" + this.journey + "}";
     }
 }

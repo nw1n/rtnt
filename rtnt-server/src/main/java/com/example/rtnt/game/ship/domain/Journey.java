@@ -8,7 +8,6 @@ import java.util.UUID;
 @NullMarked
 public record Journey(
         String id,
-        String shipId,
         String startIslandId,
         String targetIslandId,
         long departedTick,
@@ -23,7 +22,6 @@ public record Journey(
      **************************************************************************/
 
     public static Journey create(
-            String shipId,
             String startIslandId,
             String targetIslandId,
             long departedTick,
@@ -31,7 +29,6 @@ public record Journey(
     ) {
         return new Journey(
                 UUID.randomUUID().toString(),
-                shipId,
                 startIslandId,
                 targetIslandId,
                 departedTick,
@@ -43,7 +40,6 @@ public record Journey(
 
     public static Journey existing(
             String id,
-            String shipId,
             String startIslandId,
             String targetIslandId,
             long departedTick,
@@ -53,7 +49,6 @@ public record Journey(
     ) {
         return new Journey(
                 id,
-                shipId,
                 startIslandId,
                 targetIslandId,
                 departedTick,
@@ -68,5 +63,23 @@ public record Journey(
      */
     public static boolean resolveActiveFromStorage(@Nullable Boolean stored) {
         return Boolean.TRUE.equals(stored);
+    }
+
+    /***************************************************************************
+     *                                                                         *
+     * Public API                                                              *
+     *                                                                         *
+     **************************************************************************/
+
+    public Journey complete(long arrivedTick) {
+        return new Journey(
+                this.id,
+                this.startIslandId,
+                this.targetIslandId,
+                this.departedTick,
+                arrivedTick,
+                this.estimatedArrivalTick,
+                false
+        );
     }
 }

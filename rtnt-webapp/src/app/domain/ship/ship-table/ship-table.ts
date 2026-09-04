@@ -17,7 +17,7 @@ export class ShipTable {
   private readonly shipService = inject(ShipService)
   private readonly sort = viewChild(MatSort)
 
-  public readonly columns = ['name', 'islandName', 'playerId', 'speed', 'cargoCapacity']
+  public readonly columns = ['name', 'islandName', 'journeyActive', 'destination', 'playerId', 'speed', 'cargoCapacity']
   public readonly dataSource = new MatTableDataSource<ShipDto>([])
   public ships = signal<ShipDto[]>([])
   public busy = signal(false)
@@ -25,8 +25,14 @@ export class ShipTable {
 
   constructor() {
     this.dataSource.sortingDataAccessor = (ship, header): string | number => {
+      if (header === 'journeyActive') {
+        return ship.journey?.active ? 1 : 0
+      }
+      if (header === 'destination') {
+        return ship.journey?.targetIslandName ?? ''
+      }
       const value = ship[header as keyof ShipDto]
-      if (value == null) {
+      if (value == null || typeof value === 'object') {
         return ''
       }
       return value

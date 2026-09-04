@@ -1,5 +1,6 @@
 package com.example.rtnt.game.ship.persistence;
 
+import com.example.rtnt.game.ship.domain.Journey;
 import com.example.rtnt.game.ship.domain.Ship;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
@@ -12,7 +13,8 @@ public record ShipDocument(
         @Id String id,
         String name,
         @Nullable String islandId,
-        @Nullable String playerId
+        @Nullable String playerId,
+        @Nullable JourneyDocument journey
 ) {
     /***************************************************************************
      *                                                                         *
@@ -21,7 +23,14 @@ public record ShipDocument(
      **************************************************************************/
 
     public static ShipDocument from(Ship ship) {
-        return new ShipDocument(ship.getId(), ship.getName(), ship.getIslandId(), ship.getPlayerId());
+        Journey journey = ship.getJourney();
+        return new ShipDocument(
+                ship.getId(),
+                ship.getName(),
+                ship.getIslandId(),
+                ship.getPlayerId(),
+                journey == null ? null : JourneyDocument.from(journey)
+        );
     }
 
     /***************************************************************************
@@ -31,6 +40,13 @@ public record ShipDocument(
      **************************************************************************/
 
     public Ship toShip() {
-        return Ship.existing(this.id, this.name, this.islandId, this.playerId);
+        JourneyDocument journey = this.journey;
+        return Ship.existing(
+                this.id,
+                this.name,
+                this.islandId,
+                this.playerId,
+                journey == null ? null : journey.toJourney()
+        );
     }
 }
