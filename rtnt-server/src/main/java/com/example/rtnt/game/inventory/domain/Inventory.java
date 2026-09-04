@@ -124,10 +124,13 @@ public final class Inventory {
         return true;
     }
 
-    /** Keeps half of each tradeable good (floored). Gold is unchanged. */
+    /** Keeps half of each tradeable good except food (floored). Gold and food are unchanged. */
     public Inventory consumeHalfTradeableGoods() {
         EnumMap<GoodType, Integer> next = new EnumMap<>(this.amounts);
         for (GoodType goodType : GoodType.tradeableGoods()) {
+            if (goodType == GoodType.FOOD) {
+                continue;
+            }
             next.put(goodType, this.getAmount(goodType) / 2);
         }
         return new Inventory(next);

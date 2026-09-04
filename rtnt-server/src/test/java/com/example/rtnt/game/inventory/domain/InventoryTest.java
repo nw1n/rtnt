@@ -74,10 +74,12 @@ class InventoryTest {
     void consumeHalfTradeableGoodsLeavesGold() {
         Inventory halved = Inventory.of(Map.of(
                 GoodType.GOLD, 80,
+                GoodType.FOOD, 20,
                 GoodType.RUM, 21,
                 GoodType.SUGAR, 10
         )).consumeHalfTradeableGoods();
         assertEquals(80, halved.getAmount(GoodType.GOLD));
+        assertEquals(20, halved.getAmount(GoodType.FOOD));
         assertEquals(10, halved.getAmount(GoodType.RUM));
         assertEquals(5, halved.getAmount(GoodType.SUGAR));
     }

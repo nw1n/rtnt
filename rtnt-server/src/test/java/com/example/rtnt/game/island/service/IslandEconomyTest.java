@@ -87,7 +87,7 @@ class IslandEconomyTest {
         IslandStatus saved = this.savedStatus();
         assertTrue(saved.population() >= 5);
         assertEquals(100, saved.inventory().getAmount(GoodType.GOLD));
-        assertEquals(10, saved.inventory().getAmount(GoodType.FOOD));
+        assertEquals(20, saved.inventory().getAmount(GoodType.FOOD));
         assertEquals(10, saved.inventory().getAmount(GoodType.RUM));
         assertEquals(10, saved.inventory().getAmount(GoodType.SUGAR));
         assertEquals(11, saved.inventory().getAmount(GoodType.SPICES));
@@ -134,7 +134,7 @@ class IslandEconomyTest {
     }
 
     @Test
-    void starvesTenPercentRoundedUpWhenOutOfFood() {
+    void starvesFivePercentRoundedUpWhenOutOfFood() {
         IslandStatus hungry = new IslandStatus(
                 "a",
                 11,
@@ -147,7 +147,7 @@ class IslandEconomyTest {
         assertTrue(economy.applyIfDue(20));
 
         IslandStatus saved = this.savedStatus();
-        assertEquals(9, saved.population());
+        assertEquals(10, saved.population());
         assertEquals(0, saved.inventory().getAmount(GoodType.FOOD));
     }
 
@@ -156,7 +156,7 @@ class IslandEconomyTest {
         IslandStatus hungry = new IslandStatus(
                 "a",
                 1_000,
-                Inventory.of(Map.of(GoodType.FOOD, 3)),
+                Inventory.of(Map.of(GoodType.FOOD, 2)),
                 TradePriceList.defaultPrices()
         );
         when(this.islandStatusMongoRepository.findAll()).thenReturn(List.of(IslandStatusDocument.from(hungry)));
@@ -165,7 +165,7 @@ class IslandEconomyTest {
         assertTrue(economy.applyIfDue(20));
 
         IslandStatus saved = this.savedStatus();
-        assertEquals(900, saved.population());
+        assertEquals(950, saved.population());
         assertEquals(0, saved.inventory().getAmount(GoodType.FOOD));
     }
 
@@ -244,7 +244,7 @@ class IslandEconomyTest {
     }
 
     @Test
-    void growsFivePercentWhenStartingPopulationIsLarge() {
+    void growsSixPercentWhenStartingPopulationIsLarge() {
         IslandStatus town = new IslandStatus(
                 "a",
                 1_000,
@@ -263,7 +263,7 @@ class IslandEconomyTest {
         assertTrue(economy.applyIfDue(10));
 
         IslandStatus saved = this.savedStatus();
-        assertEquals(1_050, saved.population());
+        assertEquals(1_060, saved.population());
     }
 
     private IslandStatus savedStatus() {
@@ -287,7 +287,7 @@ class IslandEconomyTest {
                 30,
                 1,
                 20,
-                5,
+                6,
                 new Random(1)
         );
     }
@@ -306,7 +306,7 @@ class IslandEconomyTest {
                 30,
                 1,
                 20,
-                5,
+                6,
                 new Random(1)
         );
     }

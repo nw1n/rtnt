@@ -69,7 +69,7 @@ public record IslandStatus(
         if (population < 1) {
             return 0;
         }
-        return (int) ((population + 249) / 250);
+        return (int) ((population + 399) / 400);
     }
 
     public IslandStatus consumeFoodOrStarve() {
@@ -84,7 +84,7 @@ public record IslandStatus(
         Inventory remaining = available > 0
                 ? this.inventory.removeAmount(GoodType.FOOD, available)
                 : this.inventory;
-        long loss = (this.population + 9) / 10;
+        long loss = Math.max(1L, (this.population * 5 + 99) / 100);
         return new IslandStatus(this.islandId, this.population - loss, remaining, this.tradePrices);
     }
 

@@ -39,16 +39,17 @@ class IslandStatusTest {
     void consumeHalfGoodsAndGrowHalvesTradeables() {
         IslandStatus flourished = IslandStatus.initial("island-1").consumeHalfGoodsAndGrow(2);
         assertEquals(1_002, flourished.population());
+        assertEquals(15, flourished.inventory().getAmount(GoodType.FOOD));
         assertEquals(7, flourished.inventory().getAmount(GoodType.RUM));
         assertEquals(7, flourished.inventory().getAmount(GoodType.SUGAR));
         assertEquals(100, flourished.inventory().getAmount(GoodType.GOLD));
     }
 
     @Test
-    void consumeFoodOrStarveEatsOneFoodPerTwoHundredFiftyPeople() {
+    void consumeFoodOrStarveEatsOneFoodPerFourHundredPeople() {
         IslandStatus fed = IslandStatus.initial("island-1").consumeFoodOrStarve();
         assertEquals(1_000, fed.population());
-        assertEquals(11, fed.inventory().getAmount(GoodType.FOOD));
+        assertEquals(12, fed.inventory().getAmount(GoodType.FOOD));
     }
 
     @Test
@@ -56,10 +57,10 @@ class IslandStatusTest {
         IslandStatus hungry = new IslandStatus(
                 "island-1",
                 1_000,
-                Inventory.of(Map.of(GoodType.FOOD, 3)),
+                Inventory.of(Map.of(GoodType.FOOD, 2)),
                 TradePriceList.defaultPrices()
         ).consumeFoodOrStarve();
-        assertEquals(900, hungry.population());
+        assertEquals(950, hungry.population());
         assertEquals(0, hungry.inventory().getAmount(GoodType.FOOD));
     }
 
@@ -71,7 +72,7 @@ class IslandStatusTest {
                 Inventory.empty(),
                 TradePriceList.defaultPrices()
         ).consumeFoodOrStarve();
-        assertEquals(9, hungry.population());
+        assertEquals(10, hungry.population());
     }
 
     @Test

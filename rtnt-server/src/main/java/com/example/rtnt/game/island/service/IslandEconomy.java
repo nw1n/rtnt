@@ -53,7 +53,7 @@ public class IslandEconomy {
             @Value("${rtnt.island.price-surplus-threshold:30}") int priceSurplusThreshold,
             @Value("${rtnt.island.price-min:1}") int priceMin,
             @Value("${rtnt.island.price-max:20}") int priceMax,
-            @Value("${rtnt.island.population-growth-percent:5}") int growthPercent
+            @Value("${rtnt.island.population-growth-percent:6}") int growthPercent
     ) {
         this(
                 islandStatusMongoRepository,
@@ -179,7 +179,7 @@ public class IslandEconomy {
         if (economyDue && this.productionChance > 0) {
             for (GoodType good : GoodType.tradeableGoods()) {
                 double chance = good == GoodType.FOOD
-                        ? Math.min(0.75, this.productionChance * FOOD_PRODUCTION_WEIGHT)
+                        ? Math.min(0.85, this.productionChance * FOOD_PRODUCTION_WEIGHT)
                         : this.productionChance;
                 if (this.random.nextDouble() >= chance) {
                     continue;
