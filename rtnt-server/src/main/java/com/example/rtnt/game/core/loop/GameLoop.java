@@ -22,6 +22,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.NoSuchElementException;
+import java.util.Optional;
 
 @Service
 @NullMarked
@@ -235,19 +236,12 @@ public class GameLoop {
 
     private void execute() {
         GameTick current = this.requireTick();
-        boolean eventful = !this.gameCommandQueue.drain(current.tick()).isEmpty();
+        this.gameCommandQueue.drain(current.tick());
         this.gameTick = current.advance();
-        if (this.islandEconomy.applyIfDue(this.requireTick().tick())) {
-            eventful = true;
-        }
-        if (this.shipJourneyCheck.applyIfDue(this.requireTick().tick())) {
-            eventful = true;
-        }
-        boolean snapshotDue = this.requireTick().tick() % this.snapshotIntervalTicks == 0;
-        if (snapshotDue) {
+        this.islandEconomy.applyIfDue(this.requireTick().tick());
+        this.shipJourneyCheck.applyIfDue(this.requireTick().tick());
+        if (this.requireTick().tick() % this.snapshotIntervalTicks == 0) {
             this.persistSnapshot();
-        } else if (eventful) {
-            this.saveTick();
         }
     }
 
@@ -315,6 +309,25 @@ public class GameLoop {
                     this.liveIntervalMs = this.defaultLiveIntervalMs;
                     this.saveFlow();
                 });
+        this.hydrateWorldFromSnapshot();
         this.loaded = true;
+    }
+
+    private void hydrateWorldFromSnapshot() {
+        long tick = this.requireTick().tick();
+        Optional<WorldSnapshot> exact = this.worldSnapshotStore.findByTick(tick);
+        if (exact.isPresent()) {
+            this.replaceWorld(exact.get());
+            return;
+        }
+        this.worldSnapshotStore.findLatest().ifPresent(latest -> {
+            this.replaceWorld(latest);
+            this.gameTick = new GameTick(latest.tick());
+        });
+    }
+
+    private void replaceWorld(WorldSnapshot snapshot) {
+        this.islandService.replaceAll(snapshot.islands(), snapshot.islandStatuses());
+        this.shipService.replaceAll(snapshot.ships());
     }
 }

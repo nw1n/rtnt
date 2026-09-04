@@ -9,8 +9,6 @@ import com.example.rtnt.game.island.service.IslandService;
 import com.example.rtnt.game.ship.domain.Journey;
 import com.example.rtnt.game.ship.domain.Ship;
 import com.example.rtnt.game.ship.domain.ShipTravel;
-import com.example.rtnt.game.ship.persistence.ShipDocument;
-import com.example.rtnt.game.ship.persistence.ShipMongoRepository;
 import com.example.rtnt.game.trade.domain.TradeEvent;
 import com.example.rtnt.game.trade.domain.TradeResult;
 import com.example.rtnt.game.trade.domain.TradeType;
@@ -40,7 +38,7 @@ import static org.mockito.Mockito.when;
 class ShipJourneyCheckTest {
 
     @Mock
-    private ShipMongoRepository shipMongoRepository;
+    private ShipService shipService;
 
     @Mock
     private IslandService islandService;
@@ -58,7 +56,7 @@ class ShipJourneyCheckTest {
         assertFalse(check.applyIfDue(0));
         assertFalse(check.applyIfDue(9));
         verify(this.islandService, never()).list();
-        verify(this.shipMongoRepository, never()).findAll();
+        verify(this.shipService, never()).list();
     }
 
     @Test
@@ -68,7 +66,7 @@ class ShipJourneyCheckTest {
         Ship ship = Ship.create("Black Pearl", start.id(), null);
         when(this.islandService.list()).thenReturn(List.of(start, target));
         when(this.islandService.listStatuses()).thenReturn(List.of());
-        when(this.shipMongoRepository.findAll()).thenReturn(List.of(ShipDocument.from(ship)));
+        when(this.shipService.list()).thenReturn(List.of(ship));
 
         assertTrue(this.check().applyIfDue(10));
 
@@ -91,10 +89,10 @@ class ShipJourneyCheckTest {
         Ship ship = Ship.create("Player Ship", start.id(), "player-1");
         when(this.islandService.list()).thenReturn(List.of(start, target));
         when(this.islandService.listStatuses()).thenReturn(List.of());
-        when(this.shipMongoRepository.findAll()).thenReturn(List.of(ShipDocument.from(ship)));
+        when(this.shipService.list()).thenReturn(List.of(ship));
 
         assertFalse(this.check().applyIfDue(10));
-        verify(this.shipMongoRepository, never()).saveAll(org.mockito.ArgumentMatchers.any());
+        verify(this.shipService, never()).save(org.mockito.ArgumentMatchers.any());
     }
 
     @Test
@@ -105,10 +103,10 @@ class ShipJourneyCheckTest {
         Ship ship = Ship.create("Black Pearl", null, null, journey);
         when(this.islandService.list()).thenReturn(List.of(start, target));
         when(this.islandService.listStatuses()).thenReturn(List.of());
-        when(this.shipMongoRepository.findAll()).thenReturn(List.of(ShipDocument.from(ship)));
+        when(this.shipService.list()).thenReturn(List.of(ship));
 
         assertFalse(this.check().applyIfDue(10));
-        verify(this.shipMongoRepository, never()).saveAll(org.mockito.ArgumentMatchers.any());
+        verify(this.shipService, never()).save(org.mockito.ArgumentMatchers.any());
     }
 
     @Test
@@ -119,7 +117,7 @@ class ShipJourneyCheckTest {
         Ship ship = Ship.create("Black Pearl", null, null, journey);
         when(this.islandService.list()).thenReturn(List.of(start, target));
         when(this.islandService.listStatuses()).thenReturn(List.of());
-        when(this.shipMongoRepository.findAll()).thenReturn(List.of(ShipDocument.from(ship)));
+        when(this.shipService.list()).thenReturn(List.of(ship));
 
         assertTrue(this.check().applyIfDue(10));
 
@@ -140,7 +138,7 @@ class ShipJourneyCheckTest {
         Ship ship = Ship.create("Black Pearl", null, null, journey);
         when(this.islandService.list()).thenReturn(List.of(start, target));
         when(this.islandService.listStatuses()).thenReturn(List.of());
-        when(this.shipMongoRepository.findAll()).thenReturn(List.of(ShipDocument.from(ship)));
+        when(this.shipService.list()).thenReturn(List.of(ship));
 
         assertTrue(this.check().applyIfDue(10));
 
@@ -160,7 +158,7 @@ class ShipJourneyCheckTest {
         IslandStatus status = IslandStatus.initial(target.id());
         when(this.islandService.list()).thenReturn(List.of(start, target));
         when(this.islandService.listStatuses()).thenReturn(List.of(status));
-        when(this.shipMongoRepository.findAll()).thenReturn(List.of(ShipDocument.from(ship)));
+        when(this.shipService.list()).thenReturn(List.of(ship));
         when(this.arrivalTrade.execute(any(Ship.class), eq(target), eq(status), eq(10L)))
                 .thenAnswer(invocation -> {
                     Ship docked = invocation.getArgument(0);
@@ -204,7 +202,7 @@ class ShipJourneyCheckTest {
 
     private ShipJourneyCheck check() {
         return new ShipJourneyCheck(
-                this.shipMongoRepository,
+                this.shipService,
                 this.islandService,
                 this.arrivalTrade,
                 this.tradeEventStore,
@@ -215,9 +213,9 @@ class ShipJourneyCheckTest {
 
     @SuppressWarnings("unchecked")
     private Ship capturedSavedShip() {
-        ArgumentCaptor<List<ShipDocument>> captor = ArgumentCaptor.forClass(List.class);
-        verify(this.shipMongoRepository).saveAll(captor.capture());
+        ArgumentCaptor<List<Ship>> captor = ArgumentCaptor.forClass(List.class);
+        verify(this.shipService).save(captor.capture());
         assertEquals(1, captor.getValue().size());
-        return captor.getValue().getFirst().toShip();
+        return captor.getValue().getFirst();
     }
 }

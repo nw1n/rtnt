@@ -45,6 +45,11 @@ public class MongoWorldSnapshotStore implements WorldSnapshotStore {
     }
 
     @Override
+    public Optional<WorldSnapshot> findLatest() {
+        return this.worldSnapshotMongoRepository.findFirstByOrderByTickDesc().map(WorldSnapshotDocument::toSnapshot);
+    }
+
+    @Override
     public List<WorldSnapshot> list() {
         return this.worldSnapshotMongoRepository.findAllByOrderByTickAsc().stream()
                 .map(WorldSnapshotDocument::toSnapshot)

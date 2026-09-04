@@ -3,19 +3,15 @@ package com.example.rtnt.game.island.service;
 import com.example.rtnt.game.island.domain.Island;
 import com.example.rtnt.game.island.domain.IslandPlacement;
 import com.example.rtnt.game.island.domain.IslandStatus;
-import com.example.rtnt.game.island.persistence.IslandDocument;
-import com.example.rtnt.game.island.persistence.IslandMongoRepository;
-import com.example.rtnt.game.island.persistence.IslandStatusDocument;
-import com.example.rtnt.game.island.persistence.IslandStatusMongoRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.Map;
 
 @Service
 public class IslandService {
@@ -27,11 +23,11 @@ public class IslandService {
      *                                                                         *
      **************************************************************************/
 
-    private final IslandMongoRepository islandMongoRepository;
-    private final IslandStatusMongoRepository islandStatusMongoRepository;
     private final int islandCount;
     private final int mapWidth;
     private final int mapHeight;
+    private final Map<String, Island> islandsById = new LinkedHashMap<>();
+    private final Map<String, IslandStatus> statusesById = new LinkedHashMap<>();
 
     /***************************************************************************
      *                                                                         *
@@ -40,14 +36,10 @@ public class IslandService {
      **************************************************************************/
 
     public IslandService(
-            IslandMongoRepository islandMongoRepository,
-            IslandStatusMongoRepository islandStatusMongoRepository,
             @Value("${rtnt.startup.island-count:15}") int islandCount,
             @Value("${rtnt.map.width:2000}") int mapWidth,
             @Value("${rtnt.map.height:1000}") int mapHeight
     ) {
-        this.islandMongoRepository = islandMongoRepository;
-        this.islandStatusMongoRepository = islandStatusMongoRepository;
         this.islandCount = islandCount;
         this.mapWidth = mapWidth;
         this.mapHeight = mapHeight;
@@ -59,47 +51,45 @@ public class IslandService {
      *                                                                         *
      **************************************************************************/
 
-    public List<Island> list() {
-        return this.islandMongoRepository.findAll().stream()
-                .map(IslandDocument::toIsland)
-                .toList();
+    public synchronized List<Island> list() {
+        return List.copyOf(this.islandsById.values());
     }
 
-    public List<IslandStatus> listStatuses() {
-        return this.islandStatusMongoRepository.findAll().stream()
-                .map(IslandStatusDocument::toIslandStatus)
-                .toList();
+    public synchronized List<IslandStatus> listStatuses() {
+        return List.copyOf(this.statusesById.values());
     }
 
-    public List<Island> recreateAll() {
-        this.islandStatusMongoRepository.deleteAll();
-        this.islandMongoRepository.deleteAll();
+    public synchronized List<Island> recreateAll() {
+        this.islandsById.clear();
+        this.statusesById.clear();
         List<Island> placed = this.seed();
-        log.info("Recreated {} islands", placed.size());
+        log.info("Recreated {} islands in memory", placed.size());
         return placed;
     }
 
-    public void replaceAll(List<Island> islands, List<IslandStatus> statuses) {
-        this.islandStatusMongoRepository.deleteAll();
-        this.islandMongoRepository.deleteAll();
-        this.islandMongoRepository.saveAll(islands.stream().map(IslandDocument::fromIsland).toList());
-        this.islandStatusMongoRepository.saveAll(statuses.stream().map(IslandStatusDocument::from).toList());
-        log.info("Replaced world with {} islands from snapshot", islands.size());
+    public synchronized void replaceAll(List<Island> islands, List<IslandStatus> statuses) {
+        this.islandsById.clear();
+        this.statusesById.clear();
+        for (Island island : islands) {
+            this.islandsById.put(island.id(), island);
+        }
+        for (IslandStatus status : statuses) {
+            this.statusesById.put(status.islandId(), status);
+        }
+        log.info("Replaced in-memory world with {} islands from snapshot", islands.size());
     }
 
-    public void seedIfEmpty() {
-        if (this.islandMongoRepository.count() > 0) {
-            this.ensureStatuses();
+    public synchronized void seedIfEmpty() {
+        if (!this.islandsById.isEmpty()) {
             return;
         }
-        log.info("Seeded {} islands", this.seed().size());
+        log.info("Seeded {} islands in memory", this.seed().size());
     }
 
-    public void saveStatuses(List<IslandStatus> statuses) {
-        if (statuses.isEmpty()) {
-            return;
+    public synchronized void saveStatuses(List<IslandStatus> statuses) {
+        for (IslandStatus status : statuses) {
+            this.statusesById.put(status.islandId(), status);
         }
-        this.islandStatusMongoRepository.saveAll(statuses.stream().map(IslandStatusDocument::from).toList());
     }
 
     /***************************************************************************
@@ -116,28 +106,9 @@ public class IslandService {
         for (int i = 0; i < this.islandCount; i++) {
             var newIsland = islandPlacement.placeIsland(islandNames.next(), islands);
             islands.add(newIsland);
+            this.islandsById.put(newIsland.id(), newIsland);
+            this.statusesById.put(newIsland.id(), IslandStatus.initial(newIsland.id()));
         }
-
-        var dataToSave = islands.stream().map(IslandDocument::fromIsland).toList();
-        this.islandMongoRepository.saveAll(dataToSave);
-        this.islandStatusMongoRepository.saveAll(
-                islands.stream()
-                        .map(island -> IslandStatusDocument.from(IslandStatus.initial(island.id())))
-                        .toList()
-        );
         return islands;
-    }
-
-    private void ensureStatuses() {
-        Set<String> existingIds = this.islandStatusMongoRepository.findAll().stream()
-                .map(IslandStatusDocument::islandId)
-                .collect(Collectors.toSet());
-        List<IslandStatusDocument> missing = this.list().stream()
-                .filter(island -> !existingIds.contains(island.id()))
-                .map(island -> IslandStatusDocument.from(IslandStatus.initial(island.id())))
-                .toList();
-        if (!missing.isEmpty()) {
-            this.islandStatusMongoRepository.saveAll(missing);
-        }
     }
 }

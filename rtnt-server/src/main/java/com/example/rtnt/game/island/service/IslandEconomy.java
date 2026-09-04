@@ -2,8 +2,6 @@ package com.example.rtnt.game.island.service;
 
 import com.example.rtnt.game.inventory.domain.GoodType;
 import com.example.rtnt.game.island.domain.IslandStatus;
-import com.example.rtnt.game.island.persistence.IslandStatusDocument;
-import com.example.rtnt.game.island.persistence.IslandStatusMongoRepository;
 import org.jspecify.annotations.NullMarked;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,7 +16,7 @@ import java.util.Random;
 public class IslandEconomy {
     private static final int FOOD_PRODUCTION_WEIGHT = 3;
 
-    private final IslandStatusMongoRepository islandStatusMongoRepository;
+    private final IslandService islandService;
     private final int intervalTicks;
     private final int foodIntervalTicks;
     private final double productionChance;
@@ -41,7 +39,7 @@ public class IslandEconomy {
 
     @Autowired
     public IslandEconomy(
-            IslandStatusMongoRepository islandStatusMongoRepository,
+            IslandService islandService,
             @Value("${rtnt.island.economy-interval-ticks:100}") int intervalTicks,
             @Value("${rtnt.island.food-interval-ticks:500}") int foodIntervalTicks,
             @Value("${rtnt.island.production-chance:0.45}") double productionChance,
@@ -56,7 +54,7 @@ public class IslandEconomy {
             @Value("${rtnt.island.population-growth-percent:6}") int growthPercent
     ) {
         this(
-                islandStatusMongoRepository,
+                islandService,
                 intervalTicks,
                 foodIntervalTicks,
                 productionChance,
@@ -74,7 +72,7 @@ public class IslandEconomy {
     }
 
     IslandEconomy(
-            IslandStatusMongoRepository islandStatusMongoRepository,
+            IslandService islandService,
             int intervalTicks,
             int foodIntervalTicks,
             double productionChance,
@@ -125,7 +123,7 @@ public class IslandEconomy {
         if (growthPercent < 1 || growthPercent > 100) {
             throw new IllegalArgumentException("growthPercent must be between 1 and 100");
         }
-        this.islandStatusMongoRepository = islandStatusMongoRepository;
+        this.islandService = islandService;
         this.intervalTicks = intervalTicks;
         this.foodIntervalTicks = foodIntervalTicks;
         this.productionChance = productionChance;
@@ -153,18 +151,17 @@ public class IslandEconomy {
         if (!economyDue && !foodDue) {
             return false;
         }
-        List<IslandStatusDocument> changed = new ArrayList<>();
-        for (IslandStatusDocument document : this.islandStatusMongoRepository.findAll()) {
-            IslandStatus current = document.toIslandStatus();
+        List<IslandStatus> changed = new ArrayList<>();
+        for (IslandStatus current : this.islandService.listStatuses()) {
             IslandStatus next = this.applyTo(current, economyDue, foodDue);
             if (!next.equals(current)) {
-                changed.add(IslandStatusDocument.from(next));
+                changed.add(next);
             }
         }
         if (changed.isEmpty()) {
             return false;
         }
-        this.islandStatusMongoRepository.saveAll(changed);
+        this.islandService.saveStatuses(changed);
         return true;
     }
 

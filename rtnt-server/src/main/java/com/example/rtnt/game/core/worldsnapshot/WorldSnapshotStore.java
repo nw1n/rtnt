@@ -13,5 +13,7 @@ public interface WorldSnapshotStore {
 
     Optional<WorldSnapshot> findByTick(long tick);
 
+    Optional<WorldSnapshot> findLatest();
+
     List<WorldSnapshot> list();
 }

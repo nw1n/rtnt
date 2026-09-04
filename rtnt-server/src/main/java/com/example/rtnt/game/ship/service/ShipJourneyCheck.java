@@ -6,8 +6,6 @@ import com.example.rtnt.game.island.service.IslandService;
 import com.example.rtnt.game.ship.domain.Journey;
 import com.example.rtnt.game.ship.domain.Ship;
 import com.example.rtnt.game.ship.domain.ShipTravel;
-import com.example.rtnt.game.ship.persistence.ShipDocument;
-import com.example.rtnt.game.ship.persistence.ShipMongoRepository;
 import com.example.rtnt.game.trade.domain.TradeEvent;
 import com.example.rtnt.game.trade.domain.TradeResult;
 import com.example.rtnt.game.trade.service.ArrivalTrade;
@@ -35,7 +33,7 @@ import java.util.stream.Collectors;
 public class ShipJourneyCheck {
     private static final Logger log = LoggerFactory.getLogger(ShipJourneyCheck.class);
 
-    private final ShipMongoRepository shipMongoRepository;
+    private final ShipService shipService;
     private final IslandService islandService;
     private final ArrivalTrade arrivalTrade;
     private final TradeEventStore tradeEventStore;
@@ -50,17 +48,17 @@ public class ShipJourneyCheck {
 
     @Autowired
     public ShipJourneyCheck(
-            ShipMongoRepository shipMongoRepository,
+            ShipService shipService,
             IslandService islandService,
             ArrivalTrade arrivalTrade,
             TradeEventStore tradeEventStore,
             @Value("${rtnt.ship.journey-check-interval-ticks:5}") int checkIntervalTicks
     ) {
-        this(shipMongoRepository, islandService, arrivalTrade, tradeEventStore, checkIntervalTicks, new Random());
+        this(shipService, islandService, arrivalTrade, tradeEventStore, checkIntervalTicks, new Random());
     }
 
     ShipJourneyCheck(
-            ShipMongoRepository shipMongoRepository,
+            ShipService shipService,
             IslandService islandService,
             ArrivalTrade arrivalTrade,
             TradeEventStore tradeEventStore,
@@ -70,7 +68,7 @@ public class ShipJourneyCheck {
         if (checkIntervalTicks < 1) {
             throw new IllegalArgumentException("checkIntervalTicks must be at least 1");
         }
-        this.shipMongoRepository = shipMongoRepository;
+        this.shipService = shipService;
         this.islandService = islandService;
         this.arrivalTrade = arrivalTrade;
         this.tradeEventStore = tradeEventStore;
@@ -98,15 +96,15 @@ public class ShipJourneyCheck {
         for (IslandStatus status : this.islandService.listStatuses()) {
             statusesById.put(status.islandId(), status);
         }
-        List<ShipDocument> updatedShips = new ArrayList<>();
+        List<Ship> updatedShips = new ArrayList<>();
         Set<String> changedStatusIds = new HashSet<>();
         List<TradeEvent> events = new ArrayList<>();
-        for (ShipDocument document : this.shipMongoRepository.findAll()) {
-            ArrivalUpdate update = this.apply(document.toShip(), islands, islandsById, statusesById, tick);
+        for (Ship ship : this.shipService.list()) {
+            ArrivalUpdate update = this.apply(ship, islands, islandsById, statusesById, tick);
             if (update == null) {
                 continue;
             }
-            updatedShips.add(ShipDocument.from(update.ship()));
+            updatedShips.add(update.ship());
             if (update.status() != null) {
                 statusesById.put(update.status().islandId(), update.status());
                 changedStatusIds.add(update.status().islandId());
@@ -116,7 +114,7 @@ public class ShipJourneyCheck {
         if (updatedShips.isEmpty()) {
             return false;
         }
-        this.shipMongoRepository.saveAll(updatedShips);
+        this.shipService.save(updatedShips);
         List<IslandStatus> statusesToSave = new ArrayList<>();
         for (String statusId : changedStatusIds) {
             IslandStatus status = statusesById.get(statusId);

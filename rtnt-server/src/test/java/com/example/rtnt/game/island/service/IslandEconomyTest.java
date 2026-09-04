@@ -4,8 +4,6 @@ import com.example.rtnt.game.inventory.domain.GoodType;
 import com.example.rtnt.game.inventory.domain.Inventory;
 import com.example.rtnt.game.island.domain.IslandStatus;
 import com.example.rtnt.game.island.domain.TradePriceList;
-import com.example.rtnt.game.island.persistence.IslandStatusDocument;
-import com.example.rtnt.game.island.persistence.IslandStatusMongoRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -27,7 +25,7 @@ import static org.mockito.Mockito.when;
 class IslandEconomyTest {
 
     @Mock
-    private IslandStatusMongoRepository islandStatusMongoRepository;
+    private IslandService islandService;
 
     @Test
     void skipsTicksOffInterval() {
@@ -35,13 +33,13 @@ class IslandEconomyTest {
 
         assertFalse(economy.applyIfDue(0));
         assertFalse(economy.applyIfDue(9));
-        verify(this.islandStatusMongoRepository, never()).findAll();
+        verify(this.islandService, never()).listStatuses();
     }
 
     @Test
     void producesEveryTradeableGoodWhenChanceIsCertain() {
         IslandStatus empty = new IslandStatus("a", 0, Inventory.empty(), TradePriceList.defaultPrices());
-        when(this.islandStatusMongoRepository.findAll()).thenReturn(List.of(IslandStatusDocument.from(empty)));
+        when(this.islandService.listStatuses()).thenReturn(List.of(empty));
         IslandEconomy economy = this.economy(1.0, 20);
 
         assertTrue(economy.applyIfDue(10));
@@ -57,11 +55,11 @@ class IslandEconomyTest {
     @Test
     void doesNotProduceWhenChanceIsZero() {
         IslandStatus balanced = new IslandStatus("a", 0, this.balancedStock(), TradePriceList.defaultPrices());
-        when(this.islandStatusMongoRepository.findAll()).thenReturn(List.of(IslandStatusDocument.from(balanced)));
+        when(this.islandService.listStatuses()).thenReturn(List.of(balanced));
         IslandEconomy economy = this.economy(0.0, 20);
 
         assertFalse(economy.applyIfDue(10));
-        verify(this.islandStatusMongoRepository, never()).saveAll(org.mockito.ArgumentMatchers.any());
+        verify(this.islandService, never()).saveStatuses(org.mockito.ArgumentMatchers.any());
     }
 
     @Test
@@ -79,7 +77,7 @@ class IslandEconomyTest {
                 )),
                 TradePriceList.defaultPrices()
         );
-        when(this.islandStatusMongoRepository.findAll()).thenReturn(List.of(IslandStatusDocument.from(abundant)));
+        when(this.islandService.listStatuses()).thenReturn(List.of(abundant));
         IslandEconomy economy = this.economy(0.0, 20);
 
         assertTrue(economy.applyIfDue(10));
@@ -108,11 +106,11 @@ class IslandEconomyTest {
                 )),
                 TradePriceList.defaultPrices()
         );
-        when(this.islandStatusMongoRepository.findAll()).thenReturn(List.of(IslandStatusDocument.from(shortOnRum)));
+        when(this.islandService.listStatuses()).thenReturn(List.of(shortOnRum));
         IslandEconomy economy = this.economy(0.0, 20);
 
         assertFalse(economy.applyIfDue(10));
-        verify(this.islandStatusMongoRepository, never()).saveAll(org.mockito.ArgumentMatchers.any());
+        verify(this.islandService, never()).saveStatuses(org.mockito.ArgumentMatchers.any());
     }
 
     @Test
@@ -123,7 +121,7 @@ class IslandEconomyTest {
                 Inventory.of(Map.of(GoodType.FOOD, 3)),
                 TradePriceList.defaultPrices()
         );
-        when(this.islandStatusMongoRepository.findAll()).thenReturn(List.of(IslandStatusDocument.from(fed)));
+        when(this.islandService.listStatuses()).thenReturn(List.of(fed));
         IslandEconomy economy = this.foodEconomy();
 
         assertTrue(economy.applyIfDue(20));
@@ -141,7 +139,7 @@ class IslandEconomyTest {
                 Inventory.empty(),
                 TradePriceList.defaultPrices()
         );
-        when(this.islandStatusMongoRepository.findAll()).thenReturn(List.of(IslandStatusDocument.from(hungry)));
+        when(this.islandService.listStatuses()).thenReturn(List.of(hungry));
         IslandEconomy economy = this.foodEconomy();
 
         assertTrue(economy.applyIfDue(20));
@@ -159,7 +157,7 @@ class IslandEconomyTest {
                 Inventory.of(Map.of(GoodType.FOOD, 2)),
                 TradePriceList.defaultPrices()
         );
-        when(this.islandStatusMongoRepository.findAll()).thenReturn(List.of(IslandStatusDocument.from(hungry)));
+        when(this.islandService.listStatuses()).thenReturn(List.of(hungry));
         IslandEconomy economy = this.foodEconomy();
 
         assertTrue(economy.applyIfDue(20));
@@ -182,7 +180,7 @@ class IslandEconomyTest {
                 )),
                 TradePriceList.defaultPrices()
         );
-        when(this.islandStatusMongoRepository.findAll()).thenReturn(List.of(IslandStatusDocument.from(overstocked)));
+        when(this.islandService.listStatuses()).thenReturn(List.of(overstocked));
         IslandEconomy economy = this.economy(0.0, 20);
 
         assertTrue(economy.applyIfDue(10));
@@ -209,7 +207,7 @@ class IslandEconomyTest {
                 )),
                 TradePriceList.defaultPrices()
         );
-        when(this.islandStatusMongoRepository.findAll()).thenReturn(List.of(IslandStatusDocument.from(scarceRum)));
+        when(this.islandService.listStatuses()).thenReturn(List.of(scarceRum));
         IslandEconomy economy = this.economy(0.0, 20);
 
         assertTrue(economy.applyIfDue(10));
@@ -233,7 +231,7 @@ class IslandEconomyTest {
                 )),
                 TradePriceList.of(Map.of(GoodType.RUM, 6))
         );
-        when(this.islandStatusMongoRepository.findAll()).thenReturn(List.of(IslandStatusDocument.from(surplusRum)));
+        when(this.islandService.listStatuses()).thenReturn(List.of(surplusRum));
         IslandEconomy economy = this.economy(0.0, 20);
 
         assertTrue(economy.applyIfDue(10));
@@ -257,7 +255,7 @@ class IslandEconomyTest {
                 )),
                 TradePriceList.defaultPrices()
         );
-        when(this.islandStatusMongoRepository.findAll()).thenReturn(List.of(IslandStatusDocument.from(town)));
+        when(this.islandService.listStatuses()).thenReturn(List.of(town));
         IslandEconomy economy = this.economy(0.0, 15);
 
         assertTrue(economy.applyIfDue(10));
@@ -267,15 +265,15 @@ class IslandEconomyTest {
     }
 
     private IslandStatus savedStatus() {
-        ArgumentCaptor<List<IslandStatusDocument>> captor = ArgumentCaptor.forClass(List.class);
-        verify(this.islandStatusMongoRepository).saveAll(captor.capture());
+        ArgumentCaptor<List<IslandStatus>> captor = ArgumentCaptor.forClass(List.class);
+        verify(this.islandService).saveStatuses(captor.capture());
         assertEquals(1, captor.getValue().size());
-        return captor.getValue().getFirst().toIslandStatus();
+        return captor.getValue().getFirst();
     }
 
     private IslandEconomy economy(double productionChance, int threshold) {
         return new IslandEconomy(
-                this.islandStatusMongoRepository,
+                this.islandService,
                 10,
                 1000,
                 productionChance,
@@ -294,7 +292,7 @@ class IslandEconomyTest {
 
     private IslandEconomy foodEconomy() {
         return new IslandEconomy(
-                this.islandStatusMongoRepository,
+                this.islandService,
                 1000,
                 20,
                 0.0,

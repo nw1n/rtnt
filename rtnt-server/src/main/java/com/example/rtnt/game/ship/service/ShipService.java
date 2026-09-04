@@ -3,15 +3,15 @@ package com.example.rtnt.game.ship.service;
 import com.example.rtnt.game.island.domain.Island;
 import com.example.rtnt.game.island.service.IslandService;
 import com.example.rtnt.game.ship.domain.Ship;
-import com.example.rtnt.game.ship.persistence.ShipDocument;
-import com.example.rtnt.game.ship.persistence.ShipMongoRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class ShipService {
@@ -23,9 +23,9 @@ public class ShipService {
      *                                                                         *
      **************************************************************************/
 
-    private final ShipMongoRepository shipMongoRepository;
     private final IslandService islandService;
     private final int shipCount;
+    private final Map<String, Ship> shipsById = new LinkedHashMap<>();
 
     /***************************************************************************
      *                                                                         *
@@ -34,11 +34,9 @@ public class ShipService {
      **************************************************************************/
 
     public ShipService(
-            ShipMongoRepository shipMongoRepository,
             IslandService islandService,
             @Value("${rtnt.startup.ship-count:60}") int shipCount
     ) {
-        this.shipMongoRepository = shipMongoRepository;
         this.islandService = islandService;
         this.shipCount = shipCount;
     }
@@ -49,30 +47,36 @@ public class ShipService {
      *                                                                         *
      **************************************************************************/
 
-    public List<Ship> list() {
-        return this.shipMongoRepository.findAll().stream()
-                .map(ShipDocument::toShip)
-                .toList();
+    public synchronized List<Ship> list() {
+        return List.copyOf(this.shipsById.values());
     }
 
-    public List<Ship> recreateAll() {
-        this.shipMongoRepository.deleteAll();
+    public synchronized List<Ship> recreateAll() {
+        this.shipsById.clear();
         List<Ship> seeded = this.seed();
-        log.info("Recreated {} ships", seeded.size());
+        log.info("Recreated {} ships in memory", seeded.size());
         return seeded;
     }
 
-    public void seedIfEmpty() {
-        if (this.shipMongoRepository.count() > 0) {
+    public synchronized void seedIfEmpty() {
+        if (!this.shipsById.isEmpty()) {
             return;
         }
-        log.info("Seeded {} ships", this.seed().size());
+        log.info("Seeded {} ships in memory", this.seed().size());
     }
 
-    public void replaceAll(List<Ship> ships) {
-        this.shipMongoRepository.deleteAll();
-        this.shipMongoRepository.saveAll(ships.stream().map(ShipDocument::from).toList());
-        log.info("Replaced world with {} ships from snapshot", ships.size());
+    public synchronized void replaceAll(List<Ship> ships) {
+        this.shipsById.clear();
+        for (Ship ship : ships) {
+            this.shipsById.put(ship.getId(), ship);
+        }
+        log.info("Replaced in-memory world with {} ships from snapshot", ships.size());
+    }
+
+    public synchronized void save(List<Ship> ships) {
+        for (Ship ship : ships) {
+            this.shipsById.put(ship.getId(), ship);
+        }
     }
 
     /***************************************************************************
@@ -87,9 +91,10 @@ public class ShipService {
         List<Ship> ships = new ArrayList<>();
         for (int i = 0; i < this.shipCount; i++) {
             String islandId = islands.isEmpty() ? null : islands.get(i % islands.size()).id();
-            ships.add(Ship.create(shipNames.next(), islandId, null));
+            Ship ship = Ship.create(shipNames.next(), islandId, null);
+            ships.add(ship);
+            this.shipsById.put(ship.getId(), ship);
         }
-        this.shipMongoRepository.saveAll(ships.stream().map(ShipDocument::from).toList());
         return ships;
     }
 }

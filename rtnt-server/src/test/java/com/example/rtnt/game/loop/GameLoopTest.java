@@ -120,7 +120,7 @@ class GameLoopTest {
         assertEquals(1, status.tick());
         assertTrue(this.gameCommandQueue.drain(0).isEmpty());
         assertEquals(1, this.gameCommandQueue.drain(1).size());
-        assertEquals(1, this.capturedTicker().tick());
+        verify(this.tickerMongoRepository, never()).save(org.mockito.ArgumentMatchers.any());
         verify(this.gameFlowStatusMongoRepository, never()).save(org.mockito.ArgumentMatchers.any());
         verify(this.worldSnapshotStore, never()).save(org.mockito.ArgumentMatchers.any());
     }
@@ -161,24 +161,26 @@ class GameLoopTest {
     }
 
     @Test
-    void islandEconomyPersistsTicker() {
+    void islandEconomyDoesNotPersistBetweenSnapshots() {
         this.givenLatest(2, FlowMode.BATCH, false);
         when(this.islandEconomy.applyIfDue(3)).thenReturn(true);
 
         this.gameLoop.step();
 
-        assertEquals(3, this.capturedTicker().tick());
+        assertEquals(3, this.gameLoop.get().tick());
+        verify(this.tickerMongoRepository, never()).save(org.mockito.ArgumentMatchers.any());
         verify(this.worldSnapshotStore, never()).save(org.mockito.ArgumentMatchers.any());
     }
 
     @Test
-    void shipJourneyCheckPersistsTicker() {
+    void shipJourneyCheckDoesNotPersistBetweenSnapshots() {
         this.givenLatest(2, FlowMode.BATCH, false);
         when(this.shipJourneyCheck.applyIfDue(3)).thenReturn(true);
 
         this.gameLoop.step();
 
-        assertEquals(3, this.capturedTicker().tick());
+        assertEquals(3, this.gameLoop.get().tick());
+        verify(this.tickerMongoRepository, never()).save(org.mockito.ArgumentMatchers.any());
         verify(this.worldSnapshotStore, never()).save(org.mockito.ArgumentMatchers.any());
     }
 
@@ -309,6 +311,7 @@ class GameLoopTest {
         IslandStatus status = new IslandStatus("i1", 42, Inventory.empty(), TradePriceList.defaultPrices());
         Ship ship = Ship.create("Black Pearl", island.id(), null);
         WorldSnapshot snapshot = new WorldSnapshot(200, List.of(island), List.of(status), List.of(ship));
+        lenient().when(this.worldSnapshotStore.findByTick(500)).thenReturn(Optional.empty());
         when(this.worldSnapshotStore.findByTick(200)).thenReturn(Optional.of(snapshot));
         this.gameCommandQueue.enqueue(10, new GameCommand("stale"));
 
@@ -327,6 +330,7 @@ class GameLoopTest {
     @Test
     void loadFromSnapshotRejectsMissingTick() {
         this.givenLatest(0, FlowMode.BATCH, true);
+        lenient().when(this.worldSnapshotStore.findByTick(0)).thenReturn(Optional.empty());
         when(this.worldSnapshotStore.findByTick(99)).thenReturn(Optional.empty());
 
         assertThrows(NoSuchElementException.class, () -> this.gameLoop.loadFromSnapshot(99));
