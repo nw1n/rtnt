@@ -27,6 +27,10 @@ public class IslandEconomy {
     private final int productionMax;
     private final int growthGoodsThreshold;
     private final int spoilageThreshold;
+    private final int priceNeedThreshold;
+    private final int priceSurplusThreshold;
+    private final int priceMin;
+    private final int priceMax;
     private final int growthMin;
     private final int growthMax;
     private final Random random;
@@ -47,6 +51,10 @@ public class IslandEconomy {
             @Value("${rtnt.island.production-max:5}") int productionMax,
             @Value("${rtnt.island.growth-goods-threshold:20}") int growthGoodsThreshold,
             @Value("${rtnt.island.spoilage-threshold:40}") int spoilageThreshold,
+            @Value("${rtnt.island.price-need-threshold:10}") int priceNeedThreshold,
+            @Value("${rtnt.island.price-surplus-threshold:30}") int priceSurplusThreshold,
+            @Value("${rtnt.island.price-min:1}") int priceMin,
+            @Value("${rtnt.island.price-max:20}") int priceMax,
             @Value("${rtnt.island.population-growth-min:1}") int growthMin,
             @Value("${rtnt.island.population-growth-max:3}") int growthMax
     ) {
@@ -59,6 +67,10 @@ public class IslandEconomy {
                 productionMax,
                 growthGoodsThreshold,
                 spoilageThreshold,
+                priceNeedThreshold,
+                priceSurplusThreshold,
+                priceMin,
+                priceMax,
                 growthMin,
                 growthMax,
                 new Random()
@@ -74,6 +86,10 @@ public class IslandEconomy {
             int productionMax,
             int growthGoodsThreshold,
             int spoilageThreshold,
+            int priceNeedThreshold,
+            int priceSurplusThreshold,
+            int priceMin,
+            int priceMax,
             int growthMin,
             int growthMax,
             Random random
@@ -99,6 +115,18 @@ public class IslandEconomy {
         if (spoilageThreshold < 1) {
             throw new IllegalArgumentException("spoilageThreshold must be at least 1");
         }
+        if (priceNeedThreshold < 0) {
+            throw new IllegalArgumentException("priceNeedThreshold must be at least 0");
+        }
+        if (priceSurplusThreshold <= priceNeedThreshold) {
+            throw new IllegalArgumentException("priceSurplusThreshold must be greater than priceNeedThreshold");
+        }
+        if (priceMin < 1) {
+            throw new IllegalArgumentException("priceMin must be at least 1");
+        }
+        if (priceMax < priceMin) {
+            throw new IllegalArgumentException("priceMax must be >= priceMin");
+        }
         if (growthMin < 1) {
             throw new IllegalArgumentException("growthMin must be at least 1");
         }
@@ -113,6 +141,10 @@ public class IslandEconomy {
         this.productionMax = productionMax;
         this.growthGoodsThreshold = growthGoodsThreshold;
         this.spoilageThreshold = spoilageThreshold;
+        this.priceNeedThreshold = priceNeedThreshold;
+        this.priceSurplusThreshold = priceSurplusThreshold;
+        this.priceMin = priceMin;
+        this.priceMax = priceMax;
         this.growthMin = growthMin;
         this.growthMax = growthMax;
         this.random = random;
@@ -167,6 +199,14 @@ public class IslandEconomy {
         if (economyDue && next.canFlourish(this.growthGoodsThreshold)) {
             int growth = this.growthMin + this.random.nextInt(this.growthMax - this.growthMin + 1);
             next = next.consumeHalfGoodsAndGrow(growth);
+        }
+        if (economyDue) {
+            next = next.adjustPrices(
+                    this.priceNeedThreshold,
+                    this.priceSurplusThreshold,
+                    this.priceMin,
+                    this.priceMax
+            );
         }
         return next;
     }

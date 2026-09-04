@@ -1,6 +1,7 @@
 package com.example.rtnt.game.island.domain;
 
 import com.example.rtnt.game.inventory.domain.GoodType;
+import com.example.rtnt.game.inventory.domain.Inventory;
 import org.jspecify.annotations.NullMarked;
 
 import java.util.Collections;
@@ -71,6 +72,44 @@ public final class TradePriceList {
             throw new IllegalStateException("No price configured for " + safeGoodType);
         }
         return price;
+    }
+
+    public TradePriceList adjustForSupply(
+            Inventory inventory,
+            int needThreshold,
+            int surplusThreshold,
+            int minPrice,
+            int maxPrice
+    ) {
+        if (needThreshold < 0) {
+            throw new IllegalArgumentException("needThreshold must be at least 0");
+        }
+        if (surplusThreshold <= needThreshold) {
+            throw new IllegalArgumentException("surplusThreshold must be greater than needThreshold");
+        }
+        if (minPrice < 1) {
+            throw new IllegalArgumentException("minPrice must be at least 1");
+        }
+        if (maxPrice < minPrice) {
+            throw new IllegalArgumentException("maxPrice must be >= minPrice");
+        }
+        EnumMap<GoodType, Integer> next = new EnumMap<>(this.prices);
+        boolean changed = false;
+        for (GoodType goodType : GoodType.tradeableGoods()) {
+            int stock = inventory.getAmount(goodType);
+            int price = this.getPrice(goodType);
+            int adjusted = price;
+            if (stock < needThreshold) {
+                adjusted = Math.min(maxPrice, price + 1);
+            } else if (stock > surplusThreshold) {
+                adjusted = Math.max(minPrice, price - 1);
+            }
+            if (adjusted != price) {
+                next.put(goodType, adjusted);
+                changed = true;
+            }
+        }
+        return changed ? new TradePriceList(next) : this;
     }
 
     public TradePriceList withPrice(GoodType goodType, int price) {

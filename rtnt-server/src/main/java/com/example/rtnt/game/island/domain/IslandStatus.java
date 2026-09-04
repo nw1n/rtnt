@@ -76,6 +76,12 @@ public record IslandStatus(
         return new IslandStatus(this.islandId, this.population - loss, this.inventory, this.tradePrices);
     }
 
+    public IslandStatus adjustPrices(int needThreshold, int surplusThreshold, int minPrice, int maxPrice) {
+        return this.withTradePrices(
+                this.tradePrices.adjustForSupply(this.inventory, needThreshold, surplusThreshold, minPrice, maxPrice)
+        );
+    }
+
     public IslandStatus withInventory(Inventory inventory) {
         return new IslandStatus(this.islandId, this.population, inventory, this.tradePrices);
     }

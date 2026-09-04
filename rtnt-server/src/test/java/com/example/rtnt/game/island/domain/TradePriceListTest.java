@@ -1,6 +1,7 @@
 package com.example.rtnt.game.island.domain;
 
 import com.example.rtnt.game.inventory.domain.GoodType;
+import com.example.rtnt.game.inventory.domain.Inventory;
 import org.junit.jupiter.api.Test;
 
 import java.util.Map;
@@ -39,6 +40,22 @@ class TradePriceListTest {
         assertEquals(3, start.getPrice(GoodType.RUM));
         assertEquals(9, next.getPrice(GoodType.RUM));
         assertEquals(2, next.getPrice(GoodType.SUGAR));
+    }
+
+    @Test
+    void adjustForSupplyRaisesScarceAndLowersSurplus() {
+        TradePriceList start = TradePriceList.of(Map.of(GoodType.RUM, 4, GoodType.SUGAR, 4, GoodType.FOOD, 4));
+        Inventory stock = Inventory.of(Map.of(
+                GoodType.RUM, 2,
+                GoodType.SUGAR, 35,
+                GoodType.FOOD, 15,
+                GoodType.SPICES, 15,
+                GoodType.TOBACCO, 15
+        ));
+        TradePriceList next = start.adjustForSupply(stock, 10, 30, 1, 20);
+        assertEquals(5, next.getPrice(GoodType.RUM));
+        assertEquals(3, next.getPrice(GoodType.SUGAR));
+        assertEquals(4, next.getPrice(GoodType.FOOD));
     }
 
     @Test

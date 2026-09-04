@@ -68,8 +68,8 @@ class IslandEconomyTest {
 
     @Test
     void doesNotProduceWhenChanceIsZero() {
-        IslandStatus empty = new IslandStatus("a", 0, Inventory.empty(), TradePriceList.defaultPrices());
-        when(this.islandStatusMongoRepository.findAll()).thenReturn(List.of(IslandStatusDocument.from(empty)));
+        IslandStatus balanced = new IslandStatus("a", 0, this.balancedStock(), TradePriceList.defaultPrices());
+        when(this.islandStatusMongoRepository.findAll()).thenReturn(List.of(IslandStatusDocument.from(balanced)));
         IslandEconomy economy = this.economy(0.0, 20);
 
         assertFalse(economy.applyIfDue(10));
@@ -189,6 +189,54 @@ class IslandEconomyTest {
         assertEquals(12, saved.inventory().getAmount(GoodType.SUGAR));
     }
 
+    @Test
+    void raisesPriceWhenAGoodIsScarce() {
+        IslandStatus scarceRum = new IslandStatus(
+                "a",
+                0,
+                Inventory.of(Map.of(
+                        GoodType.FOOD, 15,
+                        GoodType.RUM, 2,
+                        GoodType.SUGAR, 15,
+                        GoodType.SPICES, 15,
+                        GoodType.TOBACCO, 15
+                )),
+                TradePriceList.defaultPrices()
+        );
+        when(this.islandStatusMongoRepository.findAll()).thenReturn(List.of(IslandStatusDocument.from(scarceRum)));
+        IslandEconomy economy = this.economy(0.0, 20);
+
+        assertTrue(economy.applyIfDue(10));
+
+        IslandStatus saved = this.savedStatus();
+        assertEquals(2, saved.tradePrices().getPrice(GoodType.RUM));
+        assertEquals(1, saved.tradePrices().getPrice(GoodType.SUGAR));
+    }
+
+    @Test
+    void lowersPriceWhenAGoodIsInSurplus() {
+        IslandStatus surplusRum = new IslandStatus(
+                "a",
+                0,
+                Inventory.of(Map.of(
+                        GoodType.FOOD, 15,
+                        GoodType.RUM, 35,
+                        GoodType.SUGAR, 15,
+                        GoodType.SPICES, 15,
+                        GoodType.TOBACCO, 15
+                )),
+                TradePriceList.of(Map.of(GoodType.RUM, 6))
+        );
+        when(this.islandStatusMongoRepository.findAll()).thenReturn(List.of(IslandStatusDocument.from(surplusRum)));
+        IslandEconomy economy = this.economy(0.0, 20);
+
+        assertTrue(economy.applyIfDue(10));
+
+        IslandStatus saved = this.savedStatus();
+        assertEquals(5, saved.tradePrices().getPrice(GoodType.RUM));
+        assertEquals(1, saved.tradePrices().getPrice(GoodType.SUGAR));
+    }
+
     private IslandStatus savedStatus() {
         ArgumentCaptor<List<IslandStatusDocument>> captor = ArgumentCaptor.forClass(List.class);
         verify(this.islandStatusMongoRepository).saveAll(captor.capture());
@@ -206,6 +254,10 @@ class IslandEconomyTest {
                 3,
                 threshold,
                 40,
+                10,
+                30,
+                1,
+                20,
                 1,
                 3,
                 new Random(1)
@@ -222,9 +274,23 @@ class IslandEconomyTest {
                 3,
                 20,
                 40,
+                10,
+                30,
+                1,
+                20,
                 1,
                 3,
                 new Random(1)
         );
+    }
+
+    private Inventory balancedStock() {
+        return Inventory.of(Map.of(
+                GoodType.FOOD, 15,
+                GoodType.RUM, 15,
+                GoodType.SUGAR, 15,
+                GoodType.SPICES, 15,
+                GoodType.TOBACCO, 15
+        ));
     }
 }
