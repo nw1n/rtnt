@@ -39,6 +39,11 @@
             <div class="chart-host" [appEcharts]="worldGoodsChartOption()" [dark]="darkTheme()"></div>
           </ng-template>
         </mat-tab>
+        <mat-tab label="Price spread">
+          <ng-template matTabContent>
+            <div class="chart-host" [appEcharts]="priceSpreadChartOption()" [dark]="darkTheme()"></div>
+          </ng-template>
+        </mat-tab>
       </mat-tab-group>
     }
   </div>

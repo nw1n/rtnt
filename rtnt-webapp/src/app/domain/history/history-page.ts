@@ -29,6 +29,7 @@ export class HistoryPage {
   public averagePriceChartOption = computed<EChartsOption>(() => this.buildAveragePriceChart(this.snapshots()))
   public worldGoldChartOption = computed<EChartsOption>(() => this.buildWorldGoldChart(this.snapshots()))
   public worldGoodsChartOption = computed<EChartsOption>(() => this.buildWorldGoodsChart(this.snapshots()))
+  public priceSpreadChartOption = computed<EChartsOption>(() => this.buildPriceSpreadChart(this.snapshots()))
 
   constructor() {
     this.refresh()
@@ -70,6 +71,37 @@ export class HistoryPage {
         value: 0,
       }))
     })
+  }
+
+  private buildPriceSpreadChart(snapshots: WorldSnapshotDto[]): EChartsOption {
+    const goods: { id: keyof TradePricesDto; name: string }[] = [
+      { id: 'food', name: 'Food' },
+      { id: 'rum', name: 'Rum' },
+      { id: 'sugar', name: 'Sugar' },
+      { id: 'spices', name: 'Spices' },
+      { id: 'tobacco', name: 'Tobacco' },
+    ]
+    return this.buildLineChart(
+      snapshots,
+      'Price',
+      (snapshot) => {
+        const statuses = snapshot.islandStatuses ?? []
+        if (statuses.length === 0) {
+          return []
+        }
+        return goods.flatMap((good) => {
+          const prices = statuses.map((status) => status.tradePrices?.[good.id] ?? 0)
+          const min = Math.min(...prices)
+          const max = Math.max(...prices)
+          return [
+            { id: `${good.id}-min`, name: `${good.name} min`, value: min },
+            { id: `${good.id}-max`, name: `${good.name} max`, value: max },
+            { id: `${good.id}-spread`, name: `${good.name} spread`, value: max - min },
+          ]
+        })
+      },
+      false
+    )
   }
 
   private buildAveragePriceChart(snapshots: WorldSnapshotDto[]): EChartsOption {
