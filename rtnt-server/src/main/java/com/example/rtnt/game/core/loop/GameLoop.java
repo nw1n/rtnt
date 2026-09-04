@@ -5,8 +5,6 @@ import com.example.rtnt.game.core.flow.FlowMode;
 import com.example.rtnt.game.core.flow.persistence.GameFlowStatusDocument;
 import com.example.rtnt.game.core.flow.persistence.GameFlowStatusMongoRepository;
 import com.example.rtnt.game.core.ticker.GameTick;
-import com.example.rtnt.game.core.ticker.persistence.TickerDocument;
-import com.example.rtnt.game.core.ticker.persistence.TickerMongoRepository;
 import com.example.rtnt.game.core.worldsnapshot.WorldSnapshot;
 import com.example.rtnt.game.core.worldsnapshot.WorldSnapshotStore;
 import com.example.rtnt.game.island.service.IslandEconomy;
@@ -22,7 +20,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.NoSuchElementException;
-import java.util.Optional;
 
 @Service
 @NullMarked
@@ -35,7 +32,6 @@ public class GameLoop {
      *                                                                         *
      **************************************************************************/
 
-    private final TickerMongoRepository tickerMongoRepository;
     private final GameFlowStatusMongoRepository gameFlowStatusMongoRepository;
     private final GameCommandQueue gameCommandQueue;
     private final WorldSnapshotStore worldSnapshotStore;
@@ -60,7 +56,6 @@ public class GameLoop {
      **************************************************************************/
 
     public GameLoop(
-            TickerMongoRepository tickerMongoRepository,
             GameFlowStatusMongoRepository gameFlowStatusMongoRepository,
             GameCommandQueue gameCommandQueue,
             WorldSnapshotStore worldSnapshotStore,
@@ -77,7 +72,6 @@ public class GameLoop {
         if (liveIntervalMs < 1) {
             throw new IllegalArgumentException("liveIntervalMs must be at least 1");
         }
-        this.tickerMongoRepository = tickerMongoRepository;
         this.gameFlowStatusMongoRepository = gameFlowStatusMongoRepository;
         this.gameCommandQueue = gameCommandQueue;
         this.worldSnapshotStore = worldSnapshotStore;
@@ -211,7 +205,6 @@ public class GameLoop {
             this.shipService.replaceAll(snapshot.ships());
             this.gameCommandQueue.clear();
             this.gameTick = new GameTick(snapshot.tick());
-            this.saveTick();
             this.paused = true;
             this.persistFlowIfLive();
             log.info("Loaded world snapshot at tick {}", snapshot.tick());
@@ -247,7 +240,6 @@ public class GameLoop {
 
     private void persistSnapshot() {
         this.worldSnapshotStore.save(this.captureWorld());
-        this.saveTick();
     }
 
     private WorldSnapshot captureWorld() {
@@ -277,10 +269,6 @@ public class GameLoop {
         }
     }
 
-    private void saveTick() {
-        this.tickerMongoRepository.save(TickerDocument.from(this.requireTick()));
-    }
-
     private void saveFlow() {
         this.gameFlowStatusMongoRepository.save(
                 GameFlowStatusDocument.from(this.mode, this.paused, this.liveIntervalMs)
@@ -291,13 +279,10 @@ public class GameLoop {
         if (this.loaded) {
             return;
         }
-        this.gameTick = this.tickerMongoRepository.findById(TickerDocument.DOCUMENT_ID)
-                .map(document -> new GameTick(document.tick()))
-                .orElseGet(() -> {
-                    GameTick initial = GameTick.initial();
-                    this.tickerMongoRepository.save(TickerDocument.from(initial));
-                    return initial;
-                });
+        this.worldSnapshotStore.findLatest().ifPresentOrElse(latest -> {
+            this.gameTick = new GameTick(latest.tick());
+            this.replaceWorld(latest);
+        }, () -> this.gameTick = GameTick.initial());
         this.gameFlowStatusMongoRepository.findById(GameFlowStatusDocument.DOCUMENT_ID)
                 .ifPresentOrElse(document -> {
                     this.mode = document.mode();
@@ -309,21 +294,7 @@ public class GameLoop {
                     this.liveIntervalMs = this.defaultLiveIntervalMs;
                     this.saveFlow();
                 });
-        this.hydrateWorldFromSnapshot();
         this.loaded = true;
-    }
-
-    private void hydrateWorldFromSnapshot() {
-        long tick = this.requireTick().tick();
-        Optional<WorldSnapshot> exact = this.worldSnapshotStore.findByTick(tick);
-        if (exact.isPresent()) {
-            this.replaceWorld(exact.get());
-            return;
-        }
-        this.worldSnapshotStore.findLatest().ifPresent(latest -> {
-            this.replaceWorld(latest);
-            this.gameTick = new GameTick(latest.tick());
-        });
     }
 
     private void replaceWorld(WorldSnapshot snapshot) {

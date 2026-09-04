@@ -7,8 +7,6 @@ import com.example.rtnt.game.core.flow.persistence.GameFlowStatusMongoRepository
 import com.example.rtnt.game.core.loop.GameCommand;
 import com.example.rtnt.game.core.loop.GameCommandQueue;
 import com.example.rtnt.game.core.loop.GameLoop;
-import com.example.rtnt.game.core.ticker.persistence.TickerDocument;
-import com.example.rtnt.game.core.ticker.persistence.TickerMongoRepository;
 import com.example.rtnt.game.core.worldsnapshot.WorldSnapshot;
 import com.example.rtnt.game.core.worldsnapshot.WorldSnapshotStore;
 import com.example.rtnt.game.inventory.domain.Inventory;
@@ -46,9 +44,6 @@ import static org.mockito.Mockito.when;
 class GameLoopTest {
 
     @Mock
-    private TickerMongoRepository tickerMongoRepository;
-
-    @Mock
     private GameFlowStatusMongoRepository gameFlowStatusMongoRepository;
 
     @Mock
@@ -78,7 +73,6 @@ class GameLoopTest {
         lenient().when(this.shipJourneyCheck.applyIfDue(org.mockito.ArgumentMatchers.anyLong())).thenReturn(false);
         lenient().when(this.shipService.list()).thenReturn(List.of());
         this.gameLoop = new GameLoop(
-                this.tickerMongoRepository,
                 this.gameFlowStatusMongoRepository,
                 this.gameCommandQueue,
                 this.worldSnapshotStore,
@@ -93,7 +87,7 @@ class GameLoopTest {
 
     @Test
     void startsInBatchPausedWhenNoFlowDocument() {
-        when(this.tickerMongoRepository.findById(TickerDocument.DOCUMENT_ID)).thenReturn(Optional.empty());
+        when(this.worldSnapshotStore.findLatest()).thenReturn(Optional.empty());
         when(this.gameFlowStatusMongoRepository.findById(GameFlowStatusDocument.DOCUMENT_ID))
                 .thenReturn(Optional.empty());
 
@@ -120,7 +114,6 @@ class GameLoopTest {
         assertEquals(1, status.tick());
         assertTrue(this.gameCommandQueue.drain(0).isEmpty());
         assertEquals(1, this.gameCommandQueue.drain(1).size());
-        verify(this.tickerMongoRepository, never()).save(org.mockito.ArgumentMatchers.any());
         verify(this.gameFlowStatusMongoRepository, never()).save(org.mockito.ArgumentMatchers.any());
         verify(this.worldSnapshotStore, never()).save(org.mockito.ArgumentMatchers.any());
     }
@@ -132,7 +125,6 @@ class GameLoopTest {
         this.gameLoop.stepIfLive();
 
         assertEquals(1, this.gameLoop.get().tick());
-        verify(this.tickerMongoRepository, never()).save(org.mockito.ArgumentMatchers.any());
         verify(this.gameFlowStatusMongoRepository, never()).save(org.mockito.ArgumentMatchers.any());
         verify(this.worldSnapshotStore, never()).save(org.mockito.ArgumentMatchers.any());
     }
@@ -144,7 +136,6 @@ class GameLoopTest {
         this.gameLoop.stepIfLive();
 
         assertEquals(0, this.gameLoop.get().tick());
-        verify(this.tickerMongoRepository, never()).save(org.mockito.ArgumentMatchers.any());
         verify(this.gameFlowStatusMongoRepository, never()).save(org.mockito.ArgumentMatchers.any());
     }
 
@@ -155,7 +146,6 @@ class GameLoopTest {
         GameFlowStatus status = this.gameLoop.advance(1);
 
         assertEquals(1, status.tick());
-        verify(this.tickerMongoRepository, never()).save(org.mockito.ArgumentMatchers.any());
         verify(this.gameFlowStatusMongoRepository, never()).save(org.mockito.ArgumentMatchers.any());
         verify(this.worldSnapshotStore, never()).save(org.mockito.ArgumentMatchers.any());
     }
@@ -168,7 +158,6 @@ class GameLoopTest {
         this.gameLoop.step();
 
         assertEquals(3, this.gameLoop.get().tick());
-        verify(this.tickerMongoRepository, never()).save(org.mockito.ArgumentMatchers.any());
         verify(this.worldSnapshotStore, never()).save(org.mockito.ArgumentMatchers.any());
     }
 
@@ -180,7 +169,6 @@ class GameLoopTest {
         this.gameLoop.step();
 
         assertEquals(3, this.gameLoop.get().tick());
-        verify(this.tickerMongoRepository, never()).save(org.mockito.ArgumentMatchers.any());
         verify(this.worldSnapshotStore, never()).save(org.mockito.ArgumentMatchers.any());
     }
 
@@ -199,7 +187,6 @@ class GameLoopTest {
         verify(this.worldSnapshotStore).save(captor.capture());
         assertEquals(0, captor.getValue().tick());
         assertEquals(List.of(), captor.getValue().ships());
-        assertEquals(0, this.capturedTicker().tick());
         verify(this.gameFlowStatusMongoRepository, never()).save(org.mockito.ArgumentMatchers.any());
     }
 
@@ -213,7 +200,7 @@ class GameLoopTest {
     }
 
     @Test
-    void writesWorldSnapshotAndTickerOnInterval() {
+    void writesWorldSnapshotOnInterval() {
         this.givenLatest(0, FlowMode.LIVE, false);
 
         this.gameLoop.advance(4);
@@ -222,10 +209,6 @@ class GameLoopTest {
         verify(this.worldSnapshotStore, times(2)).save(snapshotCaptor.capture());
         assertEquals(2, snapshotCaptor.getAllValues().get(0).tick());
         assertEquals(4, snapshotCaptor.getAllValues().get(1).tick());
-
-        ArgumentCaptor<TickerDocument> tickerCaptor = ArgumentCaptor.forClass(TickerDocument.class);
-        verify(this.tickerMongoRepository, times(2)).save(tickerCaptor.capture());
-        assertEquals(4, tickerCaptor.getAllValues().get(1).tick());
         verify(this.gameFlowStatusMongoRepository, never()).save(org.mockito.ArgumentMatchers.any());
     }
 
@@ -240,7 +223,6 @@ class GameLoopTest {
         GameFlowStatusDocument saved = this.capturedFlow();
         assertTrue(saved.paused());
         assertEquals(FlowMode.LIVE, saved.mode());
-        verify(this.tickerMongoRepository, never()).save(org.mockito.ArgumentMatchers.any());
     }
 
     @Test
@@ -251,7 +233,6 @@ class GameLoopTest {
 
         assertEquals(FlowMode.BATCH, status.mode());
         verify(this.gameFlowStatusMongoRepository, never()).save(org.mockito.ArgumentMatchers.any());
-        verify(this.tickerMongoRepository, never()).save(org.mockito.ArgumentMatchers.any());
     }
 
     @Test
@@ -292,16 +273,19 @@ class GameLoopTest {
     }
 
     @Test
-    void readsMongoOnceThenUsesMemory() {
+    void readsLatestSnapshotOnceThenUsesMemory() {
         this.givenLatest(0, FlowMode.LIVE, false);
 
         this.gameLoop.get();
         this.gameLoop.step();
         this.gameLoop.stepIfLive();
 
-        verify(this.tickerMongoRepository, times(1)).findById(TickerDocument.DOCUMENT_ID);
+        verify(this.worldSnapshotStore, times(1)).findLatest();
         verify(this.gameFlowStatusMongoRepository, times(1)).findById(GameFlowStatusDocument.DOCUMENT_ID);
-        assertEquals(2, this.capturedTicker().tick());
+        assertEquals(2, this.gameLoop.get().tick());
+        ArgumentCaptor<WorldSnapshot> captor = ArgumentCaptor.forClass(WorldSnapshot.class);
+        verify(this.worldSnapshotStore).save(captor.capture());
+        assertEquals(2, captor.getValue().tick());
     }
 
     @Test
@@ -311,7 +295,6 @@ class GameLoopTest {
         IslandStatus status = new IslandStatus("i1", 42, Inventory.empty(), TradePriceList.defaultPrices());
         Ship ship = Ship.create("Black Pearl", island.id(), null);
         WorldSnapshot snapshot = new WorldSnapshot(200, List.of(island), List.of(status), List.of(ship));
-        lenient().when(this.worldSnapshotStore.findByTick(500)).thenReturn(Optional.empty());
         when(this.worldSnapshotStore.findByTick(200)).thenReturn(Optional.of(snapshot));
         this.gameCommandQueue.enqueue(10, new GameCommand("stale"));
 
@@ -322,7 +305,6 @@ class GameLoopTest {
         assertTrue(restored.paused());
         verify(this.islandService).replaceAll(snapshot.islands(), snapshot.islandStatuses());
         verify(this.shipService).replaceAll(snapshot.ships());
-        assertEquals(200, this.capturedTicker().tick());
         assertTrue(this.capturedFlow().paused());
         assertTrue(this.gameCommandQueue.drain(10).isEmpty());
     }
@@ -330,7 +312,6 @@ class GameLoopTest {
     @Test
     void loadFromSnapshotRejectsMissingTick() {
         this.givenLatest(0, FlowMode.BATCH, true);
-        lenient().when(this.worldSnapshotStore.findByTick(0)).thenReturn(Optional.empty());
         when(this.worldSnapshotStore.findByTick(99)).thenReturn(Optional.empty());
 
         assertThrows(NoSuchElementException.class, () -> this.gameLoop.loadFromSnapshot(99));
@@ -338,7 +319,6 @@ class GameLoopTest {
                 org.mockito.ArgumentMatchers.any(),
                 org.mockito.ArgumentMatchers.any()
         );
-        verify(this.tickerMongoRepository, never()).save(org.mockito.ArgumentMatchers.any());
     }
 
     private void givenLatest(long tick, FlowMode mode, boolean paused) {
@@ -346,8 +326,13 @@ class GameLoopTest {
     }
 
     private void givenLatest(long tick, FlowMode mode, boolean paused, Integer liveIntervalMs) {
-        when(this.tickerMongoRepository.findById(TickerDocument.DOCUMENT_ID))
-                .thenReturn(Optional.of(new TickerDocument(TickerDocument.DOCUMENT_ID, tick)));
+        if (tick == 0) {
+            when(this.worldSnapshotStore.findLatest()).thenReturn(Optional.empty());
+        } else {
+            when(this.worldSnapshotStore.findLatest()).thenReturn(Optional.of(
+                    new WorldSnapshot(tick, List.of(), List.of(), List.of())
+            ));
+        }
         when(this.gameFlowStatusMongoRepository.findById(GameFlowStatusDocument.DOCUMENT_ID))
                 .thenReturn(Optional.of(new GameFlowStatusDocument(
                         GameFlowStatusDocument.DOCUMENT_ID,
@@ -355,12 +340,6 @@ class GameLoopTest {
                         paused,
                         liveIntervalMs
                 )));
-    }
-
-    private TickerDocument capturedTicker() {
-        ArgumentCaptor<TickerDocument> captor = ArgumentCaptor.forClass(TickerDocument.class);
-        verify(this.tickerMongoRepository).save(captor.capture());
-        return captor.getValue();
     }
 
     private GameFlowStatusDocument capturedFlow() {
