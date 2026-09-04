@@ -16,7 +16,7 @@ import com.example.rtnt.game.island.domain.Footprint;
 import com.example.rtnt.game.island.domain.Island;
 import com.example.rtnt.game.island.domain.IslandStatus;
 import com.example.rtnt.game.island.domain.TradePriceList;
-import com.example.rtnt.game.island.service.IslandPopulationGrowth;
+import com.example.rtnt.game.island.service.IslandEconomy;
 import com.example.rtnt.game.island.service.IslandService;
 import com.example.rtnt.game.ship.domain.Ship;
 import com.example.rtnt.game.ship.service.ShipJourneyCheck;
@@ -58,7 +58,7 @@ class GameLoopTest {
     private IslandService islandService;
 
     @Mock
-    private IslandPopulationGrowth islandPopulationGrowth;
+    private IslandEconomy islandEconomy;
 
     @Mock
     private ShipJourneyCheck shipJourneyCheck;
@@ -74,7 +74,7 @@ class GameLoopTest {
         this.gameCommandQueue = new GameCommandQueue();
         lenient().when(this.islandService.list()).thenReturn(List.of());
         lenient().when(this.islandService.listStatuses()).thenReturn(List.of());
-        lenient().when(this.islandPopulationGrowth.applyIfDue(org.mockito.ArgumentMatchers.anyLong())).thenReturn(false);
+        lenient().when(this.islandEconomy.applyIfDue(org.mockito.ArgumentMatchers.anyLong())).thenReturn(false);
         lenient().when(this.shipJourneyCheck.applyIfDue(org.mockito.ArgumentMatchers.anyLong())).thenReturn(false);
         lenient().when(this.shipService.list()).thenReturn(List.of());
         this.gameLoop = new GameLoop(
@@ -83,7 +83,7 @@ class GameLoopTest {
                 this.gameCommandQueue,
                 this.worldSnapshotStore,
                 this.islandService,
-                this.islandPopulationGrowth,
+                this.islandEconomy,
                 this.shipJourneyCheck,
                 this.shipService,
                 2,
@@ -161,9 +161,9 @@ class GameLoopTest {
     }
 
     @Test
-    void populationGrowthPersistsTicker() {
+    void islandEconomyPersistsTicker() {
         this.givenLatest(2, FlowMode.BATCH, false);
-        when(this.islandPopulationGrowth.applyIfDue(3)).thenReturn(true);
+        when(this.islandEconomy.applyIfDue(3)).thenReturn(true);
 
         this.gameLoop.step();
 

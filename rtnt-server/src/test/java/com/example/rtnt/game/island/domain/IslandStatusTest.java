@@ -1,7 +1,7 @@
 package com.example.rtnt.game.island.domain;
 
+import com.example.rtnt.game.inventory.domain.GoodType;
 import com.example.rtnt.game.inventory.domain.Inventory;
-import com.example.rtnt.game.island.domain.TradePriceList;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -24,5 +24,21 @@ class IslandStatusTest {
         assertEquals("island-1", grown.islandId());
         assertEquals(Inventory.islandSeed(), grown.inventory());
         assertEquals(TradePriceList.islandSeed(), grown.tradePrices());
+    }
+
+    @Test
+    void produceAddsTradeableGood() {
+        IslandStatus produced = IslandStatus.initial("island-1").produce(GoodType.RUM, 5);
+        assertEquals(15, produced.inventory().getAmount(GoodType.RUM));
+        assertEquals(0, produced.population());
+    }
+
+    @Test
+    void consumeHalfGoodsAndGrowHalvesTradeables() {
+        IslandStatus flourished = IslandStatus.initial("island-1").consumeHalfGoodsAndGrow(2);
+        assertEquals(2, flourished.population());
+        assertEquals(5, flourished.inventory().getAmount(GoodType.RUM));
+        assertEquals(5, flourished.inventory().getAmount(GoodType.SUGAR));
+        assertEquals(100, flourished.inventory().getAmount(GoodType.GOLD));
     }
 }

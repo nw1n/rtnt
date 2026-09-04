@@ -5,7 +5,9 @@ import org.junit.jupiter.api.Test;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class InventoryTest {
 
@@ -52,5 +54,30 @@ class InventoryTest {
     void goldDoesNotCountAsTradeableHold() {
         Inventory inventory = Inventory.of(Map.of(GoodType.GOLD, 1000, GoodType.TOBACCO, 6));
         assertEquals(6, inventory.sumTradeableGoods());
+    }
+
+    @Test
+    void allTradeableAtLeastRequiresEveryTradeableGood() {
+        Inventory inventory = Inventory.of(Map.of(
+                GoodType.GOLD, 1,
+                GoodType.RUM, 20,
+                GoodType.SUGAR, 20,
+                GoodType.SPICES, 20,
+                GoodType.TOBACCO, 19
+        ));
+        assertFalse(inventory.allTradeableAtLeast(20));
+        assertTrue(inventory.allTradeableAtLeast(19));
+    }
+
+    @Test
+    void consumeHalfTradeableGoodsLeavesGold() {
+        Inventory halved = Inventory.of(Map.of(
+                GoodType.GOLD, 80,
+                GoodType.RUM, 21,
+                GoodType.SUGAR, 10
+        )).consumeHalfTradeableGoods();
+        assertEquals(80, halved.getAmount(GoodType.GOLD));
+        assertEquals(10, halved.getAmount(GoodType.RUM));
+        assertEquals(5, halved.getAmount(GoodType.SUGAR));
     }
 }

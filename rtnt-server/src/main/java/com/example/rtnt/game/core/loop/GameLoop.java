@@ -9,7 +9,7 @@ import com.example.rtnt.game.core.ticker.persistence.TickerDocument;
 import com.example.rtnt.game.core.ticker.persistence.TickerMongoRepository;
 import com.example.rtnt.game.core.worldsnapshot.WorldSnapshot;
 import com.example.rtnt.game.core.worldsnapshot.WorldSnapshotStore;
-import com.example.rtnt.game.island.service.IslandPopulationGrowth;
+import com.example.rtnt.game.island.service.IslandEconomy;
 import com.example.rtnt.game.island.service.IslandService;
 import com.example.rtnt.game.ship.service.ShipJourneyCheck;
 import com.example.rtnt.game.ship.service.ShipService;
@@ -39,7 +39,7 @@ public class GameLoop {
     private final GameCommandQueue gameCommandQueue;
     private final WorldSnapshotStore worldSnapshotStore;
     private final IslandService islandService;
-    private final IslandPopulationGrowth islandPopulationGrowth;
+    private final IslandEconomy islandEconomy;
     private final ShipJourneyCheck shipJourneyCheck;
     private final ShipService shipService;
     private final int snapshotIntervalTicks;
@@ -64,7 +64,7 @@ public class GameLoop {
             GameCommandQueue gameCommandQueue,
             WorldSnapshotStore worldSnapshotStore,
             IslandService islandService,
-            IslandPopulationGrowth islandPopulationGrowth,
+            IslandEconomy islandEconomy,
             ShipJourneyCheck shipJourneyCheck,
             ShipService shipService,
             @Value("${rtnt.snapshot.interval-ticks:1000}") int snapshotIntervalTicks,
@@ -81,7 +81,7 @@ public class GameLoop {
         this.gameCommandQueue = gameCommandQueue;
         this.worldSnapshotStore = worldSnapshotStore;
         this.islandService = islandService;
-        this.islandPopulationGrowth = islandPopulationGrowth;
+        this.islandEconomy = islandEconomy;
         this.shipJourneyCheck = shipJourneyCheck;
         this.shipService = shipService;
         this.snapshotIntervalTicks = snapshotIntervalTicks;
@@ -237,7 +237,7 @@ public class GameLoop {
         GameTick current = this.requireTick();
         boolean eventful = !this.gameCommandQueue.drain(current.tick()).isEmpty();
         this.gameTick = current.advance();
-        if (this.islandPopulationGrowth.applyIfDue(this.requireTick().tick())) {
+        if (this.islandEconomy.applyIfDue(this.requireTick().tick())) {
             eventful = true;
         }
         if (this.shipJourneyCheck.applyIfDue(this.requireTick().tick())) {

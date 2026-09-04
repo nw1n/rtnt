@@ -110,6 +110,27 @@ public final class Inventory {
         return sum;
     }
 
+    public boolean allTradeableAtLeast(int threshold) {
+        if (threshold < 1) {
+            throw new IllegalArgumentException("threshold must be at least 1");
+        }
+        for (GoodType goodType : GoodType.tradeableGoods()) {
+            if (this.getAmount(goodType) < threshold) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /** Keeps half of each tradeable good (floored). Gold is unchanged. */
+    public Inventory consumeHalfTradeableGoods() {
+        EnumMap<GoodType, Integer> next = new EnumMap<>(this.amounts);
+        for (GoodType goodType : GoodType.tradeableGoods()) {
+            next.put(goodType, this.getAmount(goodType) / 2);
+        }
+        return new Inventory(next);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {

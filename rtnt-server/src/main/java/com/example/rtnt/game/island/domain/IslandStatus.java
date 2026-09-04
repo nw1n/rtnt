@@ -1,5 +1,6 @@
 package com.example.rtnt.game.island.domain;
 
+import com.example.rtnt.game.inventory.domain.GoodType;
 import com.example.rtnt.game.inventory.domain.Inventory;
 import org.jspecify.annotations.NullMarked;
 
@@ -35,6 +36,29 @@ public record IslandStatus(
             throw new IllegalArgumentException("growth amount must be at least 1");
         }
         return new IslandStatus(this.islandId, this.population + amount, this.inventory, this.tradePrices);
+    }
+
+    public IslandStatus produce(GoodType goodType, int amount) {
+        if (!goodType.isTradeable()) {
+            throw new IllegalArgumentException("islands only produce tradeable goods");
+        }
+        return this.withInventory(this.inventory.addAmount(goodType, amount));
+    }
+
+    public boolean canFlourish(int goodsThreshold) {
+        return this.inventory.allTradeableAtLeast(goodsThreshold);
+    }
+
+    public IslandStatus consumeHalfGoodsAndGrow(long amount) {
+        if (amount < 1) {
+            throw new IllegalArgumentException("growth amount must be at least 1");
+        }
+        return new IslandStatus(
+                this.islandId,
+                this.population + amount,
+                this.inventory.consumeHalfTradeableGoods(),
+                this.tradePrices
+        );
     }
 
     public IslandStatus withInventory(Inventory inventory) {
