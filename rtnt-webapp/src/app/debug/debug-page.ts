@@ -22,8 +22,8 @@ export class DebugPage {
   public busy = signal(false)
   public status = signal<string | null>(null)
   public gameFlow = signal<GameFlowDto | null>(null)
-  public batchSize = signal(100)
-  public batchCount = signal(1)
+  public batchSize = signal(1000)
+  public batchCount = signal(10)
   public snapshotTick = signal(0)
   public frameMs = signal(1000)
   private frameMsLoaded = false
