@@ -1,9 +1,13 @@
 import { InventoryDto } from './inventory.dto'
 import { TradePricesDto } from './island.dto'
 
-export interface IslandPopulationDto {
+export interface IslandSnapshotDto {
   id: string
   name: string
+}
+
+export interface IslandStatusSnapshotDto {
+  islandId: string
   population: number
   inventory: InventoryDto
   tradePrices: TradePricesDto
@@ -17,6 +21,7 @@ export interface SnapshotShipDto {
 
 export interface WorldSnapshotDto {
   tick: number
-  islands: IslandPopulationDto[]
+  islands: IslandSnapshotDto[]
+  islandStatuses?: IslandStatusSnapshotDto[]
   ships?: SnapshotShipDto[]
 }

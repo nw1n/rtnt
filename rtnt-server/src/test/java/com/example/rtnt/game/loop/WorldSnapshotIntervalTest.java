@@ -54,6 +54,7 @@ class WorldSnapshotIntervalTest {
         assertFalse(last.islands().isEmpty());
         assertFalse(last.islandStatuses().isEmpty());
         assertFalse(last.islandStatuses().getFirst().inventory() == null);
+        assertFalse(last.islandStatuses().getFirst().tradePrices() == null);
         assertFalse(last.ships() == null || last.ships().isEmpty());
         assertFalse(last.ships().getFirst().inventory() == null);
     }

@@ -7,7 +7,8 @@ import org.jspecify.annotations.NullMarked;
 public record IslandStatus(
         String islandId,
         long population,
-        Inventory inventory
+        Inventory inventory,
+        TradePriceList tradePrices
 ) {
     /***************************************************************************
      *                                                                         *
@@ -16,7 +17,11 @@ public record IslandStatus(
      **************************************************************************/
 
     public static IslandStatus initial(String islandId) {
-        return new IslandStatus(islandId, 0, Inventory.islandSeed());
+        return new IslandStatus(islandId, 0, Inventory.islandSeed(), TradePriceList.islandSeed());
+    }
+
+    public static IslandStatus empty(String islandId) {
+        return new IslandStatus(islandId, 0, Inventory.empty(), TradePriceList.defaultPrices());
     }
 
     /***************************************************************************
@@ -29,10 +34,14 @@ public record IslandStatus(
         if (amount < 1) {
             throw new IllegalArgumentException("growth amount must be at least 1");
         }
-        return new IslandStatus(this.islandId, this.population + amount, this.inventory);
+        return new IslandStatus(this.islandId, this.population + amount, this.inventory, this.tradePrices);
     }
 
     public IslandStatus withInventory(Inventory inventory) {
-        return new IslandStatus(this.islandId, this.population, inventory);
+        return new IslandStatus(this.islandId, this.population, inventory, this.tradePrices);
+    }
+
+    public IslandStatus withTradePrices(TradePriceList tradePrices) {
+        return new IslandStatus(this.islandId, this.population, this.inventory, tradePrices);
     }
 }

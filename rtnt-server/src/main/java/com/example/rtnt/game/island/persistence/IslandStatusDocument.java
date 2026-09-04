@@ -12,7 +12,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public record IslandStatusDocument(
         @Id String islandId,
         long population,
-        @Nullable InventoryDocument inventory
+        @Nullable InventoryDocument inventory,
+        @Nullable TradePriceListDocument tradePrices
 ) {
     /***************************************************************************
      *                                                                         *
@@ -24,7 +25,8 @@ public record IslandStatusDocument(
         return new IslandStatusDocument(
                 status.islandId(),
                 status.population(),
-                InventoryDocument.from(status.inventory())
+                InventoryDocument.from(status.inventory()),
+                TradePriceListDocument.from(status.tradePrices())
         );
     }
 
@@ -35,6 +37,11 @@ public record IslandStatusDocument(
      **************************************************************************/
 
     public IslandStatus toIslandStatus() {
-        return new IslandStatus(this.islandId, this.population, InventoryDocument.toInventory(this.inventory));
+        return new IslandStatus(
+                this.islandId,
+                this.population,
+                InventoryDocument.toInventory(this.inventory),
+                TradePriceListDocument.toTradePriceList(this.tradePrices)
+        );
     }
 }

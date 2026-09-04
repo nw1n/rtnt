@@ -15,6 +15,7 @@ import com.example.rtnt.game.inventory.domain.Inventory;
 import com.example.rtnt.game.island.domain.Footprint;
 import com.example.rtnt.game.island.domain.Island;
 import com.example.rtnt.game.island.domain.IslandStatus;
+import com.example.rtnt.game.island.domain.TradePriceList;
 import com.example.rtnt.game.island.service.IslandPopulationGrowth;
 import com.example.rtnt.game.island.service.IslandService;
 import com.example.rtnt.game.ship.domain.Ship;
@@ -305,7 +306,7 @@ class GameLoopTest {
     void loadFromSnapshotRestoresWorldAndPauses() {
         this.givenLatest(500, FlowMode.LIVE, false);
         Island island = Island.existing("i1", "North", new Footprint(1, 2, 10, 12));
-        IslandStatus status = new IslandStatus("i1", 42, Inventory.empty());
+        IslandStatus status = new IslandStatus("i1", 42, Inventory.empty(), TradePriceList.defaultPrices());
         Ship ship = Ship.create("Black Pearl", island.id(), null);
         WorldSnapshot snapshot = new WorldSnapshot(200, List.of(island), List.of(status), List.of(ship));
         when(this.worldSnapshotStore.findByTick(200)).thenReturn(Optional.of(snapshot));

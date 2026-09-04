@@ -2,7 +2,6 @@ package com.example.rtnt.game.core.worldsnapshot.web;
 
 import com.example.rtnt.game.core.worldsnapshot.WorldSnapshot;
 import com.example.rtnt.game.core.worldsnapshot.WorldSnapshotStore;
-import com.example.rtnt.game.inventory.domain.Inventory;
 import com.example.rtnt.game.inventory.web.InventoryDto;
 import com.example.rtnt.game.island.domain.Island;
 import com.example.rtnt.game.island.domain.IslandStatus;
@@ -13,8 +12,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/world-snapshots")
@@ -50,40 +47,40 @@ public class WorldSnapshotController {
      *                                                                         *
      **************************************************************************/
 
-    public record WorldSnapshotDto(long tick, List<IslandSnapshotDto> islands, List<ShipSnapshotDto> ships) {
+    public record WorldSnapshotDto(
+            long tick,
+            List<IslandSnapshotDto> islands,
+            List<IslandStatusSnapshotDto> islandStatuses,
+            List<ShipSnapshotDto> ships
+    ) {
         static WorldSnapshotDto from(WorldSnapshot snapshot) {
-            Map<String, IslandStatus> statusByIslandId = snapshot.islandStatuses().stream()
-                    .collect(Collectors.toMap(IslandStatus::islandId, status -> status, (left, right) -> left));
             return new WorldSnapshotDto(
                     snapshot.tick(),
-                    snapshot.islands().stream()
-                            .map(island -> IslandSnapshotDto.from(
-                                    island,
-                                    statusByIslandId.getOrDefault(
-                                            island.id(),
-                                            new IslandStatus(island.id(), 0, Inventory.empty())
-                                    )
-                            ))
-                            .toList(),
+                    snapshot.islands().stream().map(IslandSnapshotDto::from).toList(),
+                    snapshot.islandStatuses().stream().map(IslandStatusSnapshotDto::from).toList(),
                     snapshot.ships().stream().map(ShipSnapshotDto::from).toList()
             );
         }
     }
 
-    public record IslandSnapshotDto(
-            String id,
-            String name,
+    public record IslandSnapshotDto(String id, String name) {
+        static IslandSnapshotDto from(Island island) {
+            return new IslandSnapshotDto(island.id(), island.name());
+        }
+    }
+
+    public record IslandStatusSnapshotDto(
+            String islandId,
             long population,
             InventoryDto inventory,
             TradePricesDto tradePrices
     ) {
-        static IslandSnapshotDto from(Island island, IslandStatus status) {
-            return new IslandSnapshotDto(
-                    island.id(),
-                    island.name(),
+        static IslandStatusSnapshotDto from(IslandStatus status) {
+            return new IslandStatusSnapshotDto(
+                    status.islandId(),
                     status.population(),
                     InventoryDto.from(status.inventory()),
-                    TradePricesDto.from(island.tradePrices())
+                    TradePricesDto.from(status.tradePrices())
             );
         }
     }

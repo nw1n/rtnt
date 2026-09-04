@@ -53,7 +53,7 @@ public class ArrivalTrade {
             if (remainingGoods == 0) {
                 break;
             }
-            int unitPrice = island.tradePrices().getPrice(good);
+            int unitPrice = status.tradePrices().getPrice(good);
             int maxBuy = maxBuyAmount(ship.getCargoCapacity(), shipInventory, islandInventory, good, unitPrice);
             int maxSell = maxSellAmount(shipInventory, islandInventory, good, unitPrice);
             boolean canBuy = maxBuy >= 1;

@@ -60,7 +60,7 @@ class ArrivalTradeTest {
         for (TradeEvent event : result.events()) {
             assertTrue(event.amount() >= 1);
             assertEquals(event.unitPrice() * event.amount(), event.totalPrice());
-            assertEquals(island.tradePrices().getPrice(event.goodType()), event.unitPrice());
+            assertEquals(status.tradePrices().getPrice(event.goodType()), event.unitPrice());
             if (event.tradeType().name().startsWith("SELL")) {
                 expectedGoldDelta += event.totalPrice();
             } else {
@@ -76,7 +76,7 @@ class ArrivalTradeTest {
     @Test
     void executeDoesNothingWhenNothingIsAffordable() {
         Island island = Island.create("Jamaica", new Footprint(0, 0, 10, 10));
-        IslandStatus status = new IslandStatus(island.id(), 0, Inventory.empty());
+        IslandStatus status = IslandStatus.empty(island.id());
         Ship ship = Ship.create("Black Pearl", island.id(), null, null, Inventory.empty());
 
         TradeResult result = new ArrivalTrade(new Random(1)).execute(ship, island, status, 40);

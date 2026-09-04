@@ -50,16 +50,22 @@ export class HistoryPage {
   }
 
   private buildPopulationChart(snapshots: WorldSnapshotDto[]): EChartsOption {
-    return this.buildLineChart(
-      snapshots,
-      'Population',
-      (snapshot) =>
-        snapshot.islands.map((island) => ({
-          id: island.id,
-          name: island.name,
-          value: island.population,
+    return this.buildLineChart(snapshots, 'Population', (snapshot) => {
+      const nameById = new Map(snapshot.islands.map((island) => [island.id, island.name]))
+      const statuses = snapshot.islandStatuses
+      if (statuses && statuses.length > 0) {
+        return statuses.map((status) => ({
+          id: status.islandId,
+          name: nameById.get(status.islandId) ?? status.islandId,
+          value: status.population,
         }))
-    )
+      }
+      return snapshot.islands.map((island) => ({
+        id: island.id,
+        name: island.name,
+        value: 0,
+      }))
+    })
   }
 
   private buildShipGoldChart(snapshots: WorldSnapshotDto[]): EChartsOption {

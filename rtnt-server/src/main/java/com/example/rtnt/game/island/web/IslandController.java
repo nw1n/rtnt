@@ -1,6 +1,5 @@
 package com.example.rtnt.game.island.web;
 
-import com.example.rtnt.game.inventory.domain.Inventory;
 import com.example.rtnt.game.inventory.web.InventoryDto;
 import com.example.rtnt.game.island.domain.Island;
 import com.example.rtnt.game.island.domain.IslandStatus;
@@ -44,7 +43,7 @@ public class IslandController {
         return this.islandService.list().stream()
                 .map(island -> IslandDto.from(
                         island,
-                        statusByIslandId.getOrDefault(island.id(), new IslandStatus(island.id(), 0, Inventory.empty()))
+                        statusByIslandId.getOrDefault(island.id(), IslandStatus.empty(island.id()))
                 ))
                 .toList();
     }
@@ -83,7 +82,7 @@ public class IslandController {
                     island.footprint().length(),
                     status.population(),
                     InventoryDto.from(status.inventory()),
-                    TradePricesDto.from(island.tradePrices())
+                    TradePricesDto.from(status.tradePrices())
             );
         }
     }

@@ -4,6 +4,7 @@ import com.example.rtnt.game.island.domain.Footprint;
 import com.example.rtnt.game.inventory.domain.Inventory;
 import com.example.rtnt.game.island.domain.Island;
 import com.example.rtnt.game.island.domain.IslandStatus;
+import com.example.rtnt.game.island.domain.TradePriceList;
 import com.example.rtnt.game.island.service.IslandService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,7 +34,9 @@ class IslandControllerTest {
     void getAllReturnsNameGeographyAndPopulation() throws Exception {
         Island island = Island.create("Jamaica", new Footprint(10, 20, 60, 40));
         when(this.islandService.list()).thenReturn(List.of(island));
-        when(this.islandService.listStatuses()).thenReturn(List.of(new IslandStatus(island.id(), 42, Inventory.empty())));
+        when(this.islandService.listStatuses()).thenReturn(List.of(
+                new IslandStatus(island.id(), 42, Inventory.empty(), TradePriceList.islandSeed())
+        ));
 
         this.mockMvc.perform(get("/api/islands"))
                 .andExpect(status().isOk())

@@ -8,8 +8,7 @@ import java.util.UUID;
 public record Island(
     String id,
     String name,
-    Footprint footprint,
-    TradePriceList tradePrices
+    Footprint footprint
 ) {
     /***************************************************************************
      *                                                                         *
@@ -18,24 +17,10 @@ public record Island(
      **************************************************************************/
 
     public static Island create(String name, Footprint footprint) {
-        return new Island(UUID.randomUUID().toString(), name, footprint, TradePriceList.islandSeed());
+        return new Island(UUID.randomUUID().toString(), name, footprint);
     }
 
     public static Island existing(String id, String name, Footprint footprint) {
-        return existing(id, name, footprint, TradePriceList.defaultPrices());
-    }
-
-    public static Island existing(String id, String name, Footprint footprint, TradePriceList tradePrices) {
-        return new Island(id, name, footprint, tradePrices);
-    }
-
-    /***************************************************************************
-     *                                                                         *
-     * Public API                                                              *
-     *                                                                         *
-     **************************************************************************/
-
-    public Island withTradePrices(TradePriceList tradePrices) {
-        return new Island(this.id, this.name, this.footprint, tradePrices);
+        return new Island(id, name, footprint);
     }
 }
