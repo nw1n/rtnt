@@ -18,5 +18,5 @@ export interface SnapshotShipDto {
 export interface WorldSnapshotDto {
   tick: number
   islands: IslandPopulationDto[]
-  ships: SnapshotShipDto[]
+  ships?: SnapshotShipDto[]
 }

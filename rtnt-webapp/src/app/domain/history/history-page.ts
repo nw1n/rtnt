@@ -21,7 +21,8 @@ export class HistoryPage {
   public error = signal<string | null>(null)
   public darkTheme = signal(document.body.classList.contains('elder-dark-theme'))
 
-  public chartOption = computed<EChartsOption>(() => this.buildChartOption(this.snapshots()))
+  public chartOption = computed<EChartsOption>(() => this.buildPopulationChart(this.snapshots()))
+  public shipGoldChartOption = computed<EChartsOption>(() => this.buildShipGoldChart(this.snapshots()))
 
   constructor() {
     this.refresh()
@@ -46,31 +47,58 @@ export class HistoryPage {
     })
   }
 
-  private buildChartOption(snapshots: WorldSnapshotDto[]): EChartsOption {
-    const seriesByIsland = new Map<string, { name: string; data: [number, number][] }>()
+  private buildPopulationChart(snapshots: WorldSnapshotDto[]): EChartsOption {
+    return this.buildLineChart(
+      snapshots,
+      'Population',
+      (snapshot) =>
+        snapshot.islands.map((island) => ({
+          id: island.id,
+          name: island.name,
+          value: island.population,
+        }))
+    )
+  }
+
+  private buildShipGoldChart(snapshots: WorldSnapshotDto[]): EChartsOption {
+    return this.buildLineChart(
+      snapshots,
+      'Gold',
+      (snapshot) =>
+        (snapshot.ships ?? []).map((ship) => ({
+          id: ship.id,
+          name: ship.name,
+          value: ship.inventory?.gold ?? 0,
+        }))
+    )
+  }
+
+  private buildLineChart(
+    snapshots: WorldSnapshotDto[],
+    yAxisName: string,
+    pointsOf: (snapshot: WorldSnapshotDto) => { id: string; name: string; value: number }[]
+  ): EChartsOption {
+    const seriesById = new Map<string, { name: string; data: [number, number][] }>()
     for (const snapshot of snapshots) {
-      for (const island of snapshot.islands) {
-        const series = seriesByIsland.get(island.id) ?? { name: island.name, data: [] }
-        series.data.push([snapshot.tick, island.population])
-        seriesByIsland.set(island.id, series)
+      for (const point of pointsOf(snapshot)) {
+        const series = seriesById.get(point.id) ?? { name: point.name, data: [] }
+        series.data.push([snapshot.tick, point.value])
+        seriesById.set(point.id, series)
       }
     }
 
     const nameCounts = new Map<string, number>()
-    for (const islandSeries of seriesByIsland.values()) {
-      nameCounts.set(islandSeries.name, (nameCounts.get(islandSeries.name) ?? 0) + 1)
+    for (const series of seriesById.values()) {
+      nameCounts.set(series.name, (nameCounts.get(series.name) ?? 0) + 1)
     }
 
-    const series = [...seriesByIsland.entries()]
+    const series = [...seriesById.entries()]
       .sort((left, right) => left[1].name.localeCompare(right[1].name))
-      .map(([islandId, islandSeries]) => ({
-        name:
-          (nameCounts.get(islandSeries.name) ?? 0) > 1
-            ? `${islandSeries.name} (${islandId.slice(0, 6)})`
-            : islandSeries.name,
+      .map(([id, item]) => ({
+        name: (nameCounts.get(item.name) ?? 0) > 1 ? `${item.name} (${id.slice(0, 6)})` : item.name,
         type: 'line' as const,
-        showSymbol: islandSeries.data.length < 24,
-        data: islandSeries.data,
+        showSymbol: item.data.length < 24,
+        data: item.data,
       }))
 
     return {
@@ -99,7 +127,7 @@ export class HistoryPage {
       },
       yAxis: {
         type: 'value',
-        name: 'Population',
+        name: yAxisName,
         min: 0,
         minInterval: 1,
       },
