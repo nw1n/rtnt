@@ -36,6 +36,27 @@ bootRun {
     jvmArgs = ['--enable-native-access=ALL-UNNAMED']
 }
 
+tasks.named('test') {
+    useJUnitPlatform {
+        excludeTags 'benchmark'
+    }
+}
+
+tasks.register('benchmark', Test) {
+    group = 'verification'
+    description = 'Time GameLoop.advance against a wiped rtnt-test Mongo database'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    systemProperty 'rtnt.benchmark', 'true'
+    useJUnitPlatform {
+        includeTags 'benchmark'
+    }
+    testLogging {
+        showStandardStreams = true
+        events 'passed', 'failed', 'standardOut', 'standardError'
+    }
+}
+
 tasks.register('recreateIslands', JavaExec) {
     group = 'application'
     description = 'Delete all islands and seed a new set'
