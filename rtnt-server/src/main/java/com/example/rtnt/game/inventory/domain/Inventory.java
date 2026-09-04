@@ -28,6 +28,7 @@ public final class Inventory {
     public static Inventory islandSeed() {
         return of(Map.of(
                 GoodType.GOLD, 100,
+                GoodType.FOOD, 10,
                 GoodType.RUM, 10,
                 GoodType.SUGAR, 10,
                 GoodType.SPICES, 10,
@@ -38,6 +39,7 @@ public final class Inventory {
     public static Inventory shipSeed() {
         return of(Map.of(
                 GoodType.GOLD, 1_000,
+                GoodType.FOOD, 4,
                 GoodType.RUM, 5,
                 GoodType.SUGAR, 4,
                 GoodType.SPICES, 3,
@@ -101,7 +103,7 @@ public final class Inventory {
         return Collections.unmodifiableMap(this.amounts);
     }
 
-    /** Sum of tradeable goods (rum, sugar, spices, tobacco). Gold is not hold space. */
+    /** Sum of tradeable goods (food, rum, sugar, spices, tobacco). Gold is not hold space. */
     public int sumTradeableGoods() {
         int sum = 0;
         for (GoodType goodType : GoodType.tradeableGoods()) {

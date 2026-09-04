@@ -9,6 +9,7 @@ import java.util.Set;
 @NullMarked
 public enum GoodType {
     GOLD(false),
+    FOOD(true),
     RUM(true),
     SUGAR(true),
     SPICES(true),

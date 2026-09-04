@@ -20,6 +20,7 @@ public class IslandEconomy {
 
     private final IslandStatusMongoRepository islandStatusMongoRepository;
     private final int intervalTicks;
+    private final int foodIntervalTicks;
     private final double productionChance;
     private final int productionMin;
     private final int productionMax;
@@ -38,6 +39,7 @@ public class IslandEconomy {
     public IslandEconomy(
             IslandStatusMongoRepository islandStatusMongoRepository,
             @Value("${rtnt.island.economy-interval-ticks:100}") int intervalTicks,
+            @Value("${rtnt.island.food-interval-ticks:500}") int foodIntervalTicks,
             @Value("${rtnt.island.production-chance:0.25}") double productionChance,
             @Value("${rtnt.island.production-min:1}") int productionMin,
             @Value("${rtnt.island.production-max:5}") int productionMax,
@@ -48,6 +50,7 @@ public class IslandEconomy {
         this(
                 islandStatusMongoRepository,
                 intervalTicks,
+                foodIntervalTicks,
                 productionChance,
                 productionMin,
                 productionMax,
@@ -61,6 +64,7 @@ public class IslandEconomy {
     IslandEconomy(
             IslandStatusMongoRepository islandStatusMongoRepository,
             int intervalTicks,
+            int foodIntervalTicks,
             double productionChance,
             int productionMin,
             int productionMax,
@@ -71,6 +75,9 @@ public class IslandEconomy {
     ) {
         if (intervalTicks < 1) {
             throw new IllegalArgumentException("intervalTicks must be at least 1");
+        }
+        if (foodIntervalTicks < 1) {
+            throw new IllegalArgumentException("foodIntervalTicks must be at least 1");
         }
         if (productionChance < 0 || productionChance > 1) {
             throw new IllegalArgumentException("productionChance must be between 0 and 1");
@@ -92,6 +99,7 @@ public class IslandEconomy {
         }
         this.islandStatusMongoRepository = islandStatusMongoRepository;
         this.intervalTicks = intervalTicks;
+        this.foodIntervalTicks = foodIntervalTicks;
         this.productionChance = productionChance;
         this.productionMin = productionMin;
         this.productionMax = productionMax;
@@ -108,13 +116,15 @@ public class IslandEconomy {
      **************************************************************************/
 
     public boolean applyIfDue(long tick) {
-        if (tick == 0 || tick % this.intervalTicks != 0) {
+        boolean economyDue = this.due(tick, this.intervalTicks);
+        boolean foodDue = this.due(tick, this.foodIntervalTicks);
+        if (!economyDue && !foodDue) {
             return false;
         }
         List<IslandStatusDocument> changed = new ArrayList<>();
         for (IslandStatusDocument document : this.islandStatusMongoRepository.findAll()) {
             IslandStatus current = document.toIslandStatus();
-            IslandStatus next = this.applyTo(current);
+            IslandStatus next = this.applyTo(current, economyDue, foodDue);
             if (!next.equals(current)) {
                 changed.add(IslandStatusDocument.from(next));
             }
@@ -132,17 +142,24 @@ public class IslandEconomy {
      *                                                                         *
      **************************************************************************/
 
-    private IslandStatus applyTo(IslandStatus status) {
+    private IslandStatus applyTo(IslandStatus status, boolean economyDue, boolean foodDue) {
         IslandStatus next = status;
-        if (this.productionChance > 0 && this.random.nextDouble() < this.productionChance) {
+        if (economyDue && this.productionChance > 0 && this.random.nextDouble() < this.productionChance) {
             GoodType good = TRADEABLE_GOODS.get(this.random.nextInt(TRADEABLE_GOODS.size()));
             int amount = this.productionMin + this.random.nextInt(this.productionMax - this.productionMin + 1);
             next = next.produce(good, amount);
         }
-        if (next.canFlourish(this.growthGoodsThreshold)) {
+        if (foodDue) {
+            next = next.consumeFoodOrStarve();
+        }
+        if (economyDue && next.canFlourish(this.growthGoodsThreshold)) {
             int growth = this.growthMin + this.random.nextInt(this.growthMax - this.growthMin + 1);
             next = next.consumeHalfGoodsAndGrow(growth);
         }
         return next;
+    }
+
+    private boolean due(long tick, int interval) {
+        return tick != 0 && tick % interval == 0;
     }
 }

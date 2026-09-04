@@ -21,10 +21,12 @@ export class IslandTable {
     'name',
     'population',
     'gold',
+    'food',
     'rum',
     'sugar',
     'spices',
     'tobacco',
+    'foodPrice',
     'rumPrice',
     'sugarPrice',
     'spicesPrice',
@@ -47,8 +49,18 @@ export class IslandTable {
       }
     })
     this.dataSource.sortingDataAccessor = (island, header): string | number => {
-      if (header === 'gold' || header === 'rum' || header === 'sugar' || header === 'spices' || header === 'tobacco') {
+      if (
+        header === 'gold' ||
+        header === 'food' ||
+        header === 'rum' ||
+        header === 'sugar' ||
+        header === 'spices' ||
+        header === 'tobacco'
+      ) {
         return island.inventory[header]
+      }
+      if (header === 'foodPrice') {
+        return island.tradePrices.food
       }
       if (header === 'rumPrice') {
         return island.tradePrices.rum

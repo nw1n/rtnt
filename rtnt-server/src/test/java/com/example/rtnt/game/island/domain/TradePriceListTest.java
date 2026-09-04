@@ -13,11 +13,13 @@ class TradePriceListTest {
     @Test
     void ofRequiresPositivePricesForTradeableGoods() {
         TradePriceList prices = TradePriceList.of(Map.of(
+                GoodType.FOOD, 2,
                 GoodType.RUM, 3,
                 GoodType.SUGAR, 2,
                 GoodType.SPICES, 4,
                 GoodType.TOBACCO, 5
         ));
+        assertEquals(2, prices.getPrice(GoodType.FOOD));
         assertEquals(3, prices.getPrice(GoodType.RUM));
         assertEquals(2, prices.getPrice(GoodType.SUGAR));
         assertEquals(4, prices.getPrice(GoodType.SPICES));

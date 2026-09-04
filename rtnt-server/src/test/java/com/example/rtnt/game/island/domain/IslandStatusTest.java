@@ -41,4 +41,22 @@ class IslandStatusTest {
         assertEquals(5, flourished.inventory().getAmount(GoodType.SUGAR));
         assertEquals(100, flourished.inventory().getAmount(GoodType.GOLD));
     }
+
+    @Test
+    void consumeFoodOrStarveEatsOneFood() {
+        IslandStatus fed = IslandStatus.initial("island-1").grow(10).consumeFoodOrStarve();
+        assertEquals(10, fed.population());
+        assertEquals(9, fed.inventory().getAmount(GoodType.FOOD));
+    }
+
+    @Test
+    void consumeFoodOrStarveCutsPopulationWhenHungry() {
+        IslandStatus hungry = new IslandStatus(
+                "island-1",
+                11,
+                Inventory.empty(),
+                TradePriceList.defaultPrices()
+        ).consumeFoodOrStarve();
+        assertEquals(9, hungry.population());
+    }
 }

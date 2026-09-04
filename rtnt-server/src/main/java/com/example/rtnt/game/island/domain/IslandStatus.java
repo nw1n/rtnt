@@ -61,6 +61,17 @@ public record IslandStatus(
         );
     }
 
+    public IslandStatus consumeFoodOrStarve() {
+        if (this.population < 1) {
+            return this;
+        }
+        if (this.inventory.getAmount(GoodType.FOOD) >= 1) {
+            return this.withInventory(this.inventory.removeAmount(GoodType.FOOD, 1));
+        }
+        long loss = (this.population + 9) / 10;
+        return new IslandStatus(this.islandId, this.population - loss, this.inventory, this.tradePrices);
+    }
+
     public IslandStatus withInventory(Inventory inventory) {
         return new IslandStatus(this.islandId, this.population, inventory, this.tradePrices);
     }

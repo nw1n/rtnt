@@ -69,6 +69,7 @@ class IslandEconomyTest {
                 4,
                 Inventory.of(Map.of(
                         GoodType.GOLD, 100,
+                        GoodType.FOOD, 20,
                         GoodType.RUM, 21,
                         GoodType.SUGAR, 20,
                         GoodType.SPICES, 22,
@@ -84,6 +85,7 @@ class IslandEconomyTest {
         IslandStatus saved = this.savedStatus();
         assertTrue(saved.population() >= 5);
         assertEquals(100, saved.inventory().getAmount(GoodType.GOLD));
+        assertEquals(10, saved.inventory().getAmount(GoodType.FOOD));
         assertEquals(10, saved.inventory().getAmount(GoodType.RUM));
         assertEquals(10, saved.inventory().getAmount(GoodType.SUGAR));
         assertEquals(11, saved.inventory().getAmount(GoodType.SPICES));
@@ -96,6 +98,7 @@ class IslandEconomyTest {
                 "a",
                 4,
                 Inventory.of(Map.of(
+                        GoodType.FOOD, 20,
                         GoodType.RUM, 19,
                         GoodType.SUGAR, 20,
                         GoodType.SPICES, 20,
@@ -110,6 +113,42 @@ class IslandEconomyTest {
         verify(this.islandStatusMongoRepository, never()).saveAll(org.mockito.ArgumentMatchers.any());
     }
 
+    @Test
+    void consumesOneFoodOnFoodInterval() {
+        IslandStatus fed = new IslandStatus(
+                "a",
+                10,
+                Inventory.of(Map.of(GoodType.FOOD, 3)),
+                TradePriceList.defaultPrices()
+        );
+        when(this.islandStatusMongoRepository.findAll()).thenReturn(List.of(IslandStatusDocument.from(fed)));
+        IslandEconomy economy = this.foodEconomy();
+
+        assertTrue(economy.applyIfDue(20));
+
+        IslandStatus saved = this.savedStatus();
+        assertEquals(10, saved.population());
+        assertEquals(2, saved.inventory().getAmount(GoodType.FOOD));
+    }
+
+    @Test
+    void starvesTenPercentRoundedUpWhenOutOfFood() {
+        IslandStatus hungry = new IslandStatus(
+                "a",
+                11,
+                Inventory.empty(),
+                TradePriceList.defaultPrices()
+        );
+        when(this.islandStatusMongoRepository.findAll()).thenReturn(List.of(IslandStatusDocument.from(hungry)));
+        IslandEconomy economy = this.foodEconomy();
+
+        assertTrue(economy.applyIfDue(20));
+
+        IslandStatus saved = this.savedStatus();
+        assertEquals(9, saved.population());
+        assertEquals(0, saved.inventory().getAmount(GoodType.FOOD));
+    }
+
     private IslandStatus savedStatus() {
         ArgumentCaptor<List<IslandStatusDocument>> captor = ArgumentCaptor.forClass(List.class);
         verify(this.islandStatusMongoRepository).saveAll(captor.capture());
@@ -121,10 +160,26 @@ class IslandEconomyTest {
         return new IslandEconomy(
                 this.islandStatusMongoRepository,
                 10,
+                1000,
                 productionChance,
                 1,
                 3,
                 threshold,
+                1,
+                3,
+                new Random(1)
+        );
+    }
+
+    private IslandEconomy foodEconomy() {
+        return new IslandEconomy(
+                this.islandStatusMongoRepository,
+                1000,
+                20,
+                0.0,
+                1,
+                3,
+                20,
                 1,
                 3,
                 new Random(1)

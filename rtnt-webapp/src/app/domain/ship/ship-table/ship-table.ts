@@ -25,6 +25,7 @@ export class ShipTable {
     'playerId',
     'speed',
     'gold',
+    'food',
     'rum',
     'sugar',
     'spices',
@@ -44,7 +45,14 @@ export class ShipTable {
       if (header === 'destination') {
         return ship.journey?.targetIslandName ?? ''
       }
-      if (header === 'gold' || header === 'rum' || header === 'sugar' || header === 'spices' || header === 'tobacco') {
+      if (
+        header === 'gold' ||
+        header === 'food' ||
+        header === 'rum' ||
+        header === 'sugar' ||
+        header === 'spices' ||
+        header === 'tobacco'
+      ) {
         return ship.inventory[header]
       }
       const value = ship[header as keyof ShipDto]

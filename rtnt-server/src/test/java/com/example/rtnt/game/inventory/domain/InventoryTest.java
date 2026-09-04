@@ -60,6 +60,7 @@ class InventoryTest {
     void allTradeableAtLeastRequiresEveryTradeableGood() {
         Inventory inventory = Inventory.of(Map.of(
                 GoodType.GOLD, 1,
+                GoodType.FOOD, 19,
                 GoodType.RUM, 20,
                 GoodType.SUGAR, 20,
                 GoodType.SPICES, 20,

@@ -1,6 +1,7 @@
 import { InventoryDto } from './inventory.dto'
 
 export interface TradePricesDto {
+  food: number
   rum: number
   sugar: number
   spices: number
