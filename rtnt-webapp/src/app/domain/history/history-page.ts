@@ -21,7 +21,6 @@ export class HistoryPage {
   public busy = signal(false)
   public error = signal<string | null>(null)
   public darkTheme = signal(document.body.classList.contains('elder-dark-theme'))
-  public selectedTab = signal(0)
 
   public chartOption = computed<EChartsOption>(() => this.buildPopulationChart(this.snapshots()))
   public shipGoldChartOption = computed<EChartsOption>(() => this.buildShipGoldChart(this.snapshots()))
