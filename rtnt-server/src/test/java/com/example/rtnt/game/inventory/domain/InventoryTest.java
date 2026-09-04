@@ -81,4 +81,18 @@ class InventoryTest {
         assertEquals(10, halved.getAmount(GoodType.RUM));
         assertEquals(5, halved.getAmount(GoodType.SUGAR));
     }
+
+    @Test
+    void spoilOverstockedHalvesOnlyGoodsAboveThreshold() {
+        Inventory spoiled = Inventory.of(Map.of(
+                GoodType.GOLD, 200,
+                GoodType.FOOD, 41,
+                GoodType.RUM, 40,
+                GoodType.SUGAR, 12
+        )).spoilOverstockedTradeableGoods(40);
+        assertEquals(200, spoiled.getAmount(GoodType.GOLD));
+        assertEquals(20, spoiled.getAmount(GoodType.FOOD));
+        assertEquals(40, spoiled.getAmount(GoodType.RUM));
+        assertEquals(12, spoiled.getAmount(GoodType.SUGAR));
+    }
 }

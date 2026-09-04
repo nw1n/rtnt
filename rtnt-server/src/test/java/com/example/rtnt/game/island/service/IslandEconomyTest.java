@@ -163,6 +163,32 @@ class IslandEconomyTest {
         assertEquals(0, saved.inventory().getAmount(GoodType.FOOD));
     }
 
+    @Test
+    void spoilsOnlyGoodsOverThreshold() {
+        IslandStatus overstocked = new IslandStatus(
+                "a",
+                4,
+                Inventory.of(Map.of(
+                        GoodType.GOLD, 200,
+                        GoodType.FOOD, 41,
+                        GoodType.RUM, 40,
+                        GoodType.SUGAR, 12
+                )),
+                TradePriceList.defaultPrices()
+        );
+        when(this.islandStatusMongoRepository.findAll()).thenReturn(List.of(IslandStatusDocument.from(overstocked)));
+        IslandEconomy economy = this.economy(0.0, 20);
+
+        assertTrue(economy.applyIfDue(10));
+
+        IslandStatus saved = this.savedStatus();
+        assertEquals(4, saved.population());
+        assertEquals(200, saved.inventory().getAmount(GoodType.GOLD));
+        assertEquals(20, saved.inventory().getAmount(GoodType.FOOD));
+        assertEquals(40, saved.inventory().getAmount(GoodType.RUM));
+        assertEquals(12, saved.inventory().getAmount(GoodType.SUGAR));
+    }
+
     private IslandStatus savedStatus() {
         ArgumentCaptor<List<IslandStatusDocument>> captor = ArgumentCaptor.forClass(List.class);
         verify(this.islandStatusMongoRepository).saveAll(captor.capture());
@@ -179,6 +205,7 @@ class IslandEconomyTest {
                 1,
                 3,
                 threshold,
+                40,
                 1,
                 3,
                 new Random(1)
@@ -194,6 +221,7 @@ class IslandEconomyTest {
                 1,
                 3,
                 20,
+                40,
                 1,
                 3,
                 new Random(1)

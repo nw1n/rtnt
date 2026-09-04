@@ -133,6 +133,23 @@ public final class Inventory {
         return new Inventory(next);
     }
 
+    /** Halves each tradeable good that is strictly above the threshold. Gold is unchanged. */
+    public Inventory spoilOverstockedTradeableGoods(int threshold) {
+        if (threshold < 1) {
+            throw new IllegalArgumentException("threshold must be at least 1");
+        }
+        EnumMap<GoodType, Integer> next = new EnumMap<>(this.amounts);
+        boolean changed = false;
+        for (GoodType goodType : GoodType.tradeableGoods()) {
+            int amount = this.getAmount(goodType);
+            if (amount > threshold) {
+                next.put(goodType, amount / 2);
+                changed = true;
+            }
+        }
+        return changed ? new Inventory(next) : this;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {

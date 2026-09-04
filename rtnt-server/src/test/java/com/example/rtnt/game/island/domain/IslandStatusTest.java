@@ -4,6 +4,8 @@ import com.example.rtnt.game.inventory.domain.GoodType;
 import com.example.rtnt.game.inventory.domain.Inventory;
 import org.junit.jupiter.api.Test;
 
+import java.util.Map;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class IslandStatusTest {
@@ -58,5 +60,18 @@ class IslandStatusTest {
                 TradePriceList.defaultPrices()
         ).consumeFoodOrStarve();
         assertEquals(9, hungry.population());
+    }
+
+    @Test
+    void spoilOverstockedGoodsHalvesOnlyThatGood() {
+        IslandStatus spoiled = new IslandStatus(
+                "island-1",
+                8,
+                Inventory.of(Map.of(GoodType.RUM, 41, GoodType.SUGAR, 10)),
+                TradePriceList.defaultPrices()
+        ).spoilOverstockedGoods(40);
+        assertEquals(8, spoiled.population());
+        assertEquals(20, spoiled.inventory().getAmount(GoodType.RUM));
+        assertEquals(10, spoiled.inventory().getAmount(GoodType.SUGAR));
     }
 }

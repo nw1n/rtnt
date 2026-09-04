@@ -61,6 +61,10 @@ public record IslandStatus(
         );
     }
 
+    public IslandStatus spoilOverstockedGoods(int threshold) {
+        return this.withInventory(this.inventory.spoilOverstockedTradeableGoods(threshold));
+    }
+
     public IslandStatus consumeFoodOrStarve() {
         if (this.population < 1) {
             return this;

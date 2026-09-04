@@ -26,6 +26,7 @@ public class IslandEconomy {
     private final int productionMin;
     private final int productionMax;
     private final int growthGoodsThreshold;
+    private final int spoilageThreshold;
     private final int growthMin;
     private final int growthMax;
     private final Random random;
@@ -45,6 +46,7 @@ public class IslandEconomy {
             @Value("${rtnt.island.production-min:1}") int productionMin,
             @Value("${rtnt.island.production-max:5}") int productionMax,
             @Value("${rtnt.island.growth-goods-threshold:20}") int growthGoodsThreshold,
+            @Value("${rtnt.island.spoilage-threshold:40}") int spoilageThreshold,
             @Value("${rtnt.island.population-growth-min:1}") int growthMin,
             @Value("${rtnt.island.population-growth-max:3}") int growthMax
     ) {
@@ -56,6 +58,7 @@ public class IslandEconomy {
                 productionMin,
                 productionMax,
                 growthGoodsThreshold,
+                spoilageThreshold,
                 growthMin,
                 growthMax,
                 new Random()
@@ -70,6 +73,7 @@ public class IslandEconomy {
             int productionMin,
             int productionMax,
             int growthGoodsThreshold,
+            int spoilageThreshold,
             int growthMin,
             int growthMax,
             Random random
@@ -92,6 +96,9 @@ public class IslandEconomy {
         if (growthGoodsThreshold < 1) {
             throw new IllegalArgumentException("growthGoodsThreshold must be at least 1");
         }
+        if (spoilageThreshold < 1) {
+            throw new IllegalArgumentException("spoilageThreshold must be at least 1");
+        }
         if (growthMin < 1) {
             throw new IllegalArgumentException("growthMin must be at least 1");
         }
@@ -105,6 +112,7 @@ public class IslandEconomy {
         this.productionMin = productionMin;
         this.productionMax = productionMax;
         this.growthGoodsThreshold = growthGoodsThreshold;
+        this.spoilageThreshold = spoilageThreshold;
         this.growthMin = growthMin;
         this.growthMax = growthMax;
         this.random = random;
@@ -149,6 +157,9 @@ public class IslandEconomy {
             GoodType good = PRODUCTION_BAG.get(this.random.nextInt(PRODUCTION_BAG.size()));
             int amount = this.productionMin + this.random.nextInt(this.productionMax - this.productionMin + 1);
             next = next.produce(good, amount);
+        }
+        if (economyDue) {
+            next = next.spoilOverstockedGoods(this.spoilageThreshold);
         }
         if (foodDue) {
             next = next.consumeFoodOrStarve();
