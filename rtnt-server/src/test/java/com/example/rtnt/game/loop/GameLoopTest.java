@@ -116,6 +116,7 @@ class GameLoopTest {
         assertEquals(1, this.gameCommandQueue.drain(1).size());
         verify(this.gameFlowStatusMongoRepository, never()).save(org.mockito.ArgumentMatchers.any());
         verify(this.worldSnapshotStore, never()).save(org.mockito.ArgumentMatchers.any());
+        verify(this.worldSnapshotStore, never()).flush();
     }
 
     @Test
@@ -148,6 +149,7 @@ class GameLoopTest {
         assertEquals(1, status.tick());
         verify(this.gameFlowStatusMongoRepository, never()).save(org.mockito.ArgumentMatchers.any());
         verify(this.worldSnapshotStore, never()).save(org.mockito.ArgumentMatchers.any());
+        verify(this.worldSnapshotStore).flush();
     }
 
     @Test
@@ -187,6 +189,7 @@ class GameLoopTest {
         verify(this.worldSnapshotStore).save(captor.capture());
         assertEquals(0, captor.getValue().tick());
         assertEquals(List.of(), captor.getValue().ships());
+        verify(this.worldSnapshotStore).flush();
         verify(this.gameFlowStatusMongoRepository, never()).save(org.mockito.ArgumentMatchers.any());
     }
 
@@ -209,6 +212,7 @@ class GameLoopTest {
         verify(this.worldSnapshotStore, times(2)).save(snapshotCaptor.capture());
         assertEquals(2, snapshotCaptor.getAllValues().get(0).tick());
         assertEquals(4, snapshotCaptor.getAllValues().get(1).tick());
+        verify(this.worldSnapshotStore).flush();
         verify(this.gameFlowStatusMongoRepository, never()).save(org.mockito.ArgumentMatchers.any());
     }
 

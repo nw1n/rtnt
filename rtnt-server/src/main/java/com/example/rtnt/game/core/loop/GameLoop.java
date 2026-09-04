@@ -188,6 +188,7 @@ public class GameLoop {
             for (int i = 0; i < ticks; i++) {
                 this.execute();
             }
+            this.worldSnapshotStore.flush();
             log.info("Game flow advanced by {} ticks to {}", ticks, this.requireTick().tick());
             return this.status();
         }
@@ -217,6 +218,7 @@ public class GameLoop {
             this.ensureLoaded();
             if (this.requireTick().tick() == 0 && !this.worldSnapshotStore.exists(0)) {
                 this.persistSnapshot();
+                this.worldSnapshotStore.flush();
             }
         }
     }

@@ -9,6 +9,8 @@ import java.util.Optional;
 public interface WorldSnapshotStore {
     void save(WorldSnapshot snapshot);
 
+    void flush();
+
     boolean exists(long tick);
 
     Optional<WorldSnapshot> findByTick(long tick);
