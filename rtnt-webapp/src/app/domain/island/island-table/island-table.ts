@@ -17,7 +17,21 @@ export class IslandTable {
   private readonly islandService = inject(IslandService)
   private readonly sort = viewChild(MatSort)
 
-  public readonly columns = ['name', 'population', 'gold', 'rum', 'sugar', 'spices', 'tobacco', 'x', 'y']
+  public readonly columns = [
+    'name',
+    'population',
+    'gold',
+    'rum',
+    'sugar',
+    'spices',
+    'tobacco',
+    'rumPrice',
+    'sugarPrice',
+    'spicesPrice',
+    'tobaccoPrice',
+    'x',
+    'y',
+  ]
   public readonly dataSource = new MatTableDataSource<IslandDto>([])
   public islands = signal<IslandDto[]>([])
   public busy = signal(false)
@@ -35,6 +49,18 @@ export class IslandTable {
     this.dataSource.sortingDataAccessor = (island, header): string | number => {
       if (header === 'gold' || header === 'rum' || header === 'sugar' || header === 'spices' || header === 'tobacco') {
         return island.inventory[header]
+      }
+      if (header === 'rumPrice') {
+        return island.tradePrices.rum
+      }
+      if (header === 'sugarPrice') {
+        return island.tradePrices.sugar
+      }
+      if (header === 'spicesPrice') {
+        return island.tradePrices.spices
+      }
+      if (header === 'tobaccoPrice') {
+        return island.tradePrices.tobacco
       }
       const value = island[header as keyof IslandDto]
       if (value == null || typeof value === 'object') {

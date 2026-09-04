@@ -44,7 +44,11 @@ class IslandControllerTest {
                 .andExpect(jsonPath("$[0].length").value(40))
                 .andExpect(jsonPath("$[0].population").value(42))
                 .andExpect(jsonPath("$[0].inventory.gold").value(0))
-                .andExpect(jsonPath("$[0].inventory.rum").value(0));
+                .andExpect(jsonPath("$[0].inventory.rum").value(0))
+                .andExpect(jsonPath("$[0].tradePrices.rum").value(3))
+                .andExpect(jsonPath("$[0].tradePrices.sugar").value(2))
+                .andExpect(jsonPath("$[0].tradePrices.spices").value(4))
+                .andExpect(jsonPath("$[0].tradePrices.tobacco").value(5));
     }
 
     @Test

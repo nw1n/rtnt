@@ -70,7 +70,8 @@ public class IslandController {
             int width,
             int length,
             long population,
-            InventoryDto inventory
+            InventoryDto inventory,
+            TradePricesDto tradePrices
     ) {
         static IslandDto from(Island island, IslandStatus status) {
             return new IslandDto(
@@ -81,7 +82,8 @@ public class IslandController {
                     island.footprint().width(),
                     island.footprint().length(),
                     status.population(),
-                    InventoryDto.from(status.inventory())
+                    InventoryDto.from(status.inventory()),
+                    TradePricesDto.from(island.tradePrices())
             );
         }
     }
