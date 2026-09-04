@@ -4,6 +4,8 @@ import com.example.rtnt.game.core.worldsnapshot.WorldSnapshot;
 import com.example.rtnt.game.core.worldsnapshot.WorldSnapshotStore;
 import org.jspecify.annotations.NullMarked;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.mongodb.core.BulkOperations;
+import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -17,6 +19,7 @@ import java.util.Optional;
 @NullMarked
 public class MongoWorldSnapshotStore implements WorldSnapshotStore {
     private final WorldSnapshotMongoRepository worldSnapshotMongoRepository;
+    private final MongoTemplate mongoTemplate;
     private final int flushEvery;
     private final LinkedHashMap<Long, WorldSnapshot> pending = new LinkedHashMap<>();
 
@@ -28,12 +31,14 @@ public class MongoWorldSnapshotStore implements WorldSnapshotStore {
 
     public MongoWorldSnapshotStore(
             WorldSnapshotMongoRepository worldSnapshotMongoRepository,
+            MongoTemplate mongoTemplate,
             @Value("${rtnt.snapshot.flush-every:10}") int flushEvery
     ) {
         if (flushEvery < 1) {
             throw new IllegalArgumentException("flushEvery must be at least 1");
         }
         this.worldSnapshotMongoRepository = worldSnapshotMongoRepository;
+        this.mongoTemplate = mongoTemplate;
         this.flushEvery = flushEvery;
     }
 
@@ -46,6 +51,10 @@ public class MongoWorldSnapshotStore implements WorldSnapshotStore {
     @Override
     public synchronized void save(WorldSnapshot snapshot) {
         this.pending.put(snapshot.tick(), snapshot);
+    }
+
+    @Override
+    public synchronized void flushIfDue() {
         if (this.pending.size() >= this.flushEvery) {
             this.flush();
         }
@@ -56,9 +65,13 @@ public class MongoWorldSnapshotStore implements WorldSnapshotStore {
         if (this.pending.isEmpty()) {
             return;
         }
-        this.worldSnapshotMongoRepository.saveAll(
-                this.pending.values().stream().map(WorldSnapshotDocument::from).toList()
-        );
+        List<WorldSnapshotDocument> documents = this.pending.values().stream()
+                .map(WorldSnapshotDocument::from)
+                .toList();
+        this.mongoTemplate
+                .bulkOps(BulkOperations.BulkMode.UNORDERED, WorldSnapshotDocument.class)
+                .insert(documents)
+                .execute();
         this.pending.clear();
     }
 

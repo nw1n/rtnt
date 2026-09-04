@@ -160,6 +160,7 @@ public class GameLoop {
         synchronized (this.lock) {
             this.ensureLoaded();
             this.execute();
+            this.worldSnapshotStore.flushIfDue();
             return this.status();
         }
     }
@@ -176,6 +177,7 @@ public class GameLoop {
             }
             this.lastLiveStepAtMs = now;
             this.execute();
+            this.worldSnapshotStore.flushIfDue();
         }
     }
 

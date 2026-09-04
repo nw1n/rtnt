@@ -116,6 +116,7 @@ class GameLoopTest {
         assertEquals(1, this.gameCommandQueue.drain(1).size());
         verify(this.gameFlowStatusMongoRepository, never()).save(org.mockito.ArgumentMatchers.any());
         verify(this.worldSnapshotStore, never()).save(org.mockito.ArgumentMatchers.any());
+        verify(this.worldSnapshotStore).flushIfDue();
         verify(this.worldSnapshotStore, never()).flush();
     }
 

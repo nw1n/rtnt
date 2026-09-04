@@ -11,6 +11,8 @@ public interface WorldSnapshotStore {
 
     void flush();
 
+    void flushIfDue();
+
     boolean exists(long tick);
 
     Optional<WorldSnapshot> findByTick(long tick);
