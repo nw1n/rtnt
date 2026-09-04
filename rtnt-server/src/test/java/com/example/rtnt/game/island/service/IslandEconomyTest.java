@@ -33,13 +33,13 @@ class IslandEconomyTest {
 
         assertFalse(economy.applyIfDue(0));
         assertFalse(economy.applyIfDue(9));
-        verify(this.islandService, never()).listStatuses();
+        verify(this.islandService, never()).viewStatuses();
     }
 
     @Test
     void producesEveryTradeableGoodWhenChanceIsCertain() {
         IslandStatus empty = new IslandStatus("a", 0, Inventory.empty(), TradePriceList.defaultPrices());
-        when(this.islandService.listStatuses()).thenReturn(List.of(empty));
+        when(this.islandService.viewStatuses()).thenReturn(List.of(empty));
         IslandEconomy economy = this.economy(1.0, 20);
 
         assertTrue(economy.applyIfDue(10));
@@ -55,7 +55,7 @@ class IslandEconomyTest {
     @Test
     void doesNotProduceWhenChanceIsZero() {
         IslandStatus balanced = new IslandStatus("a", 0, this.balancedStock(), TradePriceList.defaultPrices());
-        when(this.islandService.listStatuses()).thenReturn(List.of(balanced));
+        when(this.islandService.viewStatuses()).thenReturn(List.of(balanced));
         IslandEconomy economy = this.economy(0.0, 20);
 
         assertFalse(economy.applyIfDue(10));
@@ -77,7 +77,7 @@ class IslandEconomyTest {
                 )),
                 TradePriceList.defaultPrices()
         );
-        when(this.islandService.listStatuses()).thenReturn(List.of(abundant));
+        when(this.islandService.viewStatuses()).thenReturn(List.of(abundant));
         IslandEconomy economy = this.economy(0.0, 20);
 
         assertTrue(economy.applyIfDue(10));
@@ -106,7 +106,7 @@ class IslandEconomyTest {
                 )),
                 TradePriceList.defaultPrices()
         );
-        when(this.islandService.listStatuses()).thenReturn(List.of(shortOnRum));
+        when(this.islandService.viewStatuses()).thenReturn(List.of(shortOnRum));
         IslandEconomy economy = this.economy(0.0, 20);
 
         assertFalse(economy.applyIfDue(10));
@@ -121,7 +121,7 @@ class IslandEconomyTest {
                 Inventory.of(Map.of(GoodType.FOOD, 3)),
                 TradePriceList.defaultPrices()
         );
-        when(this.islandService.listStatuses()).thenReturn(List.of(fed));
+        when(this.islandService.viewStatuses()).thenReturn(List.of(fed));
         IslandEconomy economy = this.foodEconomy();
 
         assertTrue(economy.applyIfDue(20));
@@ -139,7 +139,7 @@ class IslandEconomyTest {
                 Inventory.empty(),
                 TradePriceList.defaultPrices()
         );
-        when(this.islandService.listStatuses()).thenReturn(List.of(hungry));
+        when(this.islandService.viewStatuses()).thenReturn(List.of(hungry));
         IslandEconomy economy = this.foodEconomy();
 
         assertTrue(economy.applyIfDue(20));
@@ -157,7 +157,7 @@ class IslandEconomyTest {
                 Inventory.of(Map.of(GoodType.FOOD, 2)),
                 TradePriceList.defaultPrices()
         );
-        when(this.islandService.listStatuses()).thenReturn(List.of(hungry));
+        when(this.islandService.viewStatuses()).thenReturn(List.of(hungry));
         IslandEconomy economy = this.foodEconomy();
 
         assertTrue(economy.applyIfDue(20));
@@ -180,7 +180,7 @@ class IslandEconomyTest {
                 )),
                 TradePriceList.defaultPrices()
         );
-        when(this.islandService.listStatuses()).thenReturn(List.of(overstocked));
+        when(this.islandService.viewStatuses()).thenReturn(List.of(overstocked));
         IslandEconomy economy = this.economy(0.0, 20);
 
         assertTrue(economy.applyIfDue(10));
@@ -207,7 +207,7 @@ class IslandEconomyTest {
                 )),
                 TradePriceList.defaultPrices()
         );
-        when(this.islandService.listStatuses()).thenReturn(List.of(scarceRum));
+        when(this.islandService.viewStatuses()).thenReturn(List.of(scarceRum));
         IslandEconomy economy = this.economy(0.0, 20);
 
         assertTrue(economy.applyIfDue(10));
@@ -231,7 +231,7 @@ class IslandEconomyTest {
                 )),
                 TradePriceList.of(Map.of(GoodType.RUM, 6))
         );
-        when(this.islandService.listStatuses()).thenReturn(List.of(surplusRum));
+        when(this.islandService.viewStatuses()).thenReturn(List.of(surplusRum));
         IslandEconomy economy = this.economy(0.0, 20);
 
         assertTrue(economy.applyIfDue(10));
@@ -255,7 +255,7 @@ class IslandEconomyTest {
                 )),
                 TradePriceList.defaultPrices()
         );
-        when(this.islandService.listStatuses()).thenReturn(List.of(town));
+        when(this.islandService.viewStatuses()).thenReturn(List.of(town));
         IslandEconomy economy = this.economy(0.0, 15);
 
         assertTrue(economy.applyIfDue(10));

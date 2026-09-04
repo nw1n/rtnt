@@ -9,6 +9,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -49,6 +51,10 @@ public class ShipService {
 
     public synchronized List<Ship> list() {
         return List.copyOf(this.shipsById.values());
+    }
+
+    public synchronized Collection<Ship> view() {
+        return Collections.unmodifiableCollection(this.shipsById.values());
     }
 
     public synchronized List<Ship> recreateAll() {

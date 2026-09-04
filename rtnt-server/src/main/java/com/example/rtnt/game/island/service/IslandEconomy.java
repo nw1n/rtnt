@@ -152,7 +152,7 @@ public class IslandEconomy {
             return false;
         }
         List<IslandStatus> changed = new ArrayList<>();
-        for (IslandStatus current : this.islandService.listStatuses()) {
+        for (IslandStatus current : this.islandService.viewStatuses()) {
             IslandStatus next = this.applyTo(current, economyDue, foodDue);
             if (!next.equals(current)) {
                 changed.add(next);

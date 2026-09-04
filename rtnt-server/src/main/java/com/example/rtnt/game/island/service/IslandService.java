@@ -9,6 +9,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -55,8 +57,20 @@ public class IslandService {
         return List.copyOf(this.islandsById.values());
     }
 
+    public synchronized Collection<Island> view() {
+        return Collections.unmodifiableCollection(this.islandsById.values());
+    }
+
+    public synchronized Map<String, Island> islandsById() {
+        return Collections.unmodifiableMap(this.islandsById);
+    }
+
     public synchronized List<IslandStatus> listStatuses() {
         return List.copyOf(this.statusesById.values());
+    }
+
+    public synchronized Collection<IslandStatus> viewStatuses() {
+        return Collections.unmodifiableCollection(this.statusesById.values());
     }
 
     public synchronized List<Island> recreateAll() {

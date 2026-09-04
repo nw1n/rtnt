@@ -44,7 +44,7 @@ public class TradeEventStore {
             return;
         }
         for (TradeEvent event : events) {
-            log.info(
+            log.debug(
                     "Trade {} {} x{} @ {} gold (total {}) ship={} island={} tick={}",
                     event.tradeType(),
                     event.goodType(),

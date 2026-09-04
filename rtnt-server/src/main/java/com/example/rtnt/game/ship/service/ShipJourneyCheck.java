@@ -19,14 +19,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @Component
 @NullMarked
@@ -86,20 +85,19 @@ public class ShipJourneyCheck {
         if (tick == 0 || tick % this.checkIntervalTicks != 0) {
             return false;
         }
-        List<Island> islands = this.islandService.list();
+        Collection<Island> islands = this.islandService.view();
         if (islands.size() < 2) {
             return false;
         }
-        Map<String, Island> islandsById = islands.stream()
-                .collect(Collectors.toMap(Island::id, Function.identity(), (left, right) -> left));
+        Map<String, Island> islandsById = this.islandService.islandsById();
         Map<String, IslandStatus> statusesById = new HashMap<>();
-        for (IslandStatus status : this.islandService.listStatuses()) {
+        for (IslandStatus status : this.islandService.viewStatuses()) {
             statusesById.put(status.islandId(), status);
         }
         List<Ship> updatedShips = new ArrayList<>();
         Set<String> changedStatusIds = new HashSet<>();
         List<TradeEvent> events = new ArrayList<>();
-        for (Ship ship : this.shipService.list()) {
+        for (Ship ship : this.shipService.view()) {
             ArrivalUpdate update = this.apply(ship, islands, islandsById, statusesById, tick);
             if (update == null) {
                 continue;
@@ -135,7 +133,7 @@ public class ShipJourneyCheck {
 
     private @Nullable ArrivalUpdate apply(
             Ship ship,
-            List<Island> islands,
+            Collection<Island> islands,
             Map<String, Island> islandsById,
             Map<String, IslandStatus> statusesById,
             long tick
@@ -149,7 +147,7 @@ public class ShipJourneyCheck {
             return null;
         }
         Ship arrived = ship.withIslandAndJourney(journey.targetIslandId(), journey.complete(tick));
-        log.info(
+        log.debug(
                 "Ship {} arrived at {} (journey {})",
                 arrived.getName(),
                 journey.targetIslandId(),
@@ -183,7 +181,7 @@ public class ShipJourneyCheck {
 
     private @Nullable Ship departIdleShip(
             Ship ship,
-            List<Island> islands,
+            Collection<Island> islands,
             Map<String, Island> islandsById,
             long tick
     ) {
@@ -213,7 +211,7 @@ public class ShipJourneyCheck {
         );
         Journey journey = Journey.create(currentIslandId, destination.id(), tick, estimatedArrivalTick);
         Ship departed = ship.withIslandAndJourney(null, journey);
-        log.info(
+        log.debug(
                 "Ship {} departed {} for {} (eta tick {})",
                 departed.getName(),
                 currentIsland.name(),

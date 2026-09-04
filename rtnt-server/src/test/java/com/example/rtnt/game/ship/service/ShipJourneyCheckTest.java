@@ -21,6 +21,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -55,8 +56,8 @@ class ShipJourneyCheckTest {
 
         assertFalse(check.applyIfDue(0));
         assertFalse(check.applyIfDue(9));
-        verify(this.islandService, never()).list();
-        verify(this.shipService, never()).list();
+        verify(this.islandService, never()).view();
+        verify(this.shipService, never()).view();
     }
 
     @Test
@@ -64,9 +65,10 @@ class ShipJourneyCheckTest {
         Island start = Island.existing("start", "Start", new Footprint(0, 0, 10, 10));
         Island target = Island.existing("target", "Target", new Footprint(100, 0, 10, 10));
         Ship ship = Ship.create("Black Pearl", start.id(), null);
-        when(this.islandService.list()).thenReturn(List.of(start, target));
-        when(this.islandService.listStatuses()).thenReturn(List.of());
-        when(this.shipService.list()).thenReturn(List.of(ship));
+        when(this.islandService.view()).thenReturn(List.of(start, target));
+        when(this.islandService.islandsById()).thenReturn(Map.of(start.id(), start, target.id(), target));
+        when(this.islandService.viewStatuses()).thenReturn(List.of());
+        when(this.shipService.view()).thenReturn(List.of(ship));
 
         assertTrue(this.check().applyIfDue(10));
 
@@ -87,9 +89,10 @@ class ShipJourneyCheckTest {
         Island start = Island.existing("start", "Start", new Footprint(0, 0, 10, 10));
         Island target = Island.existing("target", "Target", new Footprint(100, 0, 10, 10));
         Ship ship = Ship.create("Player Ship", start.id(), "player-1");
-        when(this.islandService.list()).thenReturn(List.of(start, target));
-        when(this.islandService.listStatuses()).thenReturn(List.of());
-        when(this.shipService.list()).thenReturn(List.of(ship));
+        when(this.islandService.view()).thenReturn(List.of(start, target));
+        when(this.islandService.islandsById()).thenReturn(Map.of(start.id(), start, target.id(), target));
+        when(this.islandService.viewStatuses()).thenReturn(List.of());
+        when(this.shipService.view()).thenReturn(List.of(ship));
 
         assertFalse(this.check().applyIfDue(10));
         verify(this.shipService, never()).save(org.mockito.ArgumentMatchers.any());
@@ -101,9 +104,10 @@ class ShipJourneyCheckTest {
         Island target = Island.existing("target", "Target", new Footprint(100, 0, 10, 10));
         Journey journey = Journey.create(start.id(), target.id(), 1, 20);
         Ship ship = Ship.create("Black Pearl", null, null, journey);
-        when(this.islandService.list()).thenReturn(List.of(start, target));
-        when(this.islandService.listStatuses()).thenReturn(List.of());
-        when(this.shipService.list()).thenReturn(List.of(ship));
+        when(this.islandService.view()).thenReturn(List.of(start, target));
+        when(this.islandService.islandsById()).thenReturn(Map.of(start.id(), start, target.id(), target));
+        when(this.islandService.viewStatuses()).thenReturn(List.of());
+        when(this.shipService.view()).thenReturn(List.of(ship));
 
         assertFalse(this.check().applyIfDue(10));
         verify(this.shipService, never()).save(org.mockito.ArgumentMatchers.any());
@@ -115,9 +119,10 @@ class ShipJourneyCheckTest {
         Island target = Island.existing("target", "Target", new Footprint(100, 0, 10, 10));
         Journey journey = Journey.create(start.id(), target.id(), 1, 10);
         Ship ship = Ship.create("Black Pearl", null, null, journey);
-        when(this.islandService.list()).thenReturn(List.of(start, target));
-        when(this.islandService.listStatuses()).thenReturn(List.of());
-        when(this.shipService.list()).thenReturn(List.of(ship));
+        when(this.islandService.view()).thenReturn(List.of(start, target));
+        when(this.islandService.islandsById()).thenReturn(Map.of(start.id(), start, target.id(), target));
+        when(this.islandService.viewStatuses()).thenReturn(List.of());
+        when(this.shipService.view()).thenReturn(List.of(ship));
 
         assertTrue(this.check().applyIfDue(10));
 
@@ -136,9 +141,10 @@ class ShipJourneyCheckTest {
         Island target = Island.existing("target", "Target", new Footprint(100, 0, 10, 10));
         Journey journey = Journey.create(start.id(), target.id(), 1, 8);
         Ship ship = Ship.create("Black Pearl", null, null, journey);
-        when(this.islandService.list()).thenReturn(List.of(start, target));
-        when(this.islandService.listStatuses()).thenReturn(List.of());
-        when(this.shipService.list()).thenReturn(List.of(ship));
+        when(this.islandService.view()).thenReturn(List.of(start, target));
+        when(this.islandService.islandsById()).thenReturn(Map.of(start.id(), start, target.id(), target));
+        when(this.islandService.viewStatuses()).thenReturn(List.of());
+        when(this.shipService.view()).thenReturn(List.of(ship));
 
         assertTrue(this.check().applyIfDue(10));
 
@@ -156,9 +162,10 @@ class ShipJourneyCheckTest {
         Journey journey = Journey.create(start.id(), target.id(), 1, 10);
         Ship ship = Ship.create("Black Pearl", null, null, journey);
         IslandStatus status = IslandStatus.initial(target.id());
-        when(this.islandService.list()).thenReturn(List.of(start, target));
-        when(this.islandService.listStatuses()).thenReturn(List.of(status));
-        when(this.shipService.list()).thenReturn(List.of(ship));
+        when(this.islandService.view()).thenReturn(List.of(start, target));
+        when(this.islandService.islandsById()).thenReturn(Map.of(start.id(), start, target.id(), target));
+        when(this.islandService.viewStatuses()).thenReturn(List.of(status));
+        when(this.shipService.view()).thenReturn(List.of(ship));
         when(this.arrivalTrade.execute(any(Ship.class), eq(target), eq(status), eq(10L)))
                 .thenAnswer(invocation -> {
                     Ship docked = invocation.getArgument(0);
