@@ -9,6 +9,7 @@ import com.example.rtnt.game.core.ticker.GameTick;
 import com.example.rtnt.game.weather.TemperatureChanged;
 import com.example.rtnt.game.weather.Weather;
 import com.example.rtnt.game.weather.WeatherChange;
+import com.example.rtnt.game.weather.WeatherSample;
 import jakarta.annotation.PostConstruct;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
@@ -88,6 +89,13 @@ public class GameLoop {
         synchronized (this.lock) {
             this.ensureLoaded();
             return this.weather;
+        }
+    }
+
+    public List<WeatherSample> weatherHistory() {
+        synchronized (this.lock) {
+            this.ensureLoaded();
+            return Weather.history(this.eventStore.readAll(), this.requireTick().tick());
         }
     }
 

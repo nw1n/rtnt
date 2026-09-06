@@ -22,4 +22,19 @@ class WeatherTest {
 
         assertEquals(21, weather.temperature());
     }
+
+    @Test
+    void historyStartsAtInitialTemperatureAndHoldsThroughQuietTicks() {
+        List<WeatherSample> samples = Weather.history(
+                List.of(new TemperatureChanged(10, 3), new TemperatureChanged(20, -2)),
+                25
+        );
+
+        assertEquals(List.of(
+                new WeatherSample(0, 20),
+                new WeatherSample(10, 23),
+                new WeatherSample(20, 21),
+                new WeatherSample(25, 21)
+        ), samples);
+    }
 }
