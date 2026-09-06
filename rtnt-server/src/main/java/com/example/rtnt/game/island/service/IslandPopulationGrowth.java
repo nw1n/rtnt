@@ -1,7 +1,9 @@
 package com.example.rtnt.game.island.service;
 
-import com.example.rtnt.game.island.persistence.IslandStatusDocument;
-import com.example.rtnt.game.island.persistence.IslandStatusMongoRepository;
+import com.example.rtnt.game.core.event.IslandPopulationGrew;
+import com.example.rtnt.game.core.event.World;
+import com.example.rtnt.game.core.event.WorldEvent;
+import com.example.rtnt.game.island.domain.IslandStatus;
 import org.jspecify.annotations.NullMarked;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,7 +16,6 @@ import java.util.Random;
 @Component
 @NullMarked
 public class IslandPopulationGrowth {
-    private final IslandStatusMongoRepository islandStatusMongoRepository;
     private final int checkIntervalTicks;
     private final double growthChance;
     private final int growthMin;
@@ -29,24 +30,15 @@ public class IslandPopulationGrowth {
 
     @Autowired
     public IslandPopulationGrowth(
-            IslandStatusMongoRepository islandStatusMongoRepository,
             @Value("${rtnt.island.population-check-interval-ticks:100}") int checkIntervalTicks,
             @Value("${rtnt.island.population-growth-chance:0.25}") double growthChance,
             @Value("${rtnt.island.population-growth-min:1}") int growthMin,
             @Value("${rtnt.island.population-growth-max:3}") int growthMax
     ) {
-        this(
-                islandStatusMongoRepository,
-                checkIntervalTicks,
-                growthChance,
-                growthMin,
-                growthMax,
-                new Random()
-        );
+        this(checkIntervalTicks, growthChance, growthMin, growthMax, new Random());
     }
 
     IslandPopulationGrowth(
-            IslandStatusMongoRepository islandStatusMongoRepository,
             int checkIntervalTicks,
             double growthChance,
             int growthMin,
@@ -65,7 +57,6 @@ public class IslandPopulationGrowth {
         if (growthMax < growthMin) {
             throw new IllegalArgumentException("growthMax must be >= growthMin");
         }
-        this.islandStatusMongoRepository = islandStatusMongoRepository;
         this.checkIntervalTicks = checkIntervalTicks;
         this.growthChance = growthChance;
         this.growthMin = growthMin;
@@ -79,22 +70,18 @@ public class IslandPopulationGrowth {
      *                                                                         *
      **************************************************************************/
 
-    public boolean applyIfDue(long tick) {
+    public List<WorldEvent> decide(World world, long tick) {
         if (tick == 0 || tick % this.checkIntervalTicks != 0) {
-            return false;
+            return List.of();
         }
-        List<IslandStatusDocument> grown = new ArrayList<>();
-        for (IslandStatusDocument document : this.islandStatusMongoRepository.findAll()) {
+        List<WorldEvent> events = new ArrayList<>();
+        for (IslandStatus status : world.islandStatuses()) {
             if (this.random.nextDouble() >= this.growthChance) {
                 continue;
             }
             int amount = this.growthMin + this.random.nextInt(this.growthMax - this.growthMin + 1);
-            grown.add(IslandStatusDocument.from(document.toIslandStatus().grow(amount)));
+            events.add(new IslandPopulationGrew(tick, status.islandId(), amount));
         }
-        if (grown.isEmpty()) {
-            return false;
-        }
-        this.islandStatusMongoRepository.saveAll(grown);
-        return true;
+        return List.copyOf(events);
     }
 }

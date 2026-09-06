@@ -49,3 +49,33 @@
   width: 96px;
   padding: 6px 8px;
 }
+
+.event-log-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.event-log-panel h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.event-log-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.event-log-table th,
+.event-log-table td {
+  text-align: left;
+  vertical-align: top;
+  padding: 6px 8px;
+  border-bottom: 1px solid #e5e7eb;
+  font-variant-numeric: tabular-nums;
+}
+
+.event-log-table td:last-child {
+  word-break: break-word;
+}

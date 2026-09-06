@@ -4,8 +4,10 @@ import { MatButtonModule } from '@angular/material/button'
 import { ElderSinglePaneWrapperComponent } from '@elderbyte/ngx-starter'
 import { catchError, EMPTY, firstValueFrom, interval, Observable, startWith, switchMap, timer } from 'rxjs'
 import { GameFlowService } from '../domain/game-flow/game-flow.service'
+import { EventLogService } from '../domain/history/event-log.service'
 import { IslandService } from '../domain/island/island.service'
 import { GameFlowDto } from '../models/game-flow.dto'
+import { WorldEventDto } from '../models/world-event.dto'
 
 @Component({
   selector: 'app-debug-page',
@@ -17,11 +19,13 @@ import { GameFlowDto } from '../models/game-flow.dto'
 export class DebugPage {
   private readonly islandService = inject(IslandService)
   private readonly gameFlowService = inject(GameFlowService)
+  private readonly eventLogService = inject(EventLogService)
   private readonly destroyRef = inject(DestroyRef)
 
   public busy = signal(false)
   public status = signal<string | null>(null)
   public gameFlow = signal<GameFlowDto | null>(null)
+  public events = signal<WorldEventDto[]>([])
   public batchSize = signal(100)
   public batchCount = signal(1)
   public snapshotTick = signal(0)
@@ -34,6 +38,7 @@ export class DebugPage {
         takeUntilDestroyed(this.destroyRef)
       )
       .subscribe((gameFlow) => this.gameFlow.set(gameFlow))
+    this.refreshEvents()
   }
 
   public recreateIslands(): void {
@@ -69,6 +74,7 @@ export class DebugPage {
         const gameFlow = await firstValueFrom(this.gameFlowService.advance(batchSize))
         this.gameFlow.set(gameFlow)
         this.status.set(`Batch ${i + 1} of ${batches} · ${batchSize} ticks`)
+        this.refreshEvents()
         if (i < batches - 1) {
           await firstValueFrom(timer(150))
         }
@@ -113,6 +119,16 @@ export class DebugPage {
     this.runAction(request, successMessage, errorMessage, (gameFlow) => this.gameFlow.set(gameFlow))
   }
 
+  public eventPayload(event: WorldEventDto): string {
+    return JSON.stringify(event.payload)
+  }
+
+  private refreshEvents(): void {
+    this.eventLogService.listEvents()
+      .pipe(catchError(() => EMPTY))
+      .subscribe((events) => this.events.set(events))
+  }
+
   private runAction<T>(
     request: Observable<T>,
     successMessage: string,
@@ -129,6 +145,7 @@ export class DebugPage {
         onSuccess?.(value)
         this.busy.set(false)
         this.status.set(successMessage)
+        this.refreshEvents()
       },
       error: () => {
         this.busy.set(false)
