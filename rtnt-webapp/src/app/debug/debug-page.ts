@@ -4,7 +4,6 @@ import { MatButtonModule } from '@angular/material/button'
 import { ElderSinglePaneWrapperComponent } from '@elderbyte/ngx-starter'
 import { catchError, EMPTY, firstValueFrom, interval, Observable, startWith, switchMap, timer } from 'rxjs'
 import { GameFlowService } from '../domain/game-flow/game-flow.service'
-import { IslandService } from '../domain/island/island.service'
 import { GameFlowDto } from '../models/game-flow.dto'
 
 @Component({
@@ -15,7 +14,6 @@ import { GameFlowDto } from '../models/game-flow.dto'
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DebugPage {
-  private readonly islandService = inject(IslandService)
   private readonly gameFlowService = inject(GameFlowService)
   private readonly destroyRef = inject(DestroyRef)
 
@@ -24,7 +22,6 @@ export class DebugPage {
   public gameFlow = signal<GameFlowDto | null>(null)
   public batchSize = signal(100)
   public batchCount = signal(1)
-  public snapshotTick = signal(0)
 
   constructor() {
     interval(1000)
@@ -34,14 +31,6 @@ export class DebugPage {
         takeUntilDestroyed(this.destroyRef)
       )
       .subscribe((gameFlow) => this.gameFlow.set(gameFlow))
-  }
-
-  public recreateIslands(): void {
-    this.runAction(
-      this.islandService.recreateIslands(),
-      'Islands recreated.',
-      'Failed to recreate islands.'
-    )
   }
 
   public pause(): void {
@@ -81,15 +70,6 @@ export class DebugPage {
     }
   }
 
-  public loadSnapshot(): void {
-    const tick = this.snapshotTick()
-    this.runGameFlowAction(
-      this.gameFlowService.loadSnapshot(tick),
-      `Loaded snapshot ${tick}.`,
-      `Snapshot ${tick} not found.`
-    )
-  }
-
   public onBatchSizeInput(event: Event): void {
     const value = Number((event.target as HTMLInputElement).value)
     this.batchSize.set(Number.isFinite(value) ? value : 1)
@@ -98,11 +78,6 @@ export class DebugPage {
   public onBatchCountInput(event: Event): void {
     const value = Number((event.target as HTMLInputElement).value)
     this.batchCount.set(Number.isFinite(value) ? value : 1)
-  }
-
-  public onSnapshotTickInput(event: Event): void {
-    const value = Number((event.target as HTMLInputElement).value)
-    this.snapshotTick.set(Number.isFinite(value) ? value : 0)
   }
 
   private runGameFlowAction(

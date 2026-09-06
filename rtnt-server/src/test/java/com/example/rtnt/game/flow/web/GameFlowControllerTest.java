@@ -11,8 +11,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.NoSuchElementException;
-
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -73,30 +71,6 @@ class GameFlowControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.tick").value(25));
         verify(this.gameLoop).advance(25);
-    }
-
-    @Test
-    void loadSnapshotDelegatesToGameLoop() throws Exception {
-        when(this.gameLoop.loadFromSnapshot(200))
-                .thenReturn(new GameFlowStatus(200, FlowMode.BATCH, true));
-
-        this.mockMvc.perform(post("/api/game-flow/load-snapshot")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"tick\":200}"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.tick").value(200))
-                .andExpect(jsonPath("$.paused").value(true));
-        verify(this.gameLoop).loadFromSnapshot(200);
-    }
-
-    @Test
-    void loadSnapshotReturnsNotFoundWhenMissing() throws Exception {
-        when(this.gameLoop.loadFromSnapshot(99)).thenThrow(new NoSuchElementException("missing"));
-
-        this.mockMvc.perform(post("/api/game-flow/load-snapshot")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"tick\":99}"))
-                .andExpect(status().isNotFound());
     }
 
     @Test

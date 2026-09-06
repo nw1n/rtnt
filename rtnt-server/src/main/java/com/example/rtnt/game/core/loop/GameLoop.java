@@ -7,19 +7,12 @@ import com.example.rtnt.game.core.flow.persistence.GameFlowStatusMongoRepository
 import com.example.rtnt.game.core.ticker.GameTick;
 import com.example.rtnt.game.core.ticker.persistence.TickerDocument;
 import com.example.rtnt.game.core.ticker.persistence.TickerMongoRepository;
-import com.example.rtnt.game.core.worldsnapshot.WorldSnapshot;
-import com.example.rtnt.game.core.worldsnapshot.WorldSnapshotStore;
-import com.example.rtnt.game.island.service.IslandPopulationGrowth;
-import com.example.rtnt.game.island.service.IslandService;
 import jakarta.annotation.PostConstruct;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-
-import java.util.NoSuchElementException;
 
 @Service
 @NullMarked
@@ -35,10 +28,6 @@ public class GameLoop {
     private final TickerMongoRepository tickerMongoRepository;
     private final GameFlowStatusMongoRepository gameFlowStatusMongoRepository;
     private final GameCommandQueue gameCommandQueue;
-    private final WorldSnapshotStore worldSnapshotStore;
-    private final IslandService islandService;
-    private final IslandPopulationGrowth islandPopulationGrowth;
-    private final int snapshotIntervalTicks;
     private final Object lock = new Object();
     private @Nullable GameTick gameTick;
     private FlowMode mode = FlowMode.BATCH;
@@ -54,22 +43,11 @@ public class GameLoop {
     public GameLoop(
             TickerMongoRepository tickerMongoRepository,
             GameFlowStatusMongoRepository gameFlowStatusMongoRepository,
-            GameCommandQueue gameCommandQueue,
-            WorldSnapshotStore worldSnapshotStore,
-            IslandService islandService,
-            IslandPopulationGrowth islandPopulationGrowth,
-            @Value("${rtnt.snapshot.interval-ticks:1000}") int snapshotIntervalTicks
+            GameCommandQueue gameCommandQueue
     ) {
-        if (snapshotIntervalTicks < 1) {
-            throw new IllegalArgumentException("snapshotIntervalTicks must be at least 1");
-        }
         this.tickerMongoRepository = tickerMongoRepository;
         this.gameFlowStatusMongoRepository = gameFlowStatusMongoRepository;
         this.gameCommandQueue = gameCommandQueue;
-        this.worldSnapshotStore = worldSnapshotStore;
-        this.islandService = islandService;
-        this.islandPopulationGrowth = islandPopulationGrowth;
-        this.snapshotIntervalTicks = snapshotIntervalTicks;
     }
 
     /***************************************************************************
@@ -135,6 +113,7 @@ public class GameLoop {
         synchronized (this.lock) {
             this.ensureLoaded();
             this.execute();
+            this.saveTick();
             return this.status();
         }
     }
@@ -146,6 +125,7 @@ public class GameLoop {
                 return;
             }
             this.execute();
+            this.saveTick();
         }
     }
 
@@ -158,36 +138,9 @@ public class GameLoop {
             for (int i = 0; i < ticks; i++) {
                 this.execute();
             }
+            this.saveTick();
             log.info("Game flow advanced by {} ticks to {}", ticks, this.requireTick().tick());
             return this.status();
-        }
-    }
-
-    public GameFlowStatus loadFromSnapshot(long tick) {
-        if (tick < 0) {
-            throw new IllegalArgumentException("tick must be >= 0");
-        }
-        synchronized (this.lock) {
-            this.ensureLoaded();
-            WorldSnapshot snapshot = this.worldSnapshotStore.findByTick(tick)
-                    .orElseThrow(() -> new NoSuchElementException("snapshot not found for tick " + tick));
-            this.islandService.replaceAll(snapshot.islands(), snapshot.islandStatuses());
-            this.gameCommandQueue.clear();
-            this.gameTick = new GameTick(snapshot.tick());
-            this.saveTick();
-            this.paused = true;
-            this.persistFlowIfLive();
-            log.info("Loaded world snapshot at tick {}", snapshot.tick());
-            return this.status();
-        }
-    }
-
-    public void snapshotIfAtTickZero() {
-        synchronized (this.lock) {
-            this.ensureLoaded();
-            if (this.requireTick().tick() == 0 && !this.worldSnapshotStore.exists(0)) {
-                this.persistSnapshot();
-            }
         }
     }
 
@@ -199,30 +152,8 @@ public class GameLoop {
 
     private void execute() {
         GameTick current = this.requireTick();
-        boolean eventful = !this.gameCommandQueue.drain(current.tick()).isEmpty();
+        this.gameCommandQueue.drain(current.tick());
         this.gameTick = current.advance();
-        if (this.islandPopulationGrowth.applyIfDue(this.requireTick().tick())) {
-            eventful = true;
-        }
-        boolean snapshotDue = this.requireTick().tick() % this.snapshotIntervalTicks == 0;
-        if (snapshotDue) {
-            this.persistSnapshot();
-        } else if (eventful) {
-            this.saveTick();
-        }
-    }
-
-    private void persistSnapshot() {
-        this.worldSnapshotStore.save(this.captureWorld());
-        this.saveTick();
-    }
-
-    private WorldSnapshot captureWorld() {
-        return new WorldSnapshot(
-                this.requireTick().tick(),
-                this.islandService.list(),
-                this.islandService.listStatuses()
-        );
     }
 
     private GameTick requireTick() {

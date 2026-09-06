@@ -1,9 +1,8 @@
 <elder-single-pane-wrapper>
   <div class="debug-page">
-    <h1>Debug</h1>
+    <h1>Game flow</h1>
 
     <section class="game-flow-panel">
-      <h2>Game flow</h2>
       @if (gameFlow(); as gameFlowState) {
         <p class="game-flow-readout">
           Tick {{ gameFlowState.tick }} · {{ gameFlowState.mode }}
@@ -53,27 +52,8 @@
           Advance
         </button>
       </div>
-      <div class="debug-actions advance-row">
-        <label class="ticks-label">
-          Snapshot ID
-          <input
-            type="number"
-            min="0"
-            [value]="snapshotTick()"
-            (input)="onSnapshotTickInput($event)"
-          />
-        </label>
-        <button mat-flat-button color="primary" type="button" [disabled]="busy()" (click)="loadSnapshot()">
-          Load
-        </button>
-      </div>
     </section>
 
-    <div class="debug-actions">
-      <button mat-flat-button color="primary" type="button" [disabled]="busy()" (click)="recreateIslands()">
-        Recreate islands
-      </button>
-    </div>
     @if (status(); as message) {
       <p class="status-text">{{ message }}</p>
     }

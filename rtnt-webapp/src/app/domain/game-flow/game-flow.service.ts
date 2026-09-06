@@ -31,8 +31,4 @@ export class GameFlowService {
   public advance(ticks: number): Observable<GameFlowDto> {
     return this.httpClient.post<GameFlowDto>(`${this.baseApiUrl}/advance`, { ticks })
   }
-
-  public loadSnapshot(tick: number): Observable<GameFlowDto> {
-    return this.httpClient.post<GameFlowDto>(`${this.baseApiUrl}/load-snapshot`, { tick })
-  }
 }
