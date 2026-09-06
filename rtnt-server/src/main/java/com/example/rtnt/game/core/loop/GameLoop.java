@@ -1,18 +1,22 @@
 package com.example.rtnt.game.core.loop;
 
+import com.example.rtnt.game.core.event.EventStore;
 import com.example.rtnt.game.core.flow.GameFlowStatus;
 import com.example.rtnt.game.core.flow.FlowMode;
 import com.example.rtnt.game.core.flow.persistence.GameFlowStatusDocument;
 import com.example.rtnt.game.core.flow.persistence.GameFlowStatusMongoRepository;
 import com.example.rtnt.game.core.ticker.GameTick;
-import com.example.rtnt.game.core.ticker.persistence.TickerDocument;
-import com.example.rtnt.game.core.ticker.persistence.TickerMongoRepository;
+import com.example.rtnt.game.weather.TemperatureChanged;
+import com.example.rtnt.game.weather.Weather;
+import com.example.rtnt.game.weather.WeatherChange;
 import jakarta.annotation.PostConstruct;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 @NullMarked
@@ -25,11 +29,13 @@ public class GameLoop {
      *                                                                         *
      **************************************************************************/
 
-    private final TickerMongoRepository tickerMongoRepository;
     private final GameFlowStatusMongoRepository gameFlowStatusMongoRepository;
     private final GameCommandQueue gameCommandQueue;
+    private final EventStore eventStore;
+    private final WeatherChange weatherChange;
     private final Object lock = new Object();
     private @Nullable GameTick gameTick;
+    private Weather weather = Weather.initial();
     private FlowMode mode = FlowMode.BATCH;
     private boolean paused = true;
     private boolean loaded;
@@ -41,13 +47,15 @@ public class GameLoop {
      **************************************************************************/
 
     public GameLoop(
-            TickerMongoRepository tickerMongoRepository,
             GameFlowStatusMongoRepository gameFlowStatusMongoRepository,
-            GameCommandQueue gameCommandQueue
+            GameCommandQueue gameCommandQueue,
+            EventStore eventStore,
+            WeatherChange weatherChange
     ) {
-        this.tickerMongoRepository = tickerMongoRepository;
         this.gameFlowStatusMongoRepository = gameFlowStatusMongoRepository;
         this.gameCommandQueue = gameCommandQueue;
+        this.eventStore = eventStore;
+        this.weatherChange = weatherChange;
     }
 
     /***************************************************************************
@@ -73,6 +81,13 @@ public class GameLoop {
         synchronized (this.lock) {
             this.ensureLoaded();
             return this.status();
+        }
+    }
+
+    public Weather weather() {
+        synchronized (this.lock) {
+            this.ensureLoaded();
+            return this.weather;
         }
     }
 
@@ -113,7 +128,6 @@ public class GameLoop {
         synchronized (this.lock) {
             this.ensureLoaded();
             this.execute();
-            this.saveTick();
             return this.status();
         }
     }
@@ -125,7 +139,6 @@ public class GameLoop {
                 return;
             }
             this.execute();
-            this.saveTick();
         }
     }
 
@@ -138,7 +151,6 @@ public class GameLoop {
             for (int i = 0; i < ticks; i++) {
                 this.execute();
             }
-            this.saveTick();
             log.info("Game flow advanced by {} ticks to {}", ticks, this.requireTick().tick());
             return this.status();
         }
@@ -154,6 +166,10 @@ public class GameLoop {
         GameTick current = this.requireTick();
         this.gameCommandQueue.drain(current.tick());
         this.gameTick = current.advance();
+        this.weatherChange.decide(this.requireTick().tick()).ifPresent(event -> {
+            this.eventStore.append(event);
+            this.weather = this.weather.apply(event);
+        });
     }
 
     private GameTick requireTick() {
@@ -174,10 +190,6 @@ public class GameLoop {
         }
     }
 
-    private void saveTick() {
-        this.tickerMongoRepository.save(TickerDocument.from(this.requireTick()));
-    }
-
     private void saveFlow() {
         this.gameFlowStatusMongoRepository.save(GameFlowStatusDocument.from(this.mode, this.paused));
     }
@@ -186,13 +198,11 @@ public class GameLoop {
         if (this.loaded) {
             return;
         }
-        this.gameTick = this.tickerMongoRepository.findById(TickerDocument.DOCUMENT_ID)
-                .map(document -> new GameTick(document.tick()))
-                .orElseGet(() -> {
-                    GameTick initial = GameTick.initial();
-                    this.tickerMongoRepository.save(TickerDocument.from(initial));
-                    return initial;
-                });
+        List<TemperatureChanged> events = this.eventStore.readAll();
+        this.weather = Weather.initial().applyAll(events);
+        this.gameTick = events.isEmpty()
+                ? GameTick.initial()
+                : new GameTick(events.getLast().tick());
         this.gameFlowStatusMongoRepository.findById(GameFlowStatusDocument.DOCUMENT_ID)
                 .ifPresentOrElse(document -> {
                     this.mode = document.mode();
