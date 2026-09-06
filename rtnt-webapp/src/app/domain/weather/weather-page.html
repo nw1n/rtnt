@@ -1,0 +1,13 @@
+<elder-single-pane-wrapper>
+  <div class="weather-page">
+    <h1>Weather</h1>
+    @if (error(); as message) {
+      <p class="state-text">{{ message }}</p>
+    } @else if (samples().length === 0) {
+      <p class="state-text">Loading weather history…</p>
+    } @else {
+      <p class="state-text">{{ samples().length }} samples</p>
+      <div class="chart" [appEcharts]="chartOption()" [dark]="darkTheme()"></div>
+    }
+  </div>
+</elder-single-pane-wrapper>
