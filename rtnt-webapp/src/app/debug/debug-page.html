@@ -77,28 +77,5 @@
     @if (status(); as message) {
       <p class="status-text">{{ message }}</p>
     }
-
-    <section class="event-log-panel">
-      <h2>Event log</h2>
-      <p class="status-text">{{ events().length }} recorded facts</p>
-      <table class="event-log-table">
-        <thead>
-          <tr>
-            <th>Tick</th>
-            <th>Type</th>
-            <th>Payload</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (event of events(); track $index) {
-            <tr>
-              <td>{{ event.tick }}</td>
-              <td>{{ event.type }}</td>
-              <td>{{ eventPayload(event) }}</td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    </section>
   </div>
 </elder-single-pane-wrapper>

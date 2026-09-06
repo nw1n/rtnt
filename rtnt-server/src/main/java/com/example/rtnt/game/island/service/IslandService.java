@@ -1,13 +1,5 @@
 package com.example.rtnt.game.island.service;
 
-import com.example.rtnt.game.core.event.EventStore;
-import com.example.rtnt.game.core.event.IslandCreated;
-import com.example.rtnt.game.core.event.IslandPopulationGrew;
-import com.example.rtnt.game.core.event.World;
-import com.example.rtnt.game.core.event.WorldCleared;
-import com.example.rtnt.game.core.event.WorldEvent;
-import com.example.rtnt.game.core.ticker.persistence.TickerDocument;
-import com.example.rtnt.game.core.ticker.persistence.TickerMongoRepository;
 import com.example.rtnt.game.island.domain.Island;
 import com.example.rtnt.game.island.domain.IslandPlacement;
 import com.example.rtnt.game.island.domain.IslandStatus;
@@ -22,7 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -37,8 +29,6 @@ public class IslandService {
 
     private final IslandMongoRepository islandMongoRepository;
     private final IslandStatusMongoRepository islandStatusMongoRepository;
-    private final EventStore eventStore;
-    private final TickerMongoRepository tickerMongoRepository;
     private final int islandCount;
     private final int mapWidth;
     private final int mapHeight;
@@ -52,16 +42,12 @@ public class IslandService {
     public IslandService(
             IslandMongoRepository islandMongoRepository,
             IslandStatusMongoRepository islandStatusMongoRepository,
-            EventStore eventStore,
-            TickerMongoRepository tickerMongoRepository,
             @Value("${rtnt.startup.island-count:15}") int islandCount,
             @Value("${rtnt.map.width:2000}") int mapWidth,
             @Value("${rtnt.map.height:1000}") int mapHeight
     ) {
         this.islandMongoRepository = islandMongoRepository;
         this.islandStatusMongoRepository = islandStatusMongoRepository;
-        this.eventStore = eventStore;
-        this.tickerMongoRepository = tickerMongoRepository;
         this.islandCount = islandCount;
         this.mapWidth = mapWidth;
         this.mapHeight = mapHeight;
@@ -86,19 +72,11 @@ public class IslandService {
     }
 
     public List<Island> recreateAll() {
-        long tick = this.currentTick();
-        List<WorldEvent> events = new ArrayList<>();
-        events.add(new WorldCleared(tick));
-        events.addAll(this.decideSeed(tick));
-        this.eventStore.append(events);
-        World world = World.empty().applyAll(events);
-        this.project(world);
-        log.info("Recreated {} islands", world.islands().size());
-        return world.islands();
-    }
-
-    public void project(World world) {
-        this.replaceAll(world.islands(), world.islandStatuses());
+        this.islandStatusMongoRepository.deleteAll();
+        this.islandMongoRepository.deleteAll();
+        List<Island> placed = this.seed();
+        log.info("Recreated {} islands", placed.size());
+        return placed;
     }
 
     public void replaceAll(List<Island> islands, List<IslandStatus> statuses) {
@@ -106,26 +84,15 @@ public class IslandService {
         this.islandMongoRepository.deleteAll();
         this.islandMongoRepository.saveAll(islands.stream().map(IslandDocument::fromIsland).toList());
         this.islandStatusMongoRepository.saveAll(statuses.stream().map(IslandStatusDocument::from).toList());
-        log.info("Replaced world with {} islands from projection", islands.size());
+        log.info("Replaced world with {} islands from snapshot", islands.size());
     }
 
     public void seedIfEmpty() {
-        if (!this.eventStore.isEmpty()) {
-            if (this.islandMongoRepository.count() == 0) {
-                List<WorldEvent> events = this.eventStore.readAll();
-                this.project(World.empty().applyAll(events));
-                log.info("Rebuilt island projection from {} events", events.size());
-            }
-            return;
-        }
         if (this.islandMongoRepository.count() > 0) {
-            this.backfillEventsFromProjection();
+            this.ensureStatuses();
             return;
         }
-        List<WorldEvent> created = this.decideSeed(this.currentTick());
-        this.eventStore.append(created);
-        this.project(World.empty().applyAll(created));
-        log.info("Seeded {} islands", created.size());
+        log.info("Seeded {} islands", this.seed().size());
     }
 
     /***************************************************************************
@@ -134,38 +101,36 @@ public class IslandService {
      *                                                                         *
      **************************************************************************/
 
-    private List<WorldEvent> decideSeed(long tick) {
+    private List<Island> seed() {
         var islandNames = IslandNamesLoader.load();
         var islandPlacement = new IslandPlacement(this.mapWidth, this.mapHeight);
         List<Island> islands = new ArrayList<>();
-        List<WorldEvent> events = new ArrayList<>();
+
         for (int i = 0; i < this.islandCount; i++) {
             var newIsland = islandPlacement.placeIsland(islandNames.next(), islands);
             islands.add(newIsland);
-            events.add(IslandCreated.from(newIsland, tick));
         }
-        return events;
+
+        var dataToSave = islands.stream().map(IslandDocument::fromIsland).toList();
+        this.islandMongoRepository.saveAll(dataToSave);
+        this.islandStatusMongoRepository.saveAll(
+                islands.stream()
+                        .map(island -> IslandStatusDocument.from(IslandStatus.initial(island.id())))
+                        .toList()
+        );
+        return islands;
     }
 
-    private void backfillEventsFromProjection() {
-        Map<String, Long> populationByIslandId = this.listStatuses().stream()
-                .collect(Collectors.toMap(IslandStatus::islandId, IslandStatus::population, (left, right) -> left));
-        long tick = this.currentTick();
-        List<WorldEvent> events = new ArrayList<>();
-        for (Island island : this.list()) {
-            events.add(IslandCreated.from(island, tick));
-            long population = populationByIslandId.getOrDefault(island.id(), 0L);
-            if (population > 0) {
-                events.add(new IslandPopulationGrew(tick, island.id(), population));
-            }
+    private void ensureStatuses() {
+        Set<String> existingIds = this.islandStatusMongoRepository.findAll().stream()
+                .map(IslandStatusDocument::islandId)
+                .collect(Collectors.toSet());
+        List<IslandStatusDocument> missing = this.list().stream()
+                .filter(island -> !existingIds.contains(island.id()))
+                .map(island -> IslandStatusDocument.from(IslandStatus.initial(island.id())))
+                .toList();
+        if (!missing.isEmpty()) {
+            this.islandStatusMongoRepository.saveAll(missing);
         }
-        this.eventStore.append(events);
-        log.info("Backfilled {} events from existing island projection", events.size());
-    }
-
-    private long currentTick() {
-        return this.tickerMongoRepository.findById(TickerDocument.DOCUMENT_ID)
-                .map(TickerDocument::tick)
-                .orElse(0L);
     }
 }

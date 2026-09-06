@@ -9,10 +9,6 @@ import com.example.rtnt.game.core.loop.GameCommandQueue;
 import com.example.rtnt.game.core.loop.GameLoop;
 import com.example.rtnt.game.core.ticker.persistence.TickerDocument;
 import com.example.rtnt.game.core.ticker.persistence.TickerMongoRepository;
-import com.example.rtnt.game.core.event.EventStore;
-import com.example.rtnt.game.core.event.IslandCreated;
-import com.example.rtnt.game.core.event.IslandPopulationGrew;
-import com.example.rtnt.game.core.event.World;
 import com.example.rtnt.game.core.worldsnapshot.WorldSnapshot;
 import com.example.rtnt.game.core.worldsnapshot.WorldSnapshotStore;
 import com.example.rtnt.game.island.domain.Footprint;
@@ -59,9 +55,6 @@ class GameLoopTest {
     @Mock
     private IslandPopulationGrowth islandPopulationGrowth;
 
-    @Mock
-    private EventStore eventStore;
-
     private GameCommandQueue gameCommandQueue;
     private GameLoop gameLoop;
 
@@ -70,10 +63,7 @@ class GameLoopTest {
         this.gameCommandQueue = new GameCommandQueue();
         lenient().when(this.islandService.list()).thenReturn(List.of());
         lenient().when(this.islandService.listStatuses()).thenReturn(List.of());
-        lenient().when(this.islandPopulationGrowth.decide(
-                org.mockito.ArgumentMatchers.any(),
-                org.mockito.ArgumentMatchers.anyLong()
-        )).thenReturn(List.of());
+        lenient().when(this.islandPopulationGrowth.applyIfDue(org.mockito.ArgumentMatchers.anyLong())).thenReturn(false);
         this.gameLoop = new GameLoop(
                 this.tickerMongoRepository,
                 this.gameFlowStatusMongoRepository,
@@ -81,7 +71,6 @@ class GameLoopTest {
                 this.worldSnapshotStore,
                 this.islandService,
                 this.islandPopulationGrowth,
-                this.eventStore,
                 2
         );
     }
@@ -156,14 +145,11 @@ class GameLoopTest {
     @Test
     void populationGrowthPersistsTicker() {
         this.givenLatest(2, FlowMode.BATCH, false);
-        when(this.islandPopulationGrowth.decide(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.eq(3L)))
-                .thenReturn(List.of(new IslandPopulationGrew(3, "a", 2)));
+        when(this.islandPopulationGrowth.applyIfDue(3)).thenReturn(true);
 
         this.gameLoop.step();
 
         assertEquals(3, this.capturedTicker().tick());
-        verify(this.eventStore).append(List.of(new IslandPopulationGrew(3, "a", 2)));
-        verify(this.islandService).project(org.mockito.ArgumentMatchers.any(World.class));
         verify(this.worldSnapshotStore, never()).save(org.mockito.ArgumentMatchers.any());
     }
 
@@ -269,10 +255,6 @@ class GameLoopTest {
         IslandStatus status = new IslandStatus("i1", 42);
         WorldSnapshot snapshot = new WorldSnapshot(200, List.of(island), List.of(status));
         when(this.worldSnapshotStore.findByTick(200)).thenReturn(Optional.of(snapshot));
-        when(this.eventStore.readUpToTick(200)).thenReturn(List.of(
-                new IslandCreated(0, "i1", "North", 1, 2, 10, 12),
-                new IslandPopulationGrew(50, "i1", 42)
-        ));
         this.gameCommandQueue.enqueue(10, new GameCommand("stale"));
 
         GameFlowStatus restored = this.gameLoop.loadFromSnapshot(200);
@@ -280,11 +262,7 @@ class GameLoopTest {
         assertEquals(200, restored.tick());
         assertEquals(FlowMode.LIVE, restored.mode());
         assertTrue(restored.paused());
-        ArgumentCaptor<World> worldCaptor = ArgumentCaptor.forClass(World.class);
-        verify(this.islandService).project(worldCaptor.capture());
-        assertEquals("i1", worldCaptor.getValue().islands().getFirst().id());
-        assertEquals(42, worldCaptor.getValue().islandStatuses().getFirst().population());
-        verify(this.eventStore).deleteAfterTick(200);
+        verify(this.islandService).replaceAll(snapshot.islands(), snapshot.islandStatuses());
         assertEquals(200, this.capturedTicker().tick());
         assertTrue(this.capturedFlow().paused());
         assertTrue(this.gameCommandQueue.drain(10).isEmpty());
@@ -296,8 +274,10 @@ class GameLoopTest {
         when(this.worldSnapshotStore.findByTick(99)).thenReturn(Optional.empty());
 
         assertThrows(NoSuchElementException.class, () -> this.gameLoop.loadFromSnapshot(99));
-        verify(this.islandService, never()).project(org.mockito.ArgumentMatchers.any());
-        verify(this.eventStore, never()).deleteAfterTick(org.mockito.ArgumentMatchers.anyLong());
+        verify(this.islandService, never()).replaceAll(
+                org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.any()
+        );
         verify(this.tickerMongoRepository, never()).save(org.mockito.ArgumentMatchers.any());
     }
 

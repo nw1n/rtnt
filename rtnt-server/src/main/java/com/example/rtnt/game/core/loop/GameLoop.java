@@ -7,9 +7,6 @@ import com.example.rtnt.game.core.flow.persistence.GameFlowStatusMongoRepository
 import com.example.rtnt.game.core.ticker.GameTick;
 import com.example.rtnt.game.core.ticker.persistence.TickerDocument;
 import com.example.rtnt.game.core.ticker.persistence.TickerMongoRepository;
-import com.example.rtnt.game.core.event.EventStore;
-import com.example.rtnt.game.core.event.World;
-import com.example.rtnt.game.core.event.WorldEvent;
 import com.example.rtnt.game.core.worldsnapshot.WorldSnapshot;
 import com.example.rtnt.game.core.worldsnapshot.WorldSnapshotStore;
 import com.example.rtnt.game.island.service.IslandPopulationGrowth;
@@ -22,7 +19,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.NoSuchElementException;
 
 @Service
@@ -42,7 +38,6 @@ public class GameLoop {
     private final WorldSnapshotStore worldSnapshotStore;
     private final IslandService islandService;
     private final IslandPopulationGrowth islandPopulationGrowth;
-    private final EventStore eventStore;
     private final int snapshotIntervalTicks;
     private final Object lock = new Object();
     private @Nullable GameTick gameTick;
@@ -63,7 +58,6 @@ public class GameLoop {
             WorldSnapshotStore worldSnapshotStore,
             IslandService islandService,
             IslandPopulationGrowth islandPopulationGrowth,
-            EventStore eventStore,
             @Value("${rtnt.snapshot.interval-ticks:1000}") int snapshotIntervalTicks
     ) {
         if (snapshotIntervalTicks < 1) {
@@ -75,7 +69,6 @@ public class GameLoop {
         this.worldSnapshotStore = worldSnapshotStore;
         this.islandService = islandService;
         this.islandPopulationGrowth = islandPopulationGrowth;
-        this.eventStore = eventStore;
         this.snapshotIntervalTicks = snapshotIntervalTicks;
     }
 
@@ -178,9 +171,7 @@ public class GameLoop {
             this.ensureLoaded();
             WorldSnapshot snapshot = this.worldSnapshotStore.findByTick(tick)
                     .orElseThrow(() -> new NoSuchElementException("snapshot not found for tick " + tick));
-            World world = World.empty().applyAll(this.eventStore.readUpToTick(tick));
-            this.islandService.project(world);
-            this.eventStore.deleteAfterTick(tick);
+            this.islandService.replaceAll(snapshot.islands(), snapshot.islandStatuses());
             this.gameCommandQueue.clear();
             this.gameTick = new GameTick(snapshot.tick());
             this.saveTick();
@@ -210,11 +201,7 @@ public class GameLoop {
         GameTick current = this.requireTick();
         boolean eventful = !this.gameCommandQueue.drain(current.tick()).isEmpty();
         this.gameTick = current.advance();
-        World world = World.of(this.islandService.list(), this.islandService.listStatuses());
-        List<WorldEvent> events = this.islandPopulationGrowth.decide(world, this.requireTick().tick());
-        if (!events.isEmpty()) {
-            this.eventStore.append(events);
-            this.islandService.project(world.applyAll(events));
+        if (this.islandPopulationGrowth.applyIfDue(this.requireTick().tick())) {
             eventful = true;
         }
         boolean snapshotDue = this.requireTick().tick() % this.snapshotIntervalTicks == 0;
