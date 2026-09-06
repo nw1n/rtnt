@@ -13,9 +13,6 @@
       } @else {
         <p class="status-text">Loading game flow…</p>
       }
-      @if (weather(); as weatherState) {
-        <p class="game-flow-readout">Temperature {{ weatherState.temperature }}°</p>
-      }
       <div class="debug-actions">
         <button mat-flat-button color="primary" type="button" [disabled]="busy()" (click)="pause()">
           Pause

@@ -13,6 +13,11 @@
   color: #374151;
 }
 
+.current-temperature {
+  font-size: 1.25rem;
+  font-variant-numeric: tabular-nums;
+}
+
 .chart {
   width: 100%;
   min-height: 420px;

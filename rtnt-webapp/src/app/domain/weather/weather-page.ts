@@ -3,6 +3,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop'
 import { ElderSinglePaneWrapperComponent } from '@elderbyte/ngx-starter'
 import type { EChartsOption } from 'echarts'
 import { catchError, EMPTY, interval, startWith, switchMap } from 'rxjs'
+import { WeatherDto } from '../../models/weather.dto'
 import { WeatherSampleDto } from '../../models/weather-sample.dto'
 import { EchartsDirective } from './echarts.directive'
 import { WeatherService } from './weather.service'
@@ -18,12 +19,20 @@ export class WeatherPage {
   private readonly weatherService = inject(WeatherService)
   private readonly destroyRef = inject(DestroyRef)
 
+  public weather = signal<WeatherDto | null>(null)
   public samples = signal<WeatherSampleDto[]>([])
   public error = signal<string | null>(null)
   public darkTheme = signal(document.body.classList.contains('elder-dark-theme'))
   public chartOption = computed<EChartsOption>(() => this.buildChart(this.samples()))
 
   constructor() {
+    interval(1000)
+      .pipe(
+        startWith(0),
+        switchMap(() => this.weatherService.get().pipe(catchError(() => EMPTY))),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe((weather) => this.weather.set(weather))
     interval(1000)
       .pipe(
         startWith(0),

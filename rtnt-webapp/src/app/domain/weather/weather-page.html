@@ -1,6 +1,9 @@
 <elder-single-pane-wrapper>
   <div class="weather-page">
     <h1>Weather</h1>
+    @if (weather(); as weatherState) {
+      <p class="state-text current-temperature">Temperature {{ weatherState.temperature }}°</p>
+    }
     @if (error(); as message) {
       <p class="state-text">{{ message }}</p>
     } @else if (samples().length === 0) {

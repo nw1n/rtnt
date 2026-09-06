@@ -5,9 +5,7 @@ import { ElderSinglePaneWrapperComponent } from '@elderbyte/ngx-starter'
 import { catchError, EMPTY, firstValueFrom, interval, Observable, startWith, switchMap, timer } from 'rxjs'
 import { GameFlowService } from '../domain/game-flow/game-flow.service'
 import { EventLogService } from '../domain/weather/event-log.service'
-import { WeatherService } from '../domain/weather/weather.service'
 import { GameFlowDto } from '../models/game-flow.dto'
-import { WeatherDto } from '../models/weather.dto'
 import { WorldEventDto } from '../models/world-event.dto'
 
 @Component({
@@ -19,14 +17,12 @@ import { WorldEventDto } from '../models/world-event.dto'
 })
 export class DebugPage {
   private readonly gameFlowService = inject(GameFlowService)
-  private readonly weatherService = inject(WeatherService)
   private readonly eventLogService = inject(EventLogService)
   private readonly destroyRef = inject(DestroyRef)
 
   public busy = signal(false)
   public status = signal<string | null>(null)
   public gameFlow = signal<GameFlowDto | null>(null)
-  public weather = signal<WeatherDto | null>(null)
   public events = signal<WorldEventDto[]>([])
   public batchSize = signal(100)
   public batchCount = signal(1)
@@ -39,13 +35,6 @@ export class DebugPage {
         takeUntilDestroyed(this.destroyRef)
       )
       .subscribe((gameFlow) => this.gameFlow.set(gameFlow))
-    interval(1000)
-      .pipe(
-        startWith(0),
-        switchMap(() => this.weatherService.get().pipe(catchError(() => EMPTY))),
-        takeUntilDestroyed(this.destroyRef)
-      )
-      .subscribe((weather) => this.weather.set(weather))
     interval(1000)
       .pipe(
         startWith(0),
