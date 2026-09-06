@@ -18,6 +18,52 @@
   font-variant-numeric: tabular-nums;
 }
 
+.range-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
+}
+
+.ticks-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.95rem;
+}
+
+.ticks-label input {
+  width: 96px;
+  padding: 6px 8px;
+}
+
+.analysis h2 {
+  margin: 0 0 12px;
+  font-size: 1.1rem;
+}
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px 16px;
+  margin: 0;
+}
+
+.stat-grid div {
+  margin: 0;
+}
+
+.stat-grid dt {
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+.stat-grid dd {
+  margin: 4px 0 0;
+  font-size: 1.15rem;
+  font-variant-numeric: tabular-nums;
+}
+
 .chart {
   width: 100%;
   min-height: 420px;

@@ -4,6 +4,66 @@
     @if (weather(); as weatherState) {
       <p class="state-text current-temperature">Temperature {{ weatherState.temperature }}°</p>
     }
+
+    <div class="range-row">
+      <label class="ticks-label">
+        Start tick
+        <input
+          type="number"
+          min="0"
+          [value]="fromTickInput()"
+          (input)="onFromTickInput($event)"
+          placeholder="All"
+        />
+      </label>
+      <label class="ticks-label">
+        End tick
+        <input
+          type="number"
+          min="0"
+          [value]="toTickInput()"
+          (input)="onToTickInput($event)"
+          placeholder="All"
+        />
+      </label>
+    </div>
+
+    @if (analysis(); as stats) {
+      <section class="analysis">
+        <h2>Range {{ stats.fromTick }}–{{ stats.toTick }}</h2>
+        <dl class="stat-grid">
+          <div>
+            <dt>Average</dt>
+            <dd>{{ formatAverage(stats.averageTemperature) }}°</dd>
+          </div>
+          <div>
+            <dt>Min / max</dt>
+            <dd>{{ stats.minTemperature }}° / {{ stats.maxTemperature }}°</dd>
+          </div>
+          <div>
+            <dt>Start / end</dt>
+            <dd>{{ stats.startTemperature }}° → {{ stats.endTemperature }}°</dd>
+          </div>
+          <div>
+            <dt>Changes</dt>
+            <dd>{{ stats.changeCount }}</dd>
+          </div>
+          <div>
+            <dt>Large swings (≥{{ stats.largeDeltaThreshold }}°)</dt>
+            <dd>{{ stats.largeChangeCount }}</dd>
+          </div>
+          <div>
+            <dt>Direction reversals</dt>
+            <dd>{{ stats.reversals }}</dd>
+          </div>
+          <div>
+            <dt>Bursts (2+ changes in {{ stats.burstWindowTicks }} ticks)</dt>
+            <dd>{{ stats.burstCount }}</dd>
+          </div>
+        </dl>
+      </section>
+    }
+
     @if (error(); as message) {
       <p class="state-text">{{ message }}</p>
     } @else if (samples().length === 0) {

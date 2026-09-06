@@ -37,4 +37,20 @@ class WeatherTest {
                 new WeatherSample(25, 21)
         ), samples);
     }
+
+    @Test
+    void historyClipsToSelectedTicks() {
+        List<WeatherSample> samples = Weather.history(
+                List.of(new TemperatureChanged(10, 3), new TemperatureChanged(20, -2)),
+                25,
+                12L,
+                22L
+        );
+
+        assertEquals(List.of(
+                new WeatherSample(12, 23),
+                new WeatherSample(20, 21),
+                new WeatherSample(22, 21)
+        ), samples);
+    }
 }

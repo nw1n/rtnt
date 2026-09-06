@@ -8,6 +8,7 @@ import com.example.rtnt.game.core.flow.persistence.GameFlowStatusMongoRepository
 import com.example.rtnt.game.core.ticker.GameTick;
 import com.example.rtnt.game.weather.TemperatureChanged;
 import com.example.rtnt.game.weather.Weather;
+import com.example.rtnt.game.weather.WeatherAnalysis;
 import com.example.rtnt.game.weather.WeatherChange;
 import com.example.rtnt.game.weather.WeatherSample;
 import jakarta.annotation.PostConstruct;
@@ -92,10 +93,17 @@ public class GameLoop {
         }
     }
 
-    public List<WeatherSample> weatherHistory() {
+    public List<WeatherSample> weatherHistory(@Nullable Long fromTick, @Nullable Long toTick) {
         synchronized (this.lock) {
             this.ensureLoaded();
-            return Weather.history(this.eventStore.readAll(), this.requireTick().tick());
+            return Weather.history(this.eventStore.readAll(), this.requireTick().tick(), fromTick, toTick);
+        }
+    }
+
+    public WeatherAnalysis weatherAnalysis(@Nullable Long fromTick, @Nullable Long toTick) {
+        synchronized (this.lock) {
+            this.ensureLoaded();
+            return WeatherAnalysis.of(this.eventStore.readAll(), this.requireTick().tick(), fromTick, toTick);
         }
     }
 
