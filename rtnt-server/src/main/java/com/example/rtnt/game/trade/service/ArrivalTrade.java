@@ -23,6 +23,7 @@ public class ArrivalTrade {
     private static final TradePriceList FAIR_PRICES = TradePriceList.islandSeed();
     private static final double MIN_SELL_CHANCE = 0.2;
     private static final double MAX_SELL_CHANCE = 0.8;
+    private static final int BUY_TAX_PERCENT = 5;
 
     private final Random random;
 
@@ -109,8 +110,16 @@ public class ArrivalTrade {
         }
         int holdRoom = cargoCapacity - shipInventory.sumTradeableGoods();
         int islandStock = islandInventory.getAmount(good);
-        int maxByGold = shipInventory.getAmount(GoodType.GOLD) / unitPrice;
+        int unitCost = unitPrice + buyTax(unitPrice);
+        int maxByGold = shipInventory.getAmount(GoodType.GOLD) / unitCost;
         return Math.min(holdRoom, Math.min(islandStock, maxByGold));
+    }
+
+    static int buyTax(int unitPrice) {
+        if (unitPrice < 0) {
+            throw new IllegalArgumentException("unit price cannot be negative");
+        }
+        return Math.multiplyExact(unitPrice, BUY_TAX_PERCENT) / 100;
     }
 
     static double sellProbability(int unitPrice, int fairPrice) {
@@ -162,15 +171,18 @@ public class ArrivalTrade {
             int amount,
             int unitPrice
     ) {
-        int totalPrice = Math.multiplyExact(unitPrice, amount);
+        int goodsCost = Math.multiplyExact(unitPrice, amount);
+        int tax = 0;
         Inventory nextShip;
         Inventory nextIsland;
         if (tradeType == TradeType.SELL_TO_ISLAND) {
-            nextShip = shipInventory.removeAmount(good, amount).addAmount(GoodType.GOLD, totalPrice);
-            nextIsland = islandInventory.addAmount(good, amount).removeAmount(GoodType.GOLD, totalPrice);
+            nextShip = shipInventory.removeAmount(good, amount).addAmount(GoodType.GOLD, goodsCost);
+            nextIsland = islandInventory.addAmount(good, amount).removeAmount(GoodType.GOLD, goodsCost);
         } else {
-            nextShip = shipInventory.removeAmount(GoodType.GOLD, totalPrice).addAmount(good, amount);
-            nextIsland = islandInventory.addAmount(GoodType.GOLD, totalPrice).removeAmount(good, amount);
+            tax = Math.multiplyExact(buyTax(unitPrice), amount);
+            int shipPayment = goodsCost + tax;
+            nextShip = shipInventory.removeAmount(GoodType.GOLD, shipPayment).addAmount(good, amount);
+            nextIsland = islandInventory.addAmount(GoodType.GOLD, shipPayment).removeAmount(good, amount);
         }
         return new AppliedTrade(
                 nextShip,
@@ -185,7 +197,7 @@ public class ArrivalTrade {
                         good,
                         amount,
                         unitPrice,
-                        totalPrice
+                        goodsCost + tax
                 )
         );
     }

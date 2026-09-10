@@ -42,7 +42,7 @@ class IslandStatusTest {
         assertEquals(15, flourished.inventory().getAmount(GoodType.FOOD));
         assertEquals(7, flourished.inventory().getAmount(GoodType.RUM));
         assertEquals(7, flourished.inventory().getAmount(GoodType.SUGAR));
-        assertEquals(100, flourished.inventory().getAmount(GoodType.GOLD));
+        assertEquals(1_000, flourished.inventory().getAmount(GoodType.GOLD));
     }
 
     @Test

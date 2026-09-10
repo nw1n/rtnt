@@ -27,7 +27,7 @@ public final class Inventory {
 
     public static Inventory islandSeed() {
         return of(Map.of(
-                GoodType.GOLD, 100,
+                GoodType.GOLD, 1_000,
                 GoodType.FOOD, 15,
                 GoodType.RUM, 15,
                 GoodType.SUGAR, 15,
